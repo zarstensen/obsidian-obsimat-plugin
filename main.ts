@@ -1,34 +1,24 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { EditorState } from "@codemirror/state";
-import { EquationExtractor } from "./src/EquationExtractor";
+import { EquationExtractor } from "src/EquationExtractor";
 import { spawn } from 'child_process';
 import { join } from 'path';
+import { WebSocketServer } from 'ws';
+import getPort from 'get-port';
+import { PythonEvalServer } from 'src/PythonEvalServer';
 
 export default class ObsiMatPlugin extends Plugin {
 
 	async onload() {
-
-        // Start python sympy connection
-        const pythonProcess = spawn('python', [join(this.app.vault.adapter.basePath, '.obsidian/plugins/obsimat-plugin/sympy_evaluator.py')]);
-
-        // pythonProcess.stdout.on('data', (data) => {
-        //     console.log(`stdout: ${data}`);
-        // });
-
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`stderr: ${data}`);
-        });
-
-        pythonProcess.on('close', (code) => {
-            console.log(`child process exited with code ${code}`);
-        });
+        const python_eval_server = new PythonEvalServer();
+        python_eval_server.onError((error) => { new Notice("Error\n" + error)});
+        await python_eval_server.initialize(this.app.vault.adapter.basePath);
 
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
 			id: 'evaluate-latex-expression-command',
 			name: 'Evaluate LaTeX Expression (Sympy)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-                console.log(editor);
                 const editor_state = (editor as any).cm.state as EditorState;
 
                 const equation_range = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor_state);
@@ -44,21 +34,13 @@ export default class ObsiMatPlugin extends Plugin {
                     equation = equation.substring(1);
                 }
 
-                // now pipe it to python
-                pythonProcess.stdin.write("BEGIN_EVALUATE\n");
-                pythonProcess.stdin.write(equation + "\n");
-                pythonProcess.stdin.write("END_EVALUATE\n");
-                
-                pythonProcess.stdout.once('data', (data) => {
-                    const result = data.toString();
-                    const regex = /BEGIN_RESULT([\s\S]*?)END_RESULT/;
-                    const match = regex.exec(result);
-                    const extractedResult = match ? match[1].trim() : "No result found";
-                    editor.replaceRange(" = " + extractedResult, editor.offsetToPos(equation_range.to));
-                    console.log(data.toString());
-                    console.log("NEW ENTRY");
-                    new Notice(data.toString());
+                // and await result
+                python_eval_server.receive().then((result) => {
+                    editor.replaceRange(" = " + result, editor.offsetToPos(equation_range.to));
                 });
+                
+                // now pipe it to python
+                python_eval_server.send("evaluate", equation);
 			}
 		});
 	}

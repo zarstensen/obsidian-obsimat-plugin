@@ -5,42 +5,63 @@ import { spawn } from 'child_process';
 import { join } from 'path';
 import { WebSocketServer } from 'ws';
 import getPort from 'get-port';
-import { PythonEvalServer } from 'src/PythonEvalServer';
+import { SympyEvaluator } from 'src/SympyEvaluator';
 
 export default class ObsiMatPlugin extends Plugin {
 
 	async onload() {
-        const python_eval_server = new PythonEvalServer();
-        python_eval_server.onError((error) => { new Notice("Error\n" + error)});
-        await python_eval_server.initialize(this.app.vault.adapter.basePath);
+        this.sympy_evaluator = new SympyEvaluator();
+        
+        this.sympy_evaluator.onError((error) => {
+            // limit error message to 4 lines,
+            // need to check the developer console to see the full message.
+            const maxLines = 4;
+            const errorLines = error.split('\n');
+            const truncatedError = errorLines.slice(0, maxLines).join('\n') + (errorLines.length > maxLines ? '\n...' : '');
+            new Notice("Error\n" + truncatedError);
+        });
 
-		// This adds an editor command that can perform some operation on the current editor instance
+        this.sympy_evaluator.initialize(this.app.vault.adapter.basePath);
+
+		// Add the evaluate command
 		this.addCommand({
 			id: 'evaluate-latex-expression-command',
 			name: 'Evaluate LaTeX Expression (Sympy)',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-                const editor_state = (editor as any).cm.state as EditorState;
+			editorCallback: async (editor: Editor, view: MarkdownView) => {
+                const equation = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor);
 
-                const equation_range = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor_state);
-
-                if(equation_range === null) {
+                if(equation === null) {
                     new Notice("You are not inside a math block");
                     return;
                 }
 
-                let equation = editor.getRange(editor.offsetToPos(equation_range.from), editor.offsetToPos(equation_range.to));
+                // now pipe it to python
+                await this.sympy_evaluator.send("evaluate", { expression: equation.contents });
+                const response = await this.sympy_evaluator.receive();
+                
+                editor.replaceRange(" = " + response.result, editor.offsetToPos(equation.to));
+                editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));
+			}
+		});
 
-                if(equation.startsWith("$")) {
-                    equation = equation.substring(1);
+        // Add the solve command
+		this.addCommand({
+			id: 'solve-latex-expression-command',
+			name: 'Solve LaTeX Expression (Sympy)',
+			editorCallback: async (editor: Editor, view: MarkdownView) => {
+                const equation = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor);
+
+                if(equation === null) {
+                    new Notice("You are not inside a math block");
+                    return;
                 }
 
-                // and await result
-                python_eval_server.receive().then((result) => {
-                    editor.replaceRange(" = " + result, editor.offsetToPos(equation_range.to));
-                });
-                
                 // now pipe it to python
-                python_eval_server.send("evaluate", equation);
+                await this.sympy_evaluator.send("solve", { expression: equation.contents });
+                const response = await this.sympy_evaluator.receive();
+                
+                editor.replaceRange("\n" + response.result, editor.offsetToPos(equation.block_to));
+                editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));
 			}
 		});
 	}
@@ -48,4 +69,6 @@ export default class ObsiMatPlugin extends Plugin {
 	onunload() {
 
 	}
+
+    private sympy_evaluator: SympyEvaluator;
 }

@@ -6,6 +6,8 @@ import { join } from 'path';
 import { WebSocketServer } from 'ws';
 import getPort from 'get-port';
 import { SympyEvaluator } from 'src/SympyEvaluator';
+import { SymbolSelectorModal } from 'src/SymbolSelectorModal';
+import { syntaxTree } from "@codemirror/language";
 
 export default class ObsiMatPlugin extends Plugin {
 
@@ -59,6 +61,25 @@ export default class ObsiMatPlugin extends Plugin {
                 // now pipe it to python
                 await this.sympy_evaluator.send("solve", { expression: equation.contents });
                 const response = await this.sympy_evaluator.receive();
+
+                if(response.status === "solved") {
+                    editor.replaceRange(" $$" + response.result + "$$", editor.offsetToPos(equation.block_to));
+                    editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));
+                } else {
+                    // prompt user for variables, and try again.
+                    const symbol_selector = new SymbolSelectorModal(response.symbols, this.app);
+                    symbol_selector.open();
+                    const symbol = await symbol_selector.getResultAsync();
+                    await this.sympy_evaluator.send("solve", { expression: equation.contents, symbol: symbol });
+                    const new_response = await this.sympy_evaluator.receive();
+
+                    editor.replaceRange(" $$" + new_response.result + "$$", editor.offsetToPos(equation.block_to));
+                    editor.setCursor(editor.offsetToPos(equation.to + new_response.result.length + 3));
+                }
+                
+			}
+		});
+
                 
                 editor.replaceRange("\n" + response.result, editor.offsetToPos(equation.block_to));
                 editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));

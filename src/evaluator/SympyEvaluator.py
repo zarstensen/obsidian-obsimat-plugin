@@ -25,6 +25,7 @@ async def evaluateEquation(message: Any, obsimat: ObsimatClient):
 
     sympy_expr = sympy_expr.doit() or sympy_expr
     sympy_expr = sympy_expr.expand() or sympy_expr
+    sympy_expr = sympy_expr.cancel() or sympy_expr
     sympy_expr = sympy_expr.simplify() or sympy_expr
     
     with evaluate(False):

@@ -39,8 +39,6 @@ export class ObsimatEnvironment {
 
         const editor = markdown_view.editor;
 
-        console.log(sections)
-
         // filter out any non obsimat code block sections
         sections = sections
             .filter((section) => section.type === "code")
@@ -49,8 +47,6 @@ export class ObsimatEnvironment {
                 console.log(code_block_contents)
                 return this.OBSIMAT_BLOCK_REGEX.test(code_block_contents);
             });
-
-        console.log(sections);
         
         // find the closest obsimat code block
 
@@ -60,7 +56,6 @@ export class ObsimatEnvironment {
 
         for(const section of sections) {
             if(section.position.end.offset < editor.posToOffset(position)) {
-                console.log("CLOSEST: ", section);
                 closest_section = section;
             } else {
                 break;
@@ -73,9 +68,7 @@ export class ObsimatEnvironment {
 
         // now generate obsimat environment based on section contents.
 
-        console.log(closest_section);
         const obsimat_block = editor.getRange(editor.offsetToPos(closest_section.position.start.offset), editor.offsetToPos(closest_section.position.end.offset));
-        console.log(obsimat_block)
 
         const obsimat_block_content = obsimat_block.match(this.OBSIMAT_BLOCK_REGEX)?.[1];
 
@@ -129,7 +122,7 @@ export class ObsimatEnvironment {
             if(!variable_definition.groups?.symbol || !variable_definition.groups?.value) {
                 continue;
             }
-            
+
             variables[variable_definition.groups.symbol] = variable_definition.groups.value;
         }
 

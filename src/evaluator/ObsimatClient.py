@@ -1,8 +1,7 @@
 from typing import *
-
-from websockets.asyncio.client import ClientConnection
 import websockets
 import json
+import traceback
 
 
 #
@@ -48,7 +47,7 @@ class ObsimatClient:
                 try:
                     await self.modes[mode](json.loads(payload), self)
                 except Exception as e:
-                    await self.sendError(str(e))
+                    await self.sendError(traceback.format_exc())
             else:
                 await self.sendError("Unknown mode: " + mode)
 

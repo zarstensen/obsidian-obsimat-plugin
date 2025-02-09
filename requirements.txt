@@ -1,3 +1,4 @@
 lark
 websockets
 sympy
+regex

@@ -73,7 +73,7 @@ export class SympyEvaluator {
         });
 
         // now start the python process
-        this.python_process = spawn(python_exec, [join(vault_dir, '.obsidian/plugins/obsimat-plugin/src/evaluator/SympyEvaluator.py'), server_port.toString()]);
+        this.python_process = spawn(python_exec, [join(vault_dir, '.obsidian/plugins/obsidian-obsimat-plugin/src/evaluator/SympyEvaluator.py'), server_port.toString()]);
 
         // setup output to be logged in the developer console
         this.python_process.stdout.on('data', (data) => {

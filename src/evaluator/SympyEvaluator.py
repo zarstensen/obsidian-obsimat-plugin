@@ -6,6 +6,7 @@ from sympy.parsing.latex import parse_latex_lark
 import asyncio
 import sys
 import re
+from copy import deepcopy
 
 if len(sys.argv) < 2:
     print("Usage: python sympy_evaluator.py <port>")
@@ -20,7 +21,7 @@ async def evaluateEquation(message: Any, obsimat: ObsimatClient):
     sympy_expr = LatexParser.parse_latex(expression, message['environment'])
     # store expression before units are converted and it is evaluated,
     # so we can display this intermediate step in the result.
-    before_units = sympy_expr.copy()
+    before_units = deepcopy(sympy_expr)
     sympy_expr = LatexParser.handle_units(sympy_expr, message['environment'])
 
     sympy_expr = sympy_expr.doit() or sympy_expr

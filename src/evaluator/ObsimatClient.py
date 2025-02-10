@@ -47,7 +47,7 @@ class ObsimatClient:
                 try:
                     await self.modes[mode](json.loads(payload), self)
                 except Exception as e:
-                    await self.sendError(traceback.format_exc())
+                    await self.sendError(str(e) + "\n" + traceback.format_exc())
             else:
                 await self.sendError("Unknown mode: " + mode)
 

@@ -1,4 +1,4 @@
-import { App, EditorPosition, MarkdownView } from "obsidian";
+import { App, Editor, EditorPosition, MarkdownView } from "obsidian";
 import * as toml from "toml";
 
 // The ObsimatEnvironment class represents an environment detailing how mathematical expressions,
@@ -44,15 +44,12 @@ export class ObsimatEnvironment {
             .filter((section) => section.type === "code")
             .filter((section) => {
                 const code_block_contents = editor.getRange(editor.offsetToPos(section.position.start.offset), editor.offsetToPos(section.position.end.offset));
-                console.log(code_block_contents)
                 return this.OBSIMAT_BLOCK_REGEX.test(code_block_contents);
             });
         
         // find the closest obsimat code block
 
         let closest_section = undefined;
-
-        console.log(editor.posToOffset(position));
 
         for(const section of sections) {
             if(section.position.end.offset < editor.posToOffset(position)) {

@@ -1,4 +1,4 @@
-from LatexParser import LatexParser
+from evaluator.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from ObsimatClient import ObsimatClient
 from typing import *
 from sympy import *
@@ -18,11 +18,11 @@ port = int(sys.argv[1])
 async def evaluateEquation(message: Any, obsimat: ObsimatClient):
     expression = message['expression'].split("=")[-1]
 
-    sympy_expr = LatexParser.parse_latex(expression, message['environment'])
+    sympy_expr = ObsimatEnvironmentUtils.parse_latex(expression, message['environment'])
     # store expression before units are converted and it is evaluated,
     # so we can display this intermediate step in the result.
     before_units = deepcopy(sympy_expr)
-    sympy_expr = LatexParser.handle_units(sympy_expr, message['environment'])
+    sympy_expr = ObsimatEnvironmentUtils.substitute_units(sympy_expr, message['environment'])
 
     sympy_expr = sympy_expr.doit() or sympy_expr
     sympy_expr = sympy_expr.expand() or sympy_expr
@@ -39,8 +39,8 @@ async def evaluateEquation(message: Any, obsimat: ObsimatClient):
     await obsimat.sendResult({"result": result})
 
 async def solveEquation(message: Any, obsimat: ObsimatClient):
-    expression = LatexParser.parse_latex(message['expression'], message['environment'])
-    expression = LatexParser.handle_units(expression, message['environment'])
+    expression = ObsimatEnvironmentUtils.parse_latex(message['expression'], message['environment'])
+    expression = ObsimatEnvironmentUtils.substitute_units(expression, message['environment'])
 
     if 'symbol' not in message and len(expression.free_symbols) > 1:
         await obsimat.sendResult({"status": "multivariate_equation", "symbols": [str(s) for s in expression.free_symbols]})

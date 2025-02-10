@@ -47,9 +47,7 @@ async def solveEquation(message: Any, obsimat: ObsimatClient):
         return
 
     if 'symbol' in message:
-        print(expression.free_symbols, flush=True)
         for free_symbol in expression.free_symbols:
-            print(free_symbol, flush=True)
             if str(free_symbol) == message['symbol']:
                 symbol = free_symbol
                 break

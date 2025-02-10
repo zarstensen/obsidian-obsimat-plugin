@@ -5,7 +5,6 @@ from sympy.parsing.latex import parse_latex_lark
 from lark import Tree
 from ObsimatEnvironment import ObsimatEnvironment
 import regex
-import time
 
 ## The ObsimatEnvironmentUtils provide various utility functions for a math expression present in an ObsimatEnvironment.
 class ObsimatEnvironmentUtils:
@@ -83,6 +82,8 @@ class ObsimatEnvironmentUtils:
             
         else:
             raise RecursionError(f"Max substitution depth reached. ({ObsimatEnvironmentUtils.__MAX_SUBSTITUTION_DEPTH})")
+        
+        return latex_str
     
     @staticmethod
     def __substitute_symbols(sympy_expr: Any, environment: ObsimatEnvironment):

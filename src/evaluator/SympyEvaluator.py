@@ -1,4 +1,4 @@
-from evaluator.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
+from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from ObsimatClient import ObsimatClient
 from typing import *
 from sympy import *

@@ -17,6 +17,14 @@ class LatexParser:
             latex_str
             )
         
+        # Surround all detected multi-letter variables with \mathit{} so sympy knows to treat them as single variables.
+        latex_str = LatexParser.__MULTI_LETTER_VARIABLE_REGEX.sub(LatexParser.__multi_letter_variable_substituter, latex_str)
+        
+        # Finally, remove any escaped spaces as sympy cannot figure out how to parse this
+        latex_str = latex_str.replace(r"\ ", " ")
+        
+        print(latex_str, flush=True)
+        
         sympy_expr = parse_latex_lark(latex_str)
 
         if type(sympy_expr) is Tree:
@@ -77,6 +85,18 @@ class LatexParser:
             return f"({environment['variables'][match.groupdict()['variable_name']]})"
         else:
             return match.groupdict()['original']
+        
+    @staticmethod
+    def __multi_letter_variable_substituter(match: regex.Match[str]) -> str:
+        print(match.regs, flush=True)
+        print(match.allspans(), flush=True)
+        spans = match.regs
+        match_span = spans[0]
+        variable_span = spans[LatexParser.__MULTI_LETTER_VARIABLE_REGEX.groupindex['multiletter_variable']]
+        print(spans, flush=True)
+        print(match.string, flush=True)
+        return f"\\mathit{{{match.groupdict()['multiletter_variable']}}}".join((match.string[match_span[0]:variable_span[0]], match.string[variable_span[1]:match_span[1]]))
     
     __VARIABLE_REGEX = regex.compile(r'(?P<original>(?:\\math[a-zA-Z]*{)(?P<variable_name>(?R)*)}|(?P<variable_name>\\?[a-zA-Z][a-zA-Z0-9]*(?:_{(?>.|(?R))*?}|_.)?))')
+    __MULTI_LETTER_VARIABLE_REGEX = regex.compile(r'(?<!\\end)(?<!\\begin)(?:[^\w\\]|^){1,}?(?P<multiletter_variable>[a-zA-Z]{2,})(?=[^\w]|$)')
     

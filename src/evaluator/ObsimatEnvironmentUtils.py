@@ -30,6 +30,21 @@ class ObsimatEnvironmentUtils:
 
         return sympy_expr
     
+    @staticmethod
+    def create_sympy_symbol(symbol: str, environment: ObsimatEnvironment):
+        if str(symbol) not in environment['symbols']:
+            raise ValueError(f"Symbol {symbol} not found in environment.")
+        
+        assumptions = {}
+        for assumption in environment['symbols'][str(symbol)]:
+            assumptions[assumption] = True
+        
+        # TODO: warn here if an assumption is not recognized.
+        # create the sympy symbol here
+        sympy_symbol = Symbol(str(symbol), **assumptions)
+        
+        return sympy_symbol
+    
     # Substitute any symbols present in the sympy expression with the corresponding unit from the environment.
     # Also convert all non base units to base units where possible.
     @staticmethod
@@ -88,19 +103,12 @@ class ObsimatEnvironmentUtils:
     @staticmethod
     def __substitute_symbols(sympy_expr: Any, environment: ObsimatEnvironment):
         with evaluate(False):
+            
             # now, replace all the symbols with the ones defined in the passed environment.
             for symbol in sympy_expr.free_symbols:
                 if str(symbol) in environment['symbols']:
-                    assumptions = {}
-                    for assumption in environment['symbols'][str(symbol)]:
-                        assumptions[assumption] = True
-                    
-                    # TODO: warn here if an assumption is not recognized.
-                    # create the sympy symbol here
-                    sympy_symbol = Symbol(str(symbol), **assumptions)
-                    
                     # and substitute the new symbol here.
-                    sympy_expr = sympy_expr.subs({symbol: sympy_symbol})
+                    sympy_expr = sympy_expr.subs({symbol: ObsimatEnvironmentUtils.create_sympy_symbol(symbol, environment)})
         
         return sympy_expr
         

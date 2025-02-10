@@ -20,10 +20,36 @@ export class ObsimatEnvironment {
     // the domain is a sympy expression, evaluating to the default solution domain of any equation solutions.
     public domain: string;
 
+    public static fromCodeBlock(code_block: string | undefined, variables: { [variable: string]: string }) {
+        if(!code_block) {
+            return new ObsimatEnvironment(undefined, variables);
+        }
+
+        const parsed_obsimat_block = toml.parse(code_block);
+
+        // prioritize domain name over domain expression.
+
+        let domain: string | undefined = undefined;
+
+        if(parsed_obsimat_block.domain?.name) {
+            domain = "S." + parsed_obsimat_block.domain.name.trim().charAt(0).toUpperCase() + parsed_obsimat_block.domain.name.trim().slice(1).toLowerCase();
+        } else if(parsed_obsimat_block.domain?.expression) {
+            domain = parsed_obsimat_block.domain.expression;
+        }
+
+        return new ObsimatEnvironment(
+            parsed_obsimat_block.symbols,
+            variables,
+            parsed_obsimat_block.units?.units,
+            parsed_obsimat_block.units?.['base-units'],
+            domain
+        );
+    }
+
     // construct an ObsimatEnvironment class from the given active document, and cursor position.
     // this environment is constructed based on the closest obsimat code block to the cursor (ignoring any blocks after the cursor).
     // variables are parsed from the text between the code block and the cursor.
-    public static getEnvironment(app: App, markdown_view: MarkdownView, position?: EditorPosition): ObsimatEnvironment {
+    public static fromMarkdownView(app: App, markdown_view: MarkdownView, position?: EditorPosition): ObsimatEnvironment {
         // start by finding all obsimat code block.
         position ??= markdown_view.editor.getCursor();
 
@@ -66,32 +92,10 @@ export class ObsimatEnvironment {
         // now generate obsimat environment based on section contents.
 
         const obsimat_block = editor.getRange(editor.offsetToPos(closest_section.position.start.offset), editor.offsetToPos(closest_section.position.end.offset));
-
         const obsimat_block_content = obsimat_block.match(this.OBSIMAT_BLOCK_REGEX)?.[1];
+        const obsimat_variables = this.parseVariables(editor.offsetToPos(closest_section.position.end.offset), position, editor);
 
-        if(!obsimat_block_content) {
-            return new ObsimatEnvironment(undefined, this.parseVariables(editor.offsetToPos(closest_section.position.end.offset), position, editor));
-        }
-
-        const parsed_obsimat_block = toml.parse(obsimat_block_content);
-
-        // prioritize domain name over domain expression.
-
-        let domain: string | undefined = undefined;
-
-        if(parsed_obsimat_block.domain?.name) {
-            domain = "S." + parsed_obsimat_block.domain.name.trim().charAt(0).toUpperCase() + parsed_obsimat_block.domain.name.trim().slice(1).toLowerCase();
-        } else if(parsed_obsimat_block.domain?.expression) {
-            domain = parsed_obsimat_block.domain.expression;
-        }
-
-        return new ObsimatEnvironment(
-            parsed_obsimat_block.symbols,
-            this.parseVariables(editor.offsetToPos(closest_section.position.end.offset), position, editor),
-            parsed_obsimat_block.units?.units,
-            parsed_obsimat_block.units?.['base-units'],
-            domain
-        );
+        return ObsimatEnvironment.fromCodeBlock(obsimat_block_content, obsimat_variables);
     }
 
     // regex for extracting the contents of an obsimat code block.

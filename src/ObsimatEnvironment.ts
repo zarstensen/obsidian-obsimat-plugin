@@ -100,7 +100,7 @@ export class ObsimatEnvironment {
     // regex for extracting the contents of an obsimat code block.
     private static readonly OBSIMAT_BLOCK_REGEX = /^```obsimat\s*(?:\r\n|\r|\n)([\s\S]*?)```$/;
     // regex for finding variable definitions in markdown code.
-    private static readonly OBSIMAT_VARIABLE_DEF_REGEX = /\$\s*(?:\\math\w*{(?<symbol>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*:=\s*(?<value>[^=$]*?)\s*\$/g;
+    private static readonly OBSIMAT_VARIABLE_DEF_REGEX = /\$\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*:=\s*(?<value>[^=$]*?)\s*\$/g;
 
     private constructor(symbols?: { [symbol: string]: string[] }, variables?: { [variable: string]: string }, units?: string[], base_units?: string[], domain?: string) {
         this.symbols = symbols ?? {};
@@ -119,11 +119,11 @@ export class ObsimatEnvironment {
         const variable_definitions = search_range.matchAll(this.OBSIMAT_VARIABLE_DEF_REGEX);
 
         for(const variable_definition of variable_definitions) {
-            if(!variable_definition.groups?.symbol || !variable_definition.groups?.value) {
+            if((!variable_definition.groups?.symbol && !variable_definition.groups?.symbol_math_encapsulated) || !variable_definition.groups?.value) {
                 continue;
             }
 
-            variables[variable_definition.groups.symbol] = variable_definition.groups.value;
+            variables[variable_definition.groups.symbol ?? variable_definition.groups.symbol_math_encapsulated ] = variable_definition.groups.value;
         }
 
         return variables;

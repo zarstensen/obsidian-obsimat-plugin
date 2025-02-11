@@ -8,8 +8,28 @@ env:
   PLUGIN_NAME: obsidian-obsimat-plugin
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest
+
   build:
     runs-on: ubuntu-latest
+    needs: test
     permissions:
       contents: write
     steps:
@@ -20,7 +40,7 @@ jobs:
         with:
           node-version: "18.x"
 
-      - name: Build plugin
+      - name: Build Plugin
         run: |
           npm install
           npm run build
@@ -29,7 +49,7 @@ jobs:
           mkdir -p ${{ env.PLUGIN_NAME }}/src/evaluator
           cp -r src/evaluator ${{ env.PLUGIN_NAME }}/src
           zip -r ${{ env.PLUGIN_NAME }} ${{ env.PLUGIN_NAME }}
-
+      
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1

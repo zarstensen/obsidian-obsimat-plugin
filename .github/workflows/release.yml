@@ -25,7 +25,7 @@ jobs:
           npm install
           npm run build
           mkdir ${{ env.PLUGIN_NAME }}
-          cp main.js manifest.json style.css ${{ env.PLUGIN_NAME }}
+          cp main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
           cp -r src/evaluator ${{ env.PLUGIN_NAME }}/src/evaluator
           zip -r ${{ env.PLUGIN_NAME }} ${{ env.PLUGIN_NAME }}
 

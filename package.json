@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-obsimat-plugin",
 	"version": "0.1.0",
 	"description": "Integrates the sympy python library into obsidian markdown files.",
 	"main": "main.js",
@@ -12,6 +12,7 @@
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
+		"@codemirror/language": "^6.10.8",
 		"@types/node": "^16.11.6",
 		"@types/ws": "^8.5.14",
 		"@typescript-eslint/eslint-plugin": "5.29.0",

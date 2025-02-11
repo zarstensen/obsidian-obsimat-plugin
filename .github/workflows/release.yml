@@ -1,4 +1,4 @@
-ame: Release Obsidian plugin
+name: Release Obsidian plugin
 
 on:
   push:

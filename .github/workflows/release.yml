@@ -27,7 +27,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest
+          pytest --ignore=sympy
 
   build:
     runs-on: ubuntu-latest

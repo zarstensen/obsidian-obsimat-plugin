@@ -39,4 +39,4 @@ async def evaluateMode(message: EvaluateModeMessage, obsimat: ClientBase):
     # to ensure consistency among package usage.
     result = re.sub(r"\\text\{(.*?)\}", r"\1", result)
 
-    await obsimat.sendResult({"result": result})
+    await obsimat.sendSympyResult(result)

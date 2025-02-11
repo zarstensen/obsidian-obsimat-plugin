@@ -17,6 +17,7 @@ class TestEvaluate:
         test_client = TestClient()
         asyncio.run(evaluateMode({"expression": "2 \\cdot \n\\begin{bmatrix} 1 \\\\\\ 1 \\end{bmatrix}", "environment": {}}, test_client))
         assert not test_client.isError()
+        assert test_client.hasSympyResponse()
         
         response = test_client.getResponse()
         

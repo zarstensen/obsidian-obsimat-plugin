@@ -5,6 +5,8 @@ import websockets
 import json
 import traceback
 
+from sympy import latex
+
 
 #
 # The ObsimatClient class manages a connection and message parsing + encoding between an active obsimat plugin.
@@ -28,6 +30,9 @@ class ObsimatClient(ClientBase):
     # Register a message mode handler.
     def register_mode(self, mode: str, handler: Callable[[Any, ClientBase], None]):
         self.modes[mode] = handler
+
+    async def sendSympyResult(self, sympy_result, metadata):
+        return self.sendResult({ "result": latex(sympy_result) } | metadata)
 
     # Send the given json dumpable object back to the plugin.
     async def sendResult(self, result: Any):

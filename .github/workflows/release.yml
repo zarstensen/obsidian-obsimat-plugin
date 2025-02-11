@@ -1,0 +1,53 @@
+name: Release Obsidian plugin
+
+on:
+  push:
+    tags:
+      - "*"
+env:
+  PLUGIN_NAME: obsidian-obsimat-plugin
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: Build plugin
+        run: |
+          npm install
+          npm run build
+          mkdir ${{ env.PLUGIN_NAME }}
+          cp main.js manifest.json style.css ${{ env.PLUGIN_NAME }}
+          cp -r src/evaluator ${{ env.PLUGIN_NAME }}/src/evaluator
+          zip -r ${{ env.PLUGIN_NAME }} ${{ env.PLUGIN_NAME }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.ref }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ env.PLUGIN_NAME }}.zip
+          asset_name: ${{ env.PLUGIN_NAME }}-${{ github.ref }}.zip
+          asset_content_type: application/zip

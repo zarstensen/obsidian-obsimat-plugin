@@ -3,7 +3,7 @@ from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 
 from ObsimatEnvironment import ObsimatEnvironment
 from sympy import *
-from typing import Any
+from typing import Any, TypedDict
 
 
 class SolveModeMessage(TypedDict):

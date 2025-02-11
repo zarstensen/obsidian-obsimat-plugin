@@ -18,7 +18,12 @@ export default class ObsiMatPlugin extends Plugin {
             new Notice("Error\n" + truncatedError);
         });
 
-        this.sympy_evaluator.initialize(this.app.vault.adapter.basePath);
+        if(!this.manifest.dir) {
+            new Notice("Obsimat could not determine its plugin directory, aborting load.");
+            return;
+        }
+
+        this.sympy_evaluator.initialize(this.app.vault, this.manifest.dir);
 
         this.registerMarkdownCodeBlockProcessor("obsimat", this.renderObsimatCodeBlock.bind(this));
 
@@ -113,7 +118,7 @@ export default class ObsiMatPlugin extends Plugin {
         // Add the standard code block background div,
         // to ensure a consistent look with other code blocks.
         const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg")
-        div.style = "overflow: auto;";
+        div.style.cssText = "overflow: auto;";
         // same goes with the code block flair
         const flair = div.createSpan("code-block-flair obsimat-block-flair");
         flair.innerText = "Obsimat";

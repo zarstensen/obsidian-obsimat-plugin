@@ -2,13 +2,14 @@ import { WebSocket, WebSocketServer } from 'ws';
 import getPort from 'get-port';
 import { join } from 'path';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { FileSystemAdapter, Vault } from 'obsidian';
 
 // The PythonEvalServer class manages a connection as well as message encoding and handling, with an SympyEvaluator script instance.
 // Also manages the python process itself.
 export class SympyEvaluator {
 
-    public initialize(vault_dir: string, python_exec = "python"): Promise<void> {
-        this.initialized_promise = this.initializeAsync(vault_dir, python_exec);
+    public initialize(vault: Vault, plugin_dir: string, python_exec = "python"): Promise<void> {
+        this.initialized_promise = this.initializeAsync(vault, plugin_dir, python_exec);
         return this.initialized_promise
     }
 
@@ -64,7 +65,7 @@ export class SympyEvaluator {
     // Start the SympyEvaluator python process, and establish an connection to it.
     // vault_dir: the directory of the vault, which thsi plugin is installed in.
     // python_exec: the python executable to use to start the SympyEvaluator process.
-    private async initializeAsync(vault_dir: string, python_exec = "python"): Promise<void> {
+    private async initializeAsync(vault: Vault, plugin_dir: string, python_exec = "python"): Promise<void> {
         // Start by setting up the web socket server, so we can get a port to give to the python program.
         const server_port = await getPort();
 
@@ -72,8 +73,10 @@ export class SympyEvaluator {
             port: server_port
         });
 
+        const adapter = vault.adapter as FileSystemAdapter;
+
         // now start the python process
-        this.python_process = spawn(python_exec, [join(vault_dir, '.obsidian/plugins/obsidian-obsimat-plugin/src/evaluator/SympyEvaluator.py'), server_port.toString()]);
+        this.python_process = spawn(python_exec, [join(adapter.getBasePath(), plugin_dir, "src/evaluator/SympyEvaluator.py"), server_port.toString()]);
 
         // setup output to be logged in the developer console
         this.python_process.stdout.on('data', (data) => {

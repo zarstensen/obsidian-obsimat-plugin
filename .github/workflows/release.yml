@@ -27,7 +27,7 @@ jobs:
           mkdir ${{ env.PLUGIN_NAME }}
           cp main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
           mkdir -p ${{ env.PLUGIN_NAME }}/src/evaluator
-          cp -r src/evaluator ${{ env.PLUGIN_NAME }}/src/evaluator
+          cp -r src/evaluator ${{ env.PLUGIN_NAME }}/src
           zip -r ${{ env.PLUGIN_NAME }} ${{ env.PLUGIN_NAME }}
 
       - name: Create Release

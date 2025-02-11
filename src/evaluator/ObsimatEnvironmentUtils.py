@@ -81,6 +81,9 @@ class ObsimatEnvironmentUtils:
     
     @staticmethod
     def __substitute_variables(latex_str: str, environment: ObsimatEnvironment):
+        if 'variables' not in environment:
+            return latex_str
+        
         # Substitute variables with regex here, instead of using sympys builtin substitution,
         # As sympy sometimes make some "incorrect" assumptions about variables,
         # which leads to substitution failure.
@@ -103,6 +106,9 @@ class ObsimatEnvironmentUtils:
     
     @staticmethod
     def __substitute_symbols(sympy_expr: Any, environment: ObsimatEnvironment):
+        if 'symbols' not in environment:
+            return sympy_expr
+        
         with evaluate(False):
             
             # now, replace all the symbols with the ones defined in the passed environment.

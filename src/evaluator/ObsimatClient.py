@@ -1,3 +1,5 @@
+from ClientBase import ClientBase
+
 from typing import *
 import websockets
 import json
@@ -14,7 +16,7 @@ import traceback
 # The handler also gets a reference of the current ObsimatClient, so it can use the sendResult and sendError messages,
 # to communicate back to the obsimat plugin.
 #
-class ObsimatClient:
+class ObsimatClient(ClientBase):
     def __init__(self):
         self.modes = {}
         self.connection = None
@@ -24,7 +26,7 @@ class ObsimatClient:
         self.connection = await websockets.connect(f"ws://localhost:{port}")
 
     # Register a message mode handler.
-    def register_mode(self, mode: str, handler: Callable[[Any, Self], None]):
+    def register_mode(self, mode: str, handler: Callable[[Any, ClientBase], None]):
         self.modes[mode] = handler
 
     # Send the given json dumpable object back to the plugin.

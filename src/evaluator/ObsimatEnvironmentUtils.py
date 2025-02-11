@@ -62,19 +62,20 @@ class ObsimatEnvironmentUtils:
             except AttributeError:
                 continue
             
-        # finally do unit conversion if needed.
-        convert_units = environment['base_units']
+        if 'base_units' in environment:
+            # finally do unit conversion if needed.
+            convert_units = environment['base_units']
 
-        if len(convert_units) > 0:
-            sympy_units = []
-            for unit_symbol in convert_units:
-                try:
-                    units = u.find_unit(str(unit_symbol))
-                    sympy_units.append(getattr(u, units[0]))
-                except AttributeError:
-                    continue
-                
-            sympy_expr = u.convert_to(sympy_expr, sympy_units)
+            if len(convert_units) > 0:
+                sympy_units = []
+                for unit_symbol in convert_units:
+                    try:
+                        units = u.find_unit(str(unit_symbol))
+                        sympy_units.append(getattr(u, units[0]))
+                    except AttributeError:
+                        continue
+                    
+                sympy_expr = u.convert_to(sympy_expr, sympy_units)
 
         return sympy_expr
     

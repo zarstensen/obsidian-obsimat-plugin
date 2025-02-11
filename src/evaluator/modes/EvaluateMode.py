@@ -1,5 +1,5 @@
 from ObsimatEnvironment import ObsimatEnvironment
-from ObsimatClient import ObsimatClient
+from ClientBase import ClientBase
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from copy import deepcopy
 
@@ -18,7 +18,7 @@ class EvaluateModeMessage(TypedDict):
     environment: ObsimatEnvironment
 
 ## Tries to evaluate the last equality of an latex equation.
-async def evaluateMode(message: EvaluateModeMessage, obsimat: ObsimatClient):
+async def evaluateMode(message: EvaluateModeMessage, obsimat: ClientBase):
     expression = message['expression'].split("=")[-1]
 
     sympy_expr = ObsimatEnvironmentUtils.parse_latex(expression, message['environment'])

@@ -2,3 +2,5 @@ lark
 websockets
 sympy
 regex
+pytest
+pytest-asyncio

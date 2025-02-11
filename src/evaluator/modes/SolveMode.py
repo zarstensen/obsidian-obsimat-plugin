@@ -2,6 +2,7 @@ from ObsimatClient import ObsimatClient
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 
 from ObsimatEnvironment import ObsimatEnvironment
+from evaluator import ClientBase
 from sympy import *
 from typing import Any, TypedDict
 
@@ -15,7 +16,7 @@ class SolveModeMessage(TypedDict):
 # if a symbol is not given, and the expression is multivariate, this mode sends a response with status multivariate_equation,
 # along with a list of possible symbols to solve for in its symbols key.
 # if successfull its sends a message with status solved, and the result in the result key.
-async def solveMode(message: SolveModeMessage, obsimat: ObsimatClient):
+async def solveMode(message: SolveModeMessage, obsimat: ClientBase):
     expression = ObsimatEnvironmentUtils.parse_latex(message['expression'], message['environment'])
     expression = ObsimatEnvironmentUtils.substitute_units(expression, message['environment'])
 

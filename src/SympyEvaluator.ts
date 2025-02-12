@@ -62,6 +62,8 @@ export class SympyEvaluator {
         });
     }
 
+// TODO: remove this
+
     // Start the SympyEvaluator python process, and establish an connection to it.
     // vault_dir: the directory of the vault, which thsi plugin is installed in.
     // python_exec: the python executable to use to start the SympyEvaluator process.

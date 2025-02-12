@@ -19,8 +19,9 @@ class ObsimatEnvironmentUtils:
         latex_str = ObsimatEnvironmentUtils.__MULTI_LETTER_VARIABLE_REGEX.sub(ObsimatEnvironmentUtils.__multi_letter_variable_substituter, latex_str)
 
         # Finally, remove any escaped spaces as sympy cannot figure out how to parse this
-        latex_str = latex_str.replace(r"\ ", " ")
-        
+        # TODO: this should happen in the extended lark code when this is added.
+        latex_str = ObsimatEnvironmentUtils.__ESCAPED_SPACE_REGEX.sub("", latex_str)
+
         sympy_expr = parse_latex_lark(latex_str)
 
         if type(sympy_expr) is Tree:
@@ -62,24 +63,28 @@ class ObsimatEnvironmentUtils:
             except AttributeError:
                 continue
             
-        # finally do unit conversion if needed.
-        convert_units = environment['base_units']
+        if 'base_units' in environment:
+            # finally do unit conversion if needed.
+            convert_units = environment['base_units']
 
-        if len(convert_units) > 0:
-            sympy_units = []
-            for unit_symbol in convert_units:
-                try:
-                    units = u.find_unit(str(unit_symbol))
-                    sympy_units.append(getattr(u, units[0]))
-                except AttributeError:
-                    continue
-                
-            sympy_expr = u.convert_to(sympy_expr, sympy_units)
+            if len(convert_units) > 0:
+                sympy_units = []
+                for unit_symbol in convert_units:
+                    try:
+                        units = u.find_unit(str(unit_symbol))
+                        sympy_units.append(getattr(u, units[0]))
+                    except AttributeError:
+                        continue
+                    
+                sympy_expr = u.convert_to(sympy_expr, sympy_units)
 
         return sympy_expr
     
     @staticmethod
     def __substitute_variables(latex_str: str, environment: ObsimatEnvironment):
+        if 'variables' not in environment:
+            return latex_str
+        
         # Substitute variables with regex here, instead of using sympys builtin substitution,
         # As sympy sometimes make some "incorrect" assumptions about variables,
         # which leads to substitution failure.
@@ -102,6 +107,9 @@ class ObsimatEnvironmentUtils:
     
     @staticmethod
     def __substitute_symbols(sympy_expr: Any, environment: ObsimatEnvironment):
+        if 'symbols' not in environment:
+            return sympy_expr
+        
         with evaluate(False):
             
             # now, replace all the symbols with the ones defined in the passed environment.
@@ -116,6 +124,7 @@ class ObsimatEnvironmentUtils:
     
     __VARIABLE_REGEX = regex.compile(r'(?P<original>(?:\\math[a-zA-Z]*{)(?P<variable_name>(?R)*)}|(?P<variable_name>\\?[a-zA-Z][a-zA-Z0-9]*(?:_{(?>.|(?R))*?}|_.)?))')
     __MULTI_LETTER_VARIABLE_REGEX = regex.compile(r'(?<!\\end)(?<!\\begin)(?:[^\w\\]|^){1,}?(?P<multiletter_variable>[a-zA-Z]{2,})(?=[^\w]|$)')
+    __ESCAPED_SPACE_REGEX = regex.compile(r"(?<!\\)\\ ")
     
         
     # TODO: comments here

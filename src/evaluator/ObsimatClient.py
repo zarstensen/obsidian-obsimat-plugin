@@ -1,7 +1,12 @@
+from ModeResponse import ModeResponse
+
 from typing import *
 import websockets
 import json
 import traceback
+import re
+
+from sympy import latex
 
 
 #
@@ -24,18 +29,17 @@ class ObsimatClient:
         self.connection = await websockets.connect(f"ws://localhost:{port}")
 
     # Register a message mode handler.
-    def register_mode(self, mode: str, handler: Callable[[Any, Self], None]):
-        self.modes[mode] = handler
-
+    def register_mode(self, mode: str, handler: Callable[[Any, ModeResponse], None], formatter: Callable[[Any, str, dict], str] = None):
+        self.modes[mode] = {
+            'handler': handler,
+            'formatter': formatter or ObsimatClient.__default_sympy_formatter
+        }
+    
     # Send the given json dumpable object back to the plugin.
-    async def sendResult(self, result: Any):
-        await self.connection.send("result|" + json.dumps(result))
+    async def send(self, mode: str, message: dict):
+        await self.connection.send(f"{mode}|{json.dumps(message)}")
 
     # Signal to the plugin an error has occured, and give the following error message to it.
-    async def sendError(self, error: str):
-        await self.connection.send("error|" + json.dumps({
-            'message': error
-        }))
 
     # Start the message loop, this is required to run, before any handlers will be called.
     async def run_message_loop(self):
@@ -43,12 +47,37 @@ class ObsimatClient:
             message = await self.connection.recv()
             mode, payload = message.split("|", 1)
 
+            
             if mode in self.modes:
+                response = ObsimatClient.ObsimatClientResponse(self, self.modes[mode]['formatter'])
                 try:
-                    await self.modes[mode](json.loads(payload), self)
+                    await self.modes[mode]['handler'](json.loads(payload), response)
                 except Exception as e:
-                    await self.sendError(str(e) + "\n" + traceback.format_exc())
+                    await response.error(str(e) + "\n" + traceback.format_exc())
             else:
-                await self.sendError("Unknown mode: " + mode)
+                await self.send("error", { 'message':  mode })
+    
+    # The default formatter used to conver the results of a mode handler,
+    # into a displayable string.
+    # simply converts the given expression to latex, and remove any text formatting.
+    @staticmethod
+    def __default_sympy_formatter(sympy_expr: Any, _status: str, _metadata: dict) -> str:
+        return re.sub(r"\\text\{(.*?)\}", r"\1", latex(sympy_expr))
+    
+    # The ObsimatClientResponse class is a helper class for the ObsimatClient,
+    # which implements the ModeResponse interface and sends the responses to the obsimat plugin via. the ObsimatClient.
+    class ObsimatClientResponse(ModeResponse):
+        def __init__(self, client: Self, formatter: Callable[[Any, str, dict], str]):
+            self.client = client
+            self.formatter = formatter
+
+        async def error(self, message):
+            await self.client.send('error', { 'message': message })
+
+        async def warn(self, message):
+            await self.client.send('warn', { 'message': message })
+
+        async def result(self, result: Any, status: str = 'success', metadata: dict[str, str] = {}):
+            await self.client.send('result', { 'result': self.formatter(result, status, metadata), 'status': status, 'metadata': metadata })
 
         

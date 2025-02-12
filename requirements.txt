@@ -2,3 +2,4 @@ lark
 websockets
 sympy
 regex
+pytest

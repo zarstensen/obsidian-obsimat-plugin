@@ -1,5 +1,5 @@
 from ObsimatEnvironment import ObsimatEnvironment
-from ClientBase import ClientBase
+from ModeResponse import ModeResponse
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from copy import deepcopy
 
@@ -18,7 +18,7 @@ class EvaluateModeMessage(TypedDict):
     environment: ObsimatEnvironment
 
 ## Tries to evaluate the last equality of an latex equation.
-async def evaluateMode(message: EvaluateModeMessage, obsimat: ClientBase):
+async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse):
     expression = message['expression'].split("=")[-1]
 
     sympy_expr = ObsimatEnvironmentUtils.parse_latex(expression, message['environment'])
@@ -33,10 +33,4 @@ async def evaluateMode(message: EvaluateModeMessage, obsimat: ClientBase):
     sympy_expr = __try_assign(sympy_expr.simplify(), sympy_expr)
     
     with evaluate(False):
-        result = latex(Eq(before_units, sympy_expr), mat_symbol_style="bold")
-    
-    # TODO: this should be done with the regex package instead,
-    # to ensure consistency among package usage.
-    result = re.sub(r"\\text\{(.*?)\}", r"\1", result)
-
-    await obsimat.sendSympyResult(result)
+        await response.result(Eq(before_units, sympy_expr))

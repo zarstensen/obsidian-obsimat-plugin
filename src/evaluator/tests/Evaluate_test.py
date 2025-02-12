@@ -1,25 +1,56 @@
-from tests.TestClient import TestClient
+from tests.TestResponse import TestResponse
 from modes.EvaluateMode import evaluateMode
 import asyncio
 
+from sympy import *
+
+
+## Tests the evaluate mode.
 class TestEvaluate:
     
     def test_simple_evaluate(self):
-        test_client = TestClient()
-        asyncio.run(evaluateMode({"expression": "1+1", "environment": {}}, test_client))
-        assert not test_client.isError()
+        response = TestResponse()
+        asyncio.run(evaluateMode({"expression": "1+1", "environment": {}}, response))
+        assert response.hasResult()
         
-        response = test_client.getResponse()
+        result = response.getResult()
+            
+        with evaluate(False):
+            assert result['result'] == Eq(2, 2)
+            
+    def test_escaped_spaces(self):
+        response = TestResponse()
+        asyncio.run(evaluateMode({"expression": r"1\ + \ 1", "environment": {}}, response))
+        assert response.hasResult()
         
-        assert response['result'] == '2 = 2'
+        result = response.getResult()
+            
+        with evaluate(False):
+            assert result['result'] == Eq(2, 2)
         
-    def test_matrix_evaluate(self):
-        test_client = TestClient()
-        asyncio.run(evaluateMode({"expression": "2 \\cdot \n\\begin{bmatrix} 1 \\\\\\ 1 \\end{bmatrix}", "environment": {}}, test_client))
-        assert not test_client.isError()
-        assert test_client.hasSympyResponse()
         
-        response = test_client.getResponse()
+    def test_matrix_single_line(self):
+        response = TestResponse()
+        asyncio.run(evaluateMode({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}}, response))
+        assert response.hasResult()
         
-        assert response['result'] == r'2 \left[\begin{matrix}1\\1\end{matrix}\right] = \left[\begin{matrix}2\\2\end{matrix}\right]'
+        result = response.getResult()
+
+        assert result['result'].rhs == 2 * Matrix([[1], [1]])
         
+                
+    def test_matrix_multi_line(self):
+        response = TestResponse()
+        asyncio.run(evaluateMode({"expression": r"""
+        2
+        \cdot 
+        \begin{bmatrix} 
+        1 \\ 1
+        \end{bmatrix}
+        """, "environment": {}}, response))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+
+        assert result['result'].rhs == 2 * Matrix([[1], [1]])

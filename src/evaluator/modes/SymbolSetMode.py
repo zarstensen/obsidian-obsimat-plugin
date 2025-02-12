@@ -2,7 +2,7 @@ from ObsimatClient import ObsimatClient
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from ObsimatEnvironment import ObsimatEnvironment
 
-from evaluator import ClientBase
+from ModeResponse import ModeResponse
 from sympy import *
 from typing import Any, TypedDict
 
@@ -41,11 +41,10 @@ class SymbolSetModeMessage(TypedDict):
     environment: ObsimatEnvironment
 
 # generates an latex array of symbols and their belonging sets, based on the given environment.
-async def symbolSetMode(message: SymbolSetModeMessage, obsimat: ClientBase):
+async def symbolSetMode(message: SymbolSetModeMessage, response: ModeResponse):
     environment: ObsimatEnvironment = message['environment']
     
     set_symbols = {set: [] for set in SETS}
-
 
     # loop over sets and figure out which symbol belongs to which sets.
     
@@ -64,10 +63,14 @@ async def symbolSetMode(message: SymbolSetModeMessage, obsimat: ClientBase):
         if smallest_containing_set is not None:
             set_symbols[smallest_containing_set].append(symbol)
     
+    await response.result(set_symbols)
+
+# Convert a set_symbols object returned rom symbolSetMode, into a latex formatted list of symbols and their belonging sets.
+def symbolSetModeFormatter(set_symbols: Any, status: str, metadata: dict) -> str:
     latex_sets = []
     
     for set, symbols in set_symbols.items():
         if len(symbols) > 0:
             latex_sets.append(f"{', '.join(symbols)} & \\in & {SET_TO_LATEX[set]}")
     
-    await obsimat.sendResult({"result": f"\\begin{{array}}{{rcl}}\n{" \\\\\n".join(latex_sets)}\n\\end{{array}}" })
+    return f"\\begin{{array}}{{rcl}}\n{" \\\\\n".join(latex_sets)}\n\\end{{array}}"

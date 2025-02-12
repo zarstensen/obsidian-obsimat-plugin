@@ -93,7 +93,7 @@ export default class ObsiMatPlugin extends Plugin {
         // if the equation is multivariate, then we need to prompt the user for which symbols should be solved for.
 
         if (response.status === "multivariate_equation") {
-            const symbol_selector = new SymbolSelectorModal(response.symbols, this.app);
+            const symbol_selector = new SymbolSelectorModal(response.result, this.app);
             symbol_selector.open();
             const symbol = await symbol_selector.getSelectedSymbolAsync();
 
@@ -104,7 +104,7 @@ export default class ObsiMatPlugin extends Plugin {
 
         // at this point we should have a response that is solved.
         // if not, something has gone wrong somewhere.
-        if (response.status === "solved") {
+        if (response.status === "success") {
             // Insert solution as a new math block, right after the current one.
             editor.replaceRange("\n$$" + response.result + "$$", editor.offsetToPos(equation.block_to));
             editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));

@@ -1,8 +1,8 @@
 from ObsimatClient import ObsimatClient
 
 from modes.EvaluateMode import evaluateMode
-from modes.SolveMode import solveMode
-from modes.SymbolSetMode import symbolSetMode
+from modes.SolveMode import solveMode, solveModeFormatter
+from modes.SymbolSetMode import symbolSetMode, symbolSetModeFormatter
 
 from sympy.parsing.latex import parse_latex_lark
 import asyncio
@@ -17,14 +17,13 @@ port = int(sys.argv[1])
 
 client = ObsimatClient()
 client.register_mode("evaluate", evaluateMode)
-client.register_mode("solve", solveMode)
-client.register_mode("symbolsets", symbolSetMode)
+client.register_mode("solve", solveMode, solveModeFormatter)
+client.register_mode("symbolsets", symbolSetMode, symbolSetModeFormatter)
 
 
 async def main():
     await client.connect(port)
     await client.run_message_loop()
-
 
 # initialize parser now, so there is no delay the first time an expression is parsed for the first time.
 parse_latex_lark("1")

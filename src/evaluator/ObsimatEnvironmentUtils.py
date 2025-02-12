@@ -19,8 +19,9 @@ class ObsimatEnvironmentUtils:
         latex_str = ObsimatEnvironmentUtils.__MULTI_LETTER_VARIABLE_REGEX.sub(ObsimatEnvironmentUtils.__multi_letter_variable_substituter, latex_str)
 
         # Finally, remove any escaped spaces as sympy cannot figure out how to parse this
-        latex_str = latex_str.replace(r"\ ", " ")
-        
+        # TODO: this should happen in the extended lark code when this is added.
+        latex_str = ObsimatEnvironmentUtils.__ESCAPED_SPACE_REGEX.sub("", latex_str)
+
         sympy_expr = parse_latex_lark(latex_str)
 
         if type(sympy_expr) is Tree:
@@ -123,6 +124,7 @@ class ObsimatEnvironmentUtils:
     
     __VARIABLE_REGEX = regex.compile(r'(?P<original>(?:\\math[a-zA-Z]*{)(?P<variable_name>(?R)*)}|(?P<variable_name>\\?[a-zA-Z][a-zA-Z0-9]*(?:_{(?>.|(?R))*?}|_.)?))')
     __MULTI_LETTER_VARIABLE_REGEX = regex.compile(r'(?<!\\end)(?<!\\begin)(?:[^\w\\]|^){1,}?(?P<multiletter_variable>[a-zA-Z]{2,})(?=[^\w]|$)')
+    __ESCAPED_SPACE_REGEX = regex.compile(r"(?<!\\)\\ ")
     
         
     # TODO: comments here

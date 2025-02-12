@@ -6,6 +6,10 @@ on:
       - "*"
     branches:
       - "*"
+
+  pull_request:
+    branches:
+      - main
 env:
   PLUGIN_NAME: obsidian-obsimat-plugin
 

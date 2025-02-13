@@ -4,6 +4,7 @@ import sympy.physics.units as u
 from sympy import *
 from sympy.parsing.latex.lark import LarkLaTeXParser
 import sympy.parsing.latex.lark as sympy_lark
+from sympy.core import Expr
 from typing import Any, Callable
 from lark import Tree
 from ObsimatEnvironment import ObsimatEnvironment
@@ -45,7 +46,7 @@ class ObsimatEnvironmentUtils:
         sympy_expr = ObsimatEnvironmentUtils.__parser.doparse(latex_str)
 
         if type(sympy_expr) is Tree:
-            sympy_expr = sympy_expr.children[-1]
+            sympy_expr = sympy_expr.children[0]        
         
         sympy_expr = ObsimatEnvironmentUtils.__substitute_symbols(sympy_expr, environment)
 
@@ -167,3 +168,10 @@ class ObsimatEnvironmentUtils:
         match_span = spans[0]
         variable_span = spans[ObsimatEnvironmentUtils.__MULTI_LETTER_VARIABLE_REGEX.groupindex['multiletter_variable']]
         return f"\\mathit{{{match.groupdict()['multiletter_variable']}}}".join((match.string[match_span[0]:variable_span[0]], match.string[variable_span[1]:match_span[1]]))
+
+    @staticmethod
+    def __nested_len(l):
+        if isinstance(l, list) or isinstance(l, tuple):
+            return sum(ObsimatEnvironmentUtils.__nested_len(i) for i in l)
+        else:
+            return 1

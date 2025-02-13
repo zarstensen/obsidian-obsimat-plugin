@@ -1,31 +1,51 @@
-from typing import Any, Callable
-from sympy import *
+from grammar.ObsimatLarkTransformer import ObsimatLarkTransformer
+
 import sympy.physics.units as u
-from sympy.parsing.latex import parse_latex_lark
+from sympy import *
+from sympy.parsing.latex.lark import LarkLaTeXParser
+import sympy.parsing.latex.lark as sympy_lark
+from typing import Any, Callable
 from lark import Tree
 from ObsimatEnvironment import ObsimatEnvironment
 import regex
+import os
+from tempfile import TemporaryDirectory
+import shutil
 
 ## The ObsimatEnvironmentUtils provide various utility functions for a math expression present in an ObsimatEnvironment.
 class ObsimatEnvironmentUtils:
     
+    # Initialize the lark parser, this will block for a little while,
+    # so only call in a non ui thread.
+    @staticmethod
+    def initialize_parser():
+        with TemporaryDirectory() as temp_dir:
+            for file in os.listdir(os.path.join(os.path.dirname(sympy_lark.__file__), "grammar")):
+                if file.endswith(".lark"):
+                    shutil.copy(os.path.join(os.path.dirname(sympy_lark.__file__), "grammar", file), temp_dir)
+            
+            with open(os.path.join(temp_dir, "latex.lark"), "a") as f:
+                with open(os.path.join(os.path.dirname(__file__), "grammar/obsimat_grammar.lark"), "r") as custom_grammar:
+                    f.write("\n" + custom_grammar.read())
+            
+            ObsimatEnvironmentUtils.__parser = LarkLaTeXParser(print_debug_output=True, transform=True, transformer=ObsimatLarkTransformer, grammar_file=os.path.join(temp_dir, "latex.lark"))
+    
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the given environment.
     @staticmethod
     def parse_latex(latex_str: str, environment: ObsimatEnvironment):
+        
+        if not ObsimatEnvironmentUtils.__parser:
+            ObsimatEnvironmentUtils.initialize_parser()
         
         latex_str = ObsimatEnvironmentUtils.__substitute_variables(latex_str, environment)
 
         # Surround all detected multi-letter variables with \mathit{} so sympy knows to treat them as single variables.
         latex_str = ObsimatEnvironmentUtils.__MULTI_LETTER_VARIABLE_REGEX.sub(ObsimatEnvironmentUtils.__multi_letter_variable_substituter, latex_str)
 
-        # Finally, remove any escaped spaces as sympy cannot figure out how to parse this
-        # TODO: this should happen in the extended lark code when this is added.
-        latex_str = ObsimatEnvironmentUtils.__ESCAPED_SPACE_REGEX.sub("", latex_str)
-
-        sympy_expr = parse_latex_lark(latex_str)
+        sympy_expr = ObsimatEnvironmentUtils.__parser.doparse(latex_str)
 
         if type(sympy_expr) is Tree:
-            sympy_expr = sympy_expr.children[0]
+            sympy_expr = sympy_expr.children[-1]
         
         sympy_expr = ObsimatEnvironmentUtils.__substitute_symbols(sympy_expr, environment)
 
@@ -50,6 +70,9 @@ class ObsimatEnvironmentUtils:
     # Also convert all non base units to base units where possible.
     @staticmethod
     def substitute_units(sympy_expr, environment: ObsimatEnvironment):
+        if 'units' not in environment:
+            return sympy_expr
+        
         # check if any symbol matches a unit string
         for symbol in sympy_expr.free_symbols:
             if str(symbol) not in environment['units'] and  str(symbol) not in environment['base_units']:
@@ -124,7 +147,8 @@ class ObsimatEnvironmentUtils:
     
     __VARIABLE_REGEX = regex.compile(r'(?P<original>(?:\\math[a-zA-Z]*{)(?P<variable_name>(?R)*)}|(?P<variable_name>\\?[a-zA-Z][a-zA-Z0-9]*(?:_{(?>.|(?R))*?}|_.)?))')
     __MULTI_LETTER_VARIABLE_REGEX = regex.compile(r'(?<!\\end)(?<!\\begin)(?:[^\w\\]|^){1,}?(?P<multiletter_variable>[a-zA-Z]{2,})(?=[^\w]|$)')
-    __ESCAPED_SPACE_REGEX = regex.compile(r"(?<!\\)\\ ")
+  
+    __parser = None
     
         
     # TODO: comments here

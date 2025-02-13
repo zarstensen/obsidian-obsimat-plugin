@@ -1,17 +1,65 @@
+%ignore "\\middle"
+
 // ignore escaped whitespace in latex code
 %ignore /(?<!\\)\\ /
 
-// add i as an imaginary unit, instead of just \\imaginaryunit
-%extend CMD_IMAGINARY_UNIT: "i"
+// fix function calls
+%override exponential: FUNC_EXP _expression_func
+
+%override log: FUNC_LOG _expression_func
+    | FUNC_LN _expression_func
+    | FUNC_LG _expression_func
+    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression_func
+    | FUNC_LOG UNDERSCORE group_curly_parentheses _expression_func
+
+
+// Fix all these functions being WAY too greedy with what they considered arguments.
+// before the latex string \\sin(a) - b could be parsed to sin(a-b), this prevents that. 
+%override sin: FUNC_SIN _expression_func
+%override cos: FUNC_COS _expression_func
+%override tan: FUNC_TAN _expression_func
+%override csc: FUNC_CSC _expression_func
+%override sec: FUNC_SEC _expression_func
+%override cot: FUNC_COT _expression_func
+
+%override sin_power: FUNC_SIN CARET _expression_func _expression_func
+%override cos_power: FUNC_COS CARET _expression_func _expression_func
+%override tan_power: FUNC_TAN CARET _expression_func _expression_func
+%override csc_power: FUNC_CSC CARET _expression_func _expression_func
+%override sec_power: FUNC_SEC CARET _expression_func _expression_func
+%override cot_power: FUNC_COT CARET _expression_func _expression_func
+
+%override sinh: FUNC_SINH _expression_func
+%override cosh: FUNC_COSH _expression_func
+%override tanh: FUNC_TANH _expression_func
+
+%override arcsin: FUNC_ARCSIN _expression_func
+%override arccos: FUNC_ARCCOS _expression_func
+%override arctan: FUNC_ARCTAN _expression_func
+%override arccsc: FUNC_ARCCSC _expression_func
+%override arcsec: FUNC_ARCSEC _expression_func
+%override arccot: FUNC_ARCCOT _expression_func
+
+%override asinh: FUNC_ARSINH _expression_func
+%override acosh: FUNC_ARCOSH _expression_func
+%override atanh: FUNC_ARTANH _expression_func
+
+// fix implicit multiplication not working in cases after explicit multiplication,
+// functions, or matricies.
+%extend adjacent_expressions: _function _expression_mul
+    | matrix _expression_mul
+%extend mul: _expression_mul MUL_SYMBOL adjacent_expressions
+// %extend div: _expression_mul MUL_SYMBOL adjacent_expressions
 
 // add mathematical constants
 PI: "\\pi"
 EULER: "e"
 TAU: "\\tau"
+IMAGINARY_CONSTANT: "i" // note: this is already present as CMD_IMAGINARY_UNIT, but it is prioritized way too low, so it is also added as a constant.
 
-MATH_CONSTANTS: PI | EULER | TAU
+MATH_CONSTANTS: PI | EULER | TAU | IMAGINARY_CONSTANT
 
-math_constant: MATH_CONSTANTS
+math_constant.1: MATH_CONSTANTS
 %extend _atomic_expr: math_constant 
 
 // add the standard matrix norm function

@@ -13,7 +13,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
 
     def quick_derivative(self, tokens):
         if len(tokens[0].free_symbols) == 0:
-            return 0
+            return S(0)
         else:
             return diff(tokens[0], list(tokens[0].free_symbols)[0], len(tokens[1]))
         
@@ -25,5 +25,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
                 return 2 * S.Pi
             case "e":
                 return S.Exp1
+            case "i":
+                return I
             case _:
                 raise ValueError("Unknown mathematical constant")

@@ -61,3 +61,12 @@ class TestParse:
             \end{bmatrix}
             a
             """, {}) == a * Matrix([[30, 40]])
+        
+        # powers
+        assert ObsimatEnvironmentUtils.parse_latex(r"b a^2", {}) == a**2 * b
+        assert ObsimatEnvironmentUtils.parse_latex(r"a^2 b", {}) == a**2 * b
+        
+        #scripts
+        x1 = symbols("x_{1}")
+        assert ObsimatEnvironmentUtils.parse_latex(r"b x_1", {}) == x1 * b
+        assert ObsimatEnvironmentUtils.parse_latex(r"x_1 b", {}) == x1 * b

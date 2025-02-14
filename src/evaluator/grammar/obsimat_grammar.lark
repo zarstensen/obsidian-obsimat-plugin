@@ -46,8 +46,7 @@
 
 // fix implicit multiplication not working in cases after explicit multiplication,
 // functions, or matricies.
-%extend adjacent_expressions: _function _expression_mul
-    | matrix _expression_mul
+%extend adjacent_expressions: _expression_power _expression_mul
 %extend mul: _expression_mul MUL_SYMBOL adjacent_expressions
 // %extend div: _expression_mul MUL_SYMBOL adjacent_expressions
 

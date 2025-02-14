@@ -19,6 +19,11 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse):
     expression = ObsimatEnvironmentUtils.parse_latex(message['expression'], message['environment'])
     expression = ObsimatEnvironmentUtils.substitute_units(expression, message['environment'])
 
+    domain = S.Complexes
+    
+    if 'domain' in message['environment']:
+        domain = sympify(message['environment']['domain'])
+
     if 'symbol' not in message and len(expression.free_symbols) > 1:
         await response.result(expression.free_symbols, status="multivariate_equation")
         return
@@ -35,7 +40,7 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse):
     else:
         symbol = list(expression.free_symbols)[0]
 
-    solution_set = solveset(expression, symbol)
+    solution_set = solveset(expression, symbol, domain=domain)
     
     await response.result({ 'solution': solution_set, 'symbol': symbol })
 

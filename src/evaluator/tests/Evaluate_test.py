@@ -97,3 +97,30 @@ class TestEvaluate:
         result = response.getResult()
 
         assert result['result'].rhs == 1 * 2 + 2 * 4
+        
+        
+    def test_relational_evaluation(self):
+        response = TestResponse()
+        asyncio.run(evaluateMode({"expression": r"""
+        5 + 5 + 5 + 5 = 10 + 10
+        """, "environment": {}}, response, self.parser))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+
+        assert result['result'].rhs == 20
+        
+        response.reset()
+        asyncio.run(evaluateMode({"expression": r"""
+            \begin{cases}
+            2 + 2 + 2 + 2 &= 4 + 2 + 2 \\
+                          &= 4 + 4
+            \end{cases}
+            """, "environment": {}}, response, self.parser))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+        
+        assert result['result'].rhs == 8

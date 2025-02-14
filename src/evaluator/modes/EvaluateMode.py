@@ -5,6 +5,7 @@ from grammar import ObsimatLatexParser
 from copy import deepcopy
 
 from sympy import *
+from sympy.core.relational import Relational
 from typing import Any, TypedDict
 import re
 
@@ -22,10 +23,20 @@ class EvaluateModeMessage(TypedDict):
 async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, parser: ObsimatLatexParser):
     # TODO: replace this with retreiving the right most side of any sympy equality returned from the parser.
     # if a system of expressions, use the bottom one.
-    expression = message['expression'].split("=")[-1]
+    # expression = message['expression'].split("=")[-1]
 
     parser.set_environment(message['environment'])
-    sympy_expr = parser.doparse(expression)
+    
+    with evaluate(False):
+        sympy_expr = parser.doparse(message['expression'])
+
+    # choose last expression in system of equations.
+    if isinstance(sympy_expr, list):
+        sympy_expr = sympy_expr[-1]
+    
+    # choose right hand most evaluatable expression.
+    while isinstance(sympy_expr, Relational):
+        sympy_expr = sympy_expr.rhs
 
     # store expression before units are converted and it is evaluated,
     # so we can display this intermediate step in the result.

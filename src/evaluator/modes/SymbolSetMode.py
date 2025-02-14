@@ -46,6 +46,10 @@ async def symbolSetMode(message: SymbolSetModeMessage, response: ModeResponse):
     
     set_symbols = {set: [] for set in SETS}
 
+    if 'symbols' not in environment:
+        await response.result(set_symbols)
+        return
+
     # loop over sets and figure out which symbol belongs to which sets.
     
     for symbol in environment['symbols']:

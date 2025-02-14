@@ -8,17 +8,17 @@ export class ObsimatEnvironment {
 
     // symbols is a map of a symbols name and a list of all the assumptions,
     // which sympy will take into account when evaluating any expression, containing this symbol.
-    public symbols: { [symbol: string]: string[] };
+    public symbols: { [symbol: string]: string[] } | undefined;
     // variables is a map of variable names and their corresponding substitutable values.
     // these values should be substituted into any expression before evaluation.
-    public variables: { [variable: string]: string };
+    public variables: { [variable: string]: string } | undefined;
 
     // the units which any expression in this environment should handle.
-    public units: string[];
+    public units: string[] | undefined;
     // the base_units list specifies a list of units which any expression result should convert its own units to.
-    public base_units: string[];
+    public base_units: string[] | undefined;
     // the domain is a sympy expression, evaluating to the default solution domain of any equation solutions.
-    public domain: string;
+    public domain: string | undefined;
 
     public static fromCodeBlock(code_block: string | undefined, variables: { [variable: string]: string }) {
         if(!code_block) {
@@ -29,20 +29,13 @@ export class ObsimatEnvironment {
 
         // prioritize domain name over domain expression.
 
-        let domain: string | undefined = undefined;
-
-        if(parsed_obsimat_block.domain?.name) {
-            domain = "S." + parsed_obsimat_block.domain.name.trim().charAt(0).toUpperCase() + parsed_obsimat_block.domain.name.trim().slice(1).toLowerCase();
-        } else if(parsed_obsimat_block.domain?.expression) {
-            domain = parsed_obsimat_block.domain.expression;
-        }
 
         return new ObsimatEnvironment(
             parsed_obsimat_block.symbols,
             variables,
             parsed_obsimat_block.units?.units,
             parsed_obsimat_block.units?.['base-units'],
-            domain
+            parsed_obsimat_block.domain?.domain
         );
     }
 
@@ -104,11 +97,11 @@ export class ObsimatEnvironment {
     private static readonly OBSIMAT_VARIABLE_DEF_REGEX = /\$\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*:=\s*(?<value>[^=$]*?)\s*\$/g;
 
     private constructor(symbols?: { [symbol: string]: string[] }, variables?: { [variable: string]: string }, units?: string[], base_units?: string[], domain?: string) {
-        this.symbols = symbols ?? {};
-        this.variables = variables ?? {};
-        this.units = units ?? [];
-        this.base_units = base_units ?? [];
-        this.domain = domain ?? "S.Reals";
+        this.symbols = symbols;
+        this.variables = variables;
+        this.units = units;
+        this.base_units = base_units;
+        this.domain = domain;
     }
 
     // find all variable definitions in the given document interval,

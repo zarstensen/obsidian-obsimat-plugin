@@ -46,7 +46,14 @@
 
 // fix implicit multiplication not working in cases after explicit multiplication,
 // functions, or matricies.
-%extend adjacent_expressions: _expression_power _expression_mul
+
+// need to override the whole thing here, as the first part of the rule needed to be modified,
+// and fixing it with an extension would lead to an ambigiouity whenever this case was encountered. 
+%override adjacent_expressions: _expression_power _expression_mul
+    | group_round_parentheses (group_round_parentheses | _one_letter_symbol)
+    | _function _function
+    | fraction _expression_mul
+
 %extend mul: _expression_mul MUL_SYMBOL adjacent_expressions
 // %extend div: _expression_mul MUL_SYMBOL adjacent_expressions
 
@@ -78,3 +85,34 @@ matrix_inner_product.1: CMD_LANGLE matrix BAR matrix CMD_RANGLE
 quick_derivative: group_round_parentheses PRIMES
 %extend _function: quick_derivative
 
+
+// multi expression environments
+ALIGN_ENV: L_BRACE "align" R_BRACE
+CASES_ENV: L_BRACE "cases" R_BRACE 
+
+CMD_BEGIN_ALIGN: CMD_BEGIN ALIGN_ENV
+CMD_BEGIN_CASES: CMD_BEGIN CASES_ENV
+CMD_END_ALIGN: CMD_END ALIGN_ENV
+CMD_END_CASES: CMD_END CASES_ENV
+
+system_of_expressions: CMD_BEGIN_ALIGN system_of_expressions_body CMD_END_ALIGN | CMD_BEGIN_CASES system_of_expressions_body CMD_END_CASES
+// the body should contain any latex parsable string separated by \\ character groups.
+// the only issue is there may be alignment characters mixed inbetween these strings,
+// so we need to capture the raw string itself, so we can filter out these alignment characters,
+// and reparse the individual latex strings.
+system_of_expressions_body: /[\S][\S\s]+?(?=\\\\|\\end)/ (MATRIX_ROW_DELIM /[\S][\S\s]+?(?=\\\\|\\end)/)* (MATRIX_ROW_DELIM)?
+
+%extend latex_string: system_of_expressions
+
+// Partial relations, that is relations which are missing a left or right side
+// eg. = 5, 25 < and so on...
+_partial_eq: EQUAL _expression | _expression EQUAL
+_partial_ne: NOT_EQUAL _expression | _expression NOT_EQUAL
+_partial_lt: LT _expression | _expression LT
+_partial_lte: LTE _expression | _expression LTE
+_partial_gt: GT _expression | _expression GT
+_partial_gte: GTE _expression | _expression GTE
+
+partial_relation: _partial_eq | _partial_ne | _partial_lt | _partial_lte | _partial_gt | _partial_gte
+
+%extend latex_string: partial_relation

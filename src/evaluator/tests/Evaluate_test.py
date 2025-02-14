@@ -1,3 +1,4 @@
+from grammar.ObsimatLatexParser import ObsimatLatexParser
 from tests.TestResponse import TestResponse
 from modes.EvaluateMode import evaluateMode
 import asyncio
@@ -7,10 +8,11 @@ from sympy import *
 
 ## Tests the evaluate mode.
 class TestEvaluate:
+    parser = ObsimatLatexParser()
     
     def test_simple_evaluate(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": "1+1", "environment": {}}, response))
+        asyncio.run(evaluateMode({"expression": "1+1", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -20,7 +22,7 @@ class TestEvaluate:
             
     def test_escaped_spaces(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"1\ + \ 1", "environment": {}}, response))
+        asyncio.run(evaluateMode({"expression": r"1\ + \ 1", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -31,7 +33,7 @@ class TestEvaluate:
         
     def test_matrix_single_line(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}}, response))
+        asyncio.run(evaluateMode({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -47,7 +49,7 @@ class TestEvaluate:
         \begin{bmatrix} 
         1 \\ 1
         \end{bmatrix}
-        """, "environment": {}}, response))
+        """, "environment": {}}, response, self.parser))
         
         assert response.hasResult()
         
@@ -66,7 +68,7 @@ class TestEvaluate:
         50
         \end{bmatrix}
         \Vert
-        """, "environment": {}}, response))
+        """, "environment": {}}, response, self.parser))
         
         assert response.hasResult()
         
@@ -88,7 +90,7 @@ class TestEvaluate:
         4
         \end{bmatrix}
         \rangle
-        """, "environment": {}}, response))
+        """, "environment": {}}, response, self.parser))
         
         assert response.hasResult()
         

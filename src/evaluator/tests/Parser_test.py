@@ -8,7 +8,7 @@ class TestParse:
         parser = ObsimatLatexParser()
         x, y, z = symbols("x y z")
         assert parser.doparse(r"x = 2y") == Eq(x, 2*y)
-         assert parser.doparse(r"x = y < z") == [ Eq(x, y), Lt(y, z) ]
+        assert parser.doparse(r"x = y < z") == [ Eq(x, y), Lt(y, z) ]
     
     def test_matrix(self):
         parser = ObsimatLatexParser()

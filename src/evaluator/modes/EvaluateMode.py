@@ -6,6 +6,7 @@ from copy import deepcopy
 
 from sympy import *
 from sympy.core.relational import Relational
+from sympy.core.operations import LatticeOp, AssocOp
 from typing import Any, TypedDict
 import re
 
@@ -30,13 +31,18 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, par
     with evaluate(False):
         sympy_expr = parser.doparse(message['expression'])
 
-    # choose last expression in system of equations.
-    if isinstance(sympy_expr, list):
-        sympy_expr = sympy_expr[-1]
     
-    # choose right hand most evaluatable expression.
-    while isinstance(sympy_expr, Relational):
-        sympy_expr = sympy_expr.rhs
+    # choose bottom / right hand most evaluatable expression.
+    while isinstance(sympy_expr, list) or isinstance(sympy_expr, Relational) or isinstance(sympy_expr, LatticeOp):
+        # for system of expressions
+        if isinstance(sympy_expr, list):
+            sympy_expr = sympy_expr[-1]
+        # for equalities
+        if isinstance(sympy_expr, Relational):
+            sympy_expr = sympy_expr.rhs
+        # for boolean operations, eg. (a + b V a + c V b + c), then we choose the right most one (b + c).
+        elif isinstance(sympy_expr, LatticeOp):
+            sympy_expr = AssocOp.make_args(sympy_expr)[-1]
 
     # store expression before units are converted and it is evaluated,
     # so we can display this intermediate step in the result.

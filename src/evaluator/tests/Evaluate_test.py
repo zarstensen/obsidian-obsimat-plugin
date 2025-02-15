@@ -100,6 +100,8 @@ class TestEvaluate:
         
         
     def test_relational_evaluation(self):
+        a, b = symbols("a b")
+        
         response = TestResponse()
         asyncio.run(evaluateMode({"expression": r"""
         5 + 5 + 5 + 5 = 10 + 10
@@ -110,6 +112,28 @@ class TestEvaluate:
         result = response.getResult()
 
         assert result['result'].rhs == 20
+        
+        response.reset()
+        asyncio.run(evaluateMode({"expression": r"""
+        a = b = (a - b)^2
+        """, "environment": {}}, response, self.parser))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+
+        assert result['result'].rhs == (a**2 + b**2 - 2 * a * b)
+        
+        response.reset()
+        asyncio.run(evaluateMode({"expression": r"""
+        1 = 2 = 1
+        """, "environment": {}}, response, self.parser))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+
+        assert result['result'].rhs == 1
         
         response.reset()
         asyncio.run(evaluateMode({"expression": r"""

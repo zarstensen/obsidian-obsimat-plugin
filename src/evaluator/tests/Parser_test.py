@@ -6,8 +6,9 @@ class TestParse:
     
     def test_relations(self):
         parser = ObsimatLatexParser()
-        x, y = symbols("x y")
+        x, y, z = symbols("x y z")
         assert parser.doparse(r"x = 2y") == Eq(x, 2*y)
+         assert parser.doparse(r"x = y < z") == [ Eq(x, y), Lt(y, z) ]
     
     def test_matrix(self):
         parser = ObsimatLatexParser()
@@ -97,8 +98,10 @@ class TestParse:
         
         assert parser.doparse(r"= 25").rhs == 25
         assert parser.doparse(r"x = ").lhs == x
+        assert parser.doparse(r"x =& ").lhs == x
+        assert parser.doparse(r"&=& 25").rhs == 25
         # check if normal relations have not broken
-        assert parser.doparse(r"x = y") == Eq(x, y) 
+        assert parser.doparse(r"x & = & y") == Eq(x, y) 
         
     def test_multi_expressions(self):
         x, y, z = symbols("x y z")
@@ -113,15 +116,15 @@ class TestParse:
         
         assert parser.doparse(r"""
             \begin{cases}
-            x &= 2y
+            x & = 2y
             \end{cases}
             """) == [ Eq(x, 2*y) ]
         
         assert parser.doparse(r"""
             \begin{align}
-            x &= 2y & 5z \\
-            y &= x^2 \\
-            z & = x & + 2\frac{y}{x} \\
+            x & = 2y 5z \\
+            y & = x^2 \\
+            z & = x + 2\frac{y}{x} \\
             \end{align}
             """) == [ Eq(x, 2*y * 5 * z), Eq(y, x**2), Eq(z, x + 2 * y / x) ]
         

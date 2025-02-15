@@ -45,14 +45,11 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         return tokens[1]
 
     def system_of_expressions_body(self, tokens):
-        expressions = []
-        
-        # remove all alignment characters, and parse again with the passed sub parser.
-        for e in filter( lambda t: not isinstance(t, Token) or t.type != "MATRIX_ROW_DELIM", tokens):
-            new_e = e.replace("&", "")
-            expressions.append(self.__sub_parser.doparse(new_e))
-            
-        return expressions
+        return list(filter( lambda t: not isinstance(t, Token) or t.type != "MATRIX_ROW_DELIM", tokens))
+    
+    def align_rel(self, tokens):
+        # just ignore the alignment characters
+        return next(filter(lambda t: t.type != "MATRIX_COL_DELIM", tokens)) 
     
     def partial_relation(self,  tokens):
         relation_token = None
@@ -67,22 +64,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             expression = tokens[0]
             is_left = True
             
-        relation_type = None
-            
-        match relation_token.type:
-            case "EQUAL":
-                relation_type = Eq
-            case "NOT_EQUAL":
-                relation_type = Ne
-            case "LT":
-                relation_type = Lt
-            case "LTE":
-                relation_type = Le
-            case "GT":
-                relation_type = Gt
-            case "GTE":
-                relation_type = Ge
-        
+        relation_type = self._relation_token_to_type(relation_token)
         # these invalid relations just get a dummy variable to the side they miss a variable.
         if is_left == True:
             return relation_type(expression, Dummy())
@@ -91,3 +73,25 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         
         raise ValueError("Invalid relation")
             
+            
+    def chained_relation(self, tokens):
+        relation_type = self._relation_token_to_type(tokens[1])
+        
+        return [tokens[0], relation_type(tokens[0].rhs, tokens[2])]
+        
+    def _relation_token_to_type(self, token):
+        match token.type:
+            case "EQUAL":
+                return Eq
+            case "NOT_EQUAL":
+                return Ne
+            case "LT":
+                return Lt
+            case "LTE":
+                return Le
+            case "GT":
+                return Gt
+            case "GTE":
+                return Ge
+            case _:
+                raise ValueError("Invalid relation token")

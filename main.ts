@@ -65,6 +65,13 @@ export default class ObsiMatPlugin extends Plugin {
         });
         const response = await this.sympy_evaluator.receive();
 
+        // TODO place between " = SOME EXPRESSION \end"
+        //                                       ^ Result should be placed here
+
+
+
+        if equation.contents
+
         // insert result at the end of the equation.
         editor.replaceRange(" = " + response.result, editor.offsetToPos(equation.to));
         editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));
@@ -135,5 +142,7 @@ export default class ObsiMatPlugin extends Plugin {
         finishRenderMath();
     }
 
+    private static readonly ENV_END_REGEX = /([\S\s]*?)\\end{\w*}/;
+    
     private sympy_evaluator: SympyEvaluator;
 }

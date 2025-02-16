@@ -3,6 +3,7 @@ import { App, FuzzySuggestModal } from "obsidian";
 //
 // The SymbolSelectorModal provides a modal dialog to select a single symbol from a list of symbols.
 // Once opened, the getSelectedSymbolAsync method can be awaited to get the selected symbol.
+// TODO: add a done button or smthng, and allow selecting n variables from the list.
 export class SymbolSelectorModal extends FuzzySuggestModal<string> {
     constructor(public symbols: string[], app: App) {
         super(app);

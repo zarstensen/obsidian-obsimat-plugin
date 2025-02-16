@@ -1,13 +1,13 @@
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
+from grammar.ObsimatExpression import ObsimatExpression
 from grammar.ObsimatLarkTransformer import ObsimatLarkTransformer
 
 import sympy.physics.units as u
 from sympy import *
-from sympy.parsing.latex.lark import LarkLaTeXParser
 import sympy.parsing.latex.lark as sympy_lark
-from sympy.core import Expr
+from sympy.core.basic import Basic
 from typing import Any, Callable
-from lark import Tree
+from lark import Tree, Lark
 from ObsimatEnvironment import ObsimatEnvironment
 import regex
 import os
@@ -18,9 +18,9 @@ import shutil
 ## The ObsimatLatexParser is responsible for parsing a latex string in the context of an ObsimatEnvironment.
 ## It also extends many functionalities of the sympy LarkLaTeXParser,
 ## to make it more suitable for general purpose mathematics.
-class ObsimatLatexParser(LarkLaTeXParser):
+class ObsimatLatexParser:
 
-    def __init__(self, print_debug_output: bool = False, grammar_file: str = None):
+    def __init__(self, grammar_file: str = None):
         self.__environment = {}
 
         # append the given grammar file to the end of sympys grammar file,
@@ -47,13 +47,19 @@ class ObsimatLatexParser(LarkLaTeXParser):
                 with open(grammar_file, "r") as custom_grammar:
                     f.write("\n" + custom_grammar.read())
 
-            # since we want to construct the transformer ourselves, we pass this lambda constructor instead of just the type.
-            super().__init__(
-                print_debug_output=print_debug_output,
-                transform=True,
-                transformer=lambda: ObsimatLarkTransformer(self),
-                grammar_file=os.path.join(temp_dir, "latex.lark"),
+            self.parser = Lark.open(
+                os.path.join(temp_dir, "latex.lark"),
+                rel_to=temp_dir,
+                parser="earley",
+                start="latex_string",
+                lexer="auto",
+                ambiguity="explicit",
+                debug=True,
+                propagate_positions=True,
+                maybe_placeholders=False,
+                keep_all_tokens=True,
             )
+    
     # Set the ObsimatEnvironment this parser should use when executing doparse.
     def set_environment(self, environment: ObsimatEnvironment):
         self.__environment = environment
@@ -70,16 +76,22 @@ class ObsimatLatexParser(LarkLaTeXParser):
             ObsimatLatexParser.__multi_letter_variable_substituter, latex_str
         )
 
-        sympy_expr = super().doparse(latex_str)
-
-        if isinstance(sympy_expr, Tree):
-            sympy_expr = sympy_expr.children[0]
-        elif isinstance(sympy_expr, list):
-            sympy_expr = [self.__substitute_symbols(expr) for expr in sympy_expr]
-        elif isinstance(sympy_expr, Expr):
-            sympy_expr = self.__substitute_symbols(sympy_expr)
-
-        return sympy_expr
+        expr =  ObsimatLarkTransformer().transform(self.parser.parse(latex_str))
+        
+        if isinstance(expr, Tree):
+            expr = expr.children[0]
+        
+        if isinstance(expr.sympy_expr(), list):
+            subs_expr = []
+            
+            for e in expr.sympy_expr():
+                subs_expr.append(self.__substitute_symbols(e.sympy_expr()), e.location())
+                        
+            expr = ObsimatExpression(subs_expr, expr.location())
+        else:
+            expr = ObsimatExpression(self.__substitute_symbols(expr.sympy_expr()), expr.location())
+        
+        return expr
 
     def __substitute_variables(self, latex_str: str):
         if "variables" not in self.get_environment():
@@ -124,6 +136,19 @@ class ObsimatLatexParser(LarkLaTeXParser):
                     )
 
         return sympy_expr
+
+    def __get_tree_line_span(tree: Tree) -> tuple[int, int]:
+        start_token = tree
+        
+        while isinstance(start_token, Tree):
+            start_token = start_token.children[0]
+            
+        end_token = tree
+        
+        while isinstance(end_token, Tree):
+          end_token = end_token.children[-1]
+          
+        return (start_token.line, end_token.end_line)  
 
     __MAX_SUBSTITUTION_DEPTH = 100
 

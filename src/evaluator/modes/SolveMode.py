@@ -18,7 +18,7 @@ class SolveModeMessage(TypedDict):
 # if successfull its sends a message with status solved, and the result in the result key.
 async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: ObsimatLatexParser):
     parser.set_environment(message['environment'])
-    expression = parser.doparse(message['expression'])
+    expression = parser.doparse(message['expression']).sympy_expr()
     expression = ObsimatEnvironmentUtils.substitute_units(expression, message['environment'])
 
     domain = S.Complexes

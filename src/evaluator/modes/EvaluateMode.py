@@ -1,7 +1,8 @@
 from ObsimatEnvironment import ObsimatEnvironment
 from ModeResponse import ModeResponse
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from grammar import ObsimatLatexParser
+from grammar.ObsimatLatexParser import ObsimatLatexParser
+from grammar.ObsimatExpression import ObsimatExpression
 from copy import deepcopy
 
 from sympy import *
@@ -29,14 +30,18 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, par
     parser.set_environment(message['environment'])
     
     with evaluate(False):
-        sympy_expr = parser.doparse(message['expression'])
-
+        expr = parser.doparse(message['expression'])
+        sympy_expr = expr.sympy_expr()
     
     # choose bottom / right hand most evaluatable expression.
     while isinstance(sympy_expr, list) or isinstance(sympy_expr, Relational) or isinstance(sympy_expr, LatticeOp):
         # for system of expressions
         if isinstance(sympy_expr, list):
-            sympy_expr = sympy_expr[-1]
+            if isinstance(sympy_expr[-1], ObsimatExpression):
+                expr = sympy_expr[-1]
+                sympy_expr = expr.sympy_expr()
+            else:
+                sympy_expr = sympy_expr[-1]
         # for equalities
         if isinstance(sympy_expr, Relational):
             sympy_expr = sympy_expr.rhs
@@ -54,4 +59,4 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, par
     sympy_expr = __try_assign(sympy_expr.simplify(), sympy_expr)
     
     with evaluate(False):
-        await response.result(Eq(before_units, sympy_expr))
+        await response.result(Eq(before_units, sympy_expr), metadata={"start_line": expr.location().line, "end_line": expr.location().end_line})

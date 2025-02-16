@@ -1,21 +1,22 @@
-from typing import Callable, Any
+from grammar.ObsimatExpression import ObsimatExpression
+
+from typing import Callable, Any, Self
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 from sympy.parsing.latex.lark.latex_parser import LarkLaTeXParser
 from sympy import *
-from lark import Token
+from lark import Token, Transformer
 
 
 # The ObsimatLarkTransofmer class provides functions for transforming
 # rules defined in obsimat_grammar.lark into sympy expressions.
 class ObsimatLarkTransformer(TransformToSymPyExpr):
-    
-    ## Construct an ObsimatLarkTransformer object with the given sub parser.
-    ## The sub parser will be used when parsing multi expression latex strings,
-    ## where the alignment characters (&) have been removed.
-    ## ideally this should just equal the original latex parser which invoked the rule.
-    def __init__(self, sub_parser: LarkLaTeXParser):
-        self.__sub_parser = sub_parser
-    
+   
+    class latex_string:
+        @staticmethod
+        def visit_wrapper(f, data, children, meta):
+            return ObsimatExpression(children[0], meta)
+
+   
     def matrix_norm(self, tokens):
         return tokens[1].norm()
 
@@ -40,12 +41,9 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
                 return I
             case _:
                 raise ValueError("Unknown mathematical constant")
-
+    
     def system_of_expressions(self, tokens):
-        return tokens[1]
-
-    def system_of_expressions_body(self, tokens):
-        return list(filter( lambda t: not isinstance(t, Token) or t.type != "MATRIX_ROW_DELIM", tokens))
+        return list(filter(lambda t: isinstance(t, ObsimatExpression), tokens))
     
     def align_rel(self, tokens):
         # just ignore the alignment characters
@@ -73,7 +71,13 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         
         raise ValueError("Invalid relation")
             
-            
+    
+    class chained_relation:
+        @staticmethod
+        def visit_wrapper(f, data, children, meta):
+            relation_type = f._relation_token_to_type(children[1])
+            return [ ObsimatExpression(children[0], meta), ObsimatExpression(relation_type(children[0].rhs, children[2], meta))]
+        
     def chained_relation(self, tokens):
         relation_type = self._relation_token_to_type(tokens[1])
         

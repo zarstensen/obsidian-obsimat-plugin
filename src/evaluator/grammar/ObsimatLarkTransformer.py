@@ -1,4 +1,4 @@
-from grammar.ObsimatExpression import ObsimatExpression
+from grammar.SystemOfExpr import SystemOfExpr
 
 from typing import Callable, Any, Self
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
@@ -10,12 +10,6 @@ from lark import Token, Transformer
 # The ObsimatLarkTransofmer class provides functions for transforming
 # rules defined in obsimat_grammar.lark into sympy expressions.
 class ObsimatLarkTransformer(TransformToSymPyExpr):
-   
-    class latex_string:
-        @staticmethod
-        def visit_wrapper(f, data, children, meta):
-            return ObsimatExpression(children[0], meta)
-
    
     def matrix_norm(self, tokens):
         return tokens[1].norm()
@@ -43,7 +37,13 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
                 raise ValueError("Unknown mathematical constant")
     
     def system_of_expressions(self, tokens):
-        return list(filter(lambda t: isinstance(t, ObsimatExpression), tokens))
+        return SystemOfExpr(list(filter(lambda t: not isinstance(t, Token), tokens)))
+    
+    class system_of_expressions_expr:
+        @staticmethod
+        def visit_wrapper(f, data, children, meta):
+            # location adata is needed for system_of_expressions handler.
+            return (children[0], meta)
     
     def align_rel(self, tokens):
         # just ignore the alignment characters
@@ -62,7 +62,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             expression = tokens[0]
             is_left = True
             
-        relation_type = self._relation_token_to_type(relation_token)
+        relation_type = ObsimatLarkTransformer._relation_token_to_type(relation_token)
         # these invalid relations just get a dummy variable to the side they miss a variable.
         if is_left == True:
             return relation_type(expression, Dummy())
@@ -70,20 +70,21 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             return relation_type(Dummy(), expression)
         
         raise ValueError("Invalid relation")
-            
     
     class chained_relation:
         @staticmethod
         def visit_wrapper(f, data, children, meta):
-            relation_type = f._relation_token_to_type(children[1])
-            return [ ObsimatExpression(children[0], meta), ObsimatExpression(relation_type(children[0].rhs, children[2], meta))]
-        
-    def chained_relation(self, tokens):
-        relation_type = self._relation_token_to_type(tokens[1])
-        
-        return [tokens[0], relation_type(tokens[0].rhs, tokens[2])]
-        
-    def _relation_token_to_type(self, token):
+            relation_type = ObsimatLarkTransformer._relation_token_to_type(children[1])
+            
+            # see a chained relation as a system of equations.
+            # TODO: maybe check if left hand side is SystemOfExpr, and create a new SystemOfExpr containing the right hand side if so.
+            return SystemOfExpr([
+                    (children[0], meta),
+                    (relation_type(children[0].rhs, children[2]), meta)
+                ])
+    
+    @staticmethod 
+    def _relation_token_to_type(token):
         match token.type:
             case "EQUAL":
                 return Eq

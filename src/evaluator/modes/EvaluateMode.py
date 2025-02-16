@@ -2,7 +2,7 @@ from ObsimatEnvironment import ObsimatEnvironment
 from ModeResponse import ModeResponse
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from grammar.ObsimatLatexParser import ObsimatLatexParser
-from grammar.ObsimatExpression import ObsimatExpression
+from grammar.SystemOfExpr import SystemOfExpr
 from copy import deepcopy
 
 from sympy import *
@@ -30,19 +30,17 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, par
     parser.set_environment(message['environment'])
     
     with evaluate(False):
-        expr = parser.doparse(message['expression'])
-        sympy_expr = expr.sympy_expr()
+        sympy_expr = parser.doparse(message['expression'])
+    
+    expr_lines = None
     
     # choose bottom / right hand most evaluatable expression.
-    while isinstance(sympy_expr, list) or isinstance(sympy_expr, Relational) or isinstance(sympy_expr, LatticeOp):
-        # for system of expressions
-        if isinstance(sympy_expr, list):
-            if isinstance(sympy_expr[-1], ObsimatExpression):
-                expr = sympy_expr[-1]
-                sympy_expr = expr.sympy_expr()
-            else:
-                sympy_expr = sympy_expr[-1]
-        # for equalities
+    while isinstance(sympy_expr, SystemOfExpr) or isinstance(sympy_expr, Relational) or isinstance(sympy_expr, LatticeOp):
+        # for system of expressions, take the last one
+        if isinstance(sympy_expr, SystemOfExpr):
+            expr_lines = (sympy_expr.get_location(-1).line, sympy_expr.get_location(-1).end_line)
+            sympy_expr = sympy_expr.get_expr(-1)
+        # for equalities, take the right hand side.
         if isinstance(sympy_expr, Relational):
             sympy_expr = sympy_expr.rhs
         # for boolean operations, eg. (a + b V a + c V b + c), then we choose the right most one (b + c).
@@ -59,4 +57,7 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, par
     sympy_expr = __try_assign(sympy_expr.simplify(), sympy_expr)
     
     with evaluate(False):
-        await response.result(Eq(before_units, sympy_expr), metadata={"start_line": expr.location().line, "end_line": expr.location().end_line})
+        if expr_lines:
+            await response.result(Eq(before_units, sympy_expr), metadata={ "start_line": expr_lines[0], "end_line": expr_lines[1] })
+        else:
+            await response.result(Eq(before_units, sympy_expr))

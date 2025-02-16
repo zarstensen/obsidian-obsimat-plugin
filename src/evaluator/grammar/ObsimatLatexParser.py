@@ -1,5 +1,5 @@
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from grammar.ObsimatExpression import ObsimatExpression
+from grammar.SystemOfExpr import SystemOfExpr
 from grammar.ObsimatLarkTransformer import ObsimatLarkTransformer
 
 import sympy.physics.units as u
@@ -47,6 +47,8 @@ class ObsimatLatexParser:
                 with open(grammar_file, "r") as custom_grammar:
                     f.write("\n" + custom_grammar.read())
 
+            # initialize a lark parser with the same settings as LarkLaTeXParser,
+            # but with propagating positions enabled.
             self.parser = Lark.open(
                 os.path.join(temp_dir, "latex.lark"),
                 rel_to=temp_dir,
@@ -78,18 +80,17 @@ class ObsimatLatexParser:
 
         expr =  ObsimatLarkTransformer().transform(self.parser.parse(latex_str))
         
+        # choose the highest prioritized ambiguity.
         if isinstance(expr, Tree):
             expr = expr.children[0]
         
-        if isinstance(expr.sympy_expr(), list):
-            subs_expr = []
-            
-            for e in expr.sympy_expr():
-                subs_expr.append(self.__substitute_symbols(e.sympy_expr()), e.location())
-                        
-            expr = ObsimatExpression(subs_expr, expr.location())
+        # substitute symbols 
+        # TODO: this should happen in the transformer
+        if isinstance(expr, SystemOfExpr):
+            for i in range(len(expr)):
+                expr.change_expr(i, lambda e: self.__substitute_symbols(e))
         else:
-            expr = ObsimatExpression(self.__substitute_symbols(expr.sympy_expr()), expr.location())
+            expr = self.__substitute_symbols(expr)
         
         return expr
 

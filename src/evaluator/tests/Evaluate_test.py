@@ -148,3 +148,5 @@ class TestEvaluate:
         result = response.getResult()
         
         assert result['result'].rhs == 8
+        assert result['metadata']['start_line'] == 4
+        assert result['metadata']['end_line'] == 4

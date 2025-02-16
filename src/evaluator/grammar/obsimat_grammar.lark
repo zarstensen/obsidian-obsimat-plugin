@@ -97,7 +97,9 @@ CMD_END_CASES: CMD_END CASES_ENV
 
 system_of_expressions: CMD_BEGIN_ALIGN _system_of_expressions_body CMD_END_ALIGN | CMD_BEGIN_CASES _system_of_expressions_body CMD_END_CASES
 // the body should contain any latex parsable string separated by \\ character groups.
-_system_of_expressions_body: latex_string (MATRIX_ROW_DELIM latex_string)* (MATRIX_ROW_DELIM)?
+_system_of_expressions_body: system_of_expressions_expr (MATRIX_ROW_DELIM system_of_expressions_expr)* (MATRIX_ROW_DELIM)?
+
+system_of_expressions_expr: latex_string
 
 %extend latex_string: system_of_expressions
 

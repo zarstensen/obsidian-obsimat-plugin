@@ -1,4 +1,4 @@
-import { Editor, finishRenderMath, MarkdownPostProcessorContext, MarkdownView, Notice, Plugin, renderMath } from 'obsidian';
+import { Editor, finishRenderMath, MarkdownPostProcessorContext, MarkdownView, Notice, Plugin, renderMath, EditorPosition } from 'obsidian';
 import { EquationExtractor } from "src/EquationExtractor";
 import { SympyEvaluator } from 'src/SympyEvaluator';
 import { SymbolSelectorModal } from 'src/SymbolSelectorModal';
@@ -65,16 +65,20 @@ export default class ObsiMatPlugin extends Plugin {
         });
         const response = await this.sympy_evaluator.receive();
 
-        // TODO place between " = SOME EXPRESSION \end"
-        //                                       ^ Result should be placed here
+        const insert_pos: EditorPosition = editor.offsetToPos(equation.to)
+        const insert_content = " = " + response.result
 
 
-
-        if equation.contents
+        // check if we have gotten a preferred insert position from SympyEvaluator,
+        // if not just place it at the end of the equation.
+        if (response.metadata.end_line !== undefined) {
+            insert_pos.line = editor.offsetToPos(equation.from).line + response.metadata.end_line - 1;
+            insert_pos.ch = editor.getLine(insert_pos.line).length;
+        }
 
         // insert result at the end of the equation.
-        editor.replaceRange(" = " + response.result, editor.offsetToPos(equation.to));
-        editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));
+        editor.replaceRange(insert_content, insert_pos);
+        editor.setCursor(editor.offsetToPos(editor.posToOffset(insert_pos) + insert_content.length));
     }
 
     private async solveCommand(editor: Editor, view: MarkdownView) {

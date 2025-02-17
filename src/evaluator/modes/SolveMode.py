@@ -77,7 +77,8 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: O
 def solveModeFormatter(result: Any, status: str, _metadata: dict) -> str:
     # return list of all possible symbols to solve for.
     if status == 'multivariate_equation':
-        return [ str(s) for s in result ]
+        result['symbols'] = [ str(s) for s in result['symbols'] ]
+        return result
     
     # format the solution set, depending on its type and size.
     elif status=='success':

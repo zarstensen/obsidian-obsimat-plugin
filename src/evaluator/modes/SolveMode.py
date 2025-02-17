@@ -63,8 +63,8 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: O
         
     solution_set = None
         
-    if len(symbols) == 1:
-        solution_set = solveset(equations, symbols[0], domain=domain)
+    if len(equations) == 1:
+        solution_set = solveset(equations[0], symbols[0], domain=domain)
     else:
         try:
             solution_set = linsolve(equations, symbols)

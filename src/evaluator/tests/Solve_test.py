@@ -17,3 +17,34 @@ class TestSolve:
         
         assert response.getResult()['result']['symbol'] == x
         assert response.getResult()['result']['solution'] == FiniteSet(0, pi)
+        
+    def test_solve_soe(self):
+        x = symbols('x')
+        
+        response = TestResponse()
+        
+        asyncio.run(solveMode({ "expression": r"""
+            \begin{align}
+            x + y + z & = 5 \\
+            2x + 5z & = 10 \\
+            2y + x & = 3 \\
+            \end{align}
+            """, "environment": { } }, response, self.parser))
+        
+        assert response.hasResult()
+        
+        assert response.getResult()['result']['solution'] == FiniteSet((15, -6, -4))
+        
+        
+        response.reset()
+        asyncio.run(solveMode({ "expression": r"""
+            \begin{align}
+            3 * x^2 & = 2 * y \\
+            y &= \frac{3}{2} x \\
+            \end{align}
+            """, "environment": { } }, response, self.parser))
+        
+        assert response.hasResult()
+        
+        assert response.getResult()['result']['solution'] == FiniteSet((0, 0), (1, Rational(3, 2)))
+        

@@ -33,6 +33,7 @@ class ObsimatEnvironmentUtils:
     
     # Substitute any symbols present in the sympy expression with the corresponding unit from the environment.
     # Also convert all non base units to base units where possible.
+    # TODO: make this work with SystemOfExpr
     @staticmethod
     def substitute_units(sympy_expr, environment: ObsimatEnvironment):
         if 'units' not in environment:

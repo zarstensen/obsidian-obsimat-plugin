@@ -1,5 +1,6 @@
 from ObsimatClient import ObsimatClient
 
+from grammar.ObsimatLatexParser import ObsimatLatexParser
 from modes.EvaluateMode import evaluateMode
 from modes.SolveMode import solveMode, solveModeFormatter
 from modes.SymbolSetMode import symbolSetMode, symbolSetModeFormatter
@@ -15,7 +16,7 @@ if len(sys.argv) < 2:
 port = int(sys.argv[1])
 
 
-client = ObsimatClient()
+client = ObsimatClient(ObsimatLatexParser())
 client.register_mode("evaluate", evaluateMode)
 client.register_mode("solve", solveMode, solveModeFormatter)
 client.register_mode("symbolsets", symbolSetMode, symbolSetModeFormatter)

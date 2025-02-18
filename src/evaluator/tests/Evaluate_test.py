@@ -1,3 +1,4 @@
+from grammar.ObsimatLatexParser import ObsimatLatexParser
 from tests.TestResponse import TestResponse
 from modes.EvaluateMode import evaluateMode
 import asyncio
@@ -7,10 +8,11 @@ from sympy import *
 
 ## Tests the evaluate mode.
 class TestEvaluate:
+    parser = ObsimatLatexParser()
     
     def test_simple_evaluate(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": "1+1", "environment": {}}, response))
+        asyncio.run(evaluateMode({"expression": "1+1", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -20,7 +22,7 @@ class TestEvaluate:
             
     def test_escaped_spaces(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"1\ + \ 1", "environment": {}}, response))
+        asyncio.run(evaluateMode({"expression": r"1\ + \ 1", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -31,7 +33,7 @@ class TestEvaluate:
         
     def test_matrix_single_line(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}}, response))
+        asyncio.run(evaluateMode({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -47,7 +49,7 @@ class TestEvaluate:
         \begin{bmatrix} 
         1 \\ 1
         \end{bmatrix}
-        """, "environment": {}}, response))
+        """, "environment": {}}, response, self.parser))
         
         assert response.hasResult()
         
@@ -66,7 +68,7 @@ class TestEvaluate:
         50
         \end{bmatrix}
         \Vert
-        """, "environment": {}}, response))
+        """, "environment": {}}, response, self.parser))
         
         assert response.hasResult()
         
@@ -88,10 +90,65 @@ class TestEvaluate:
         4
         \end{bmatrix}
         \rangle
-        """, "environment": {}}, response))
+        """, "environment": {}}, response, self.parser))
         
         assert response.hasResult()
         
         result = response.getResult()
 
         assert result['result'].rhs == 1 * 2 + 2 * 4
+        
+        
+    def test_relational_evaluation(self):
+        a, b = symbols("a b")
+        
+        response = TestResponse()
+        asyncio.run(evaluateMode({"expression": r"""
+        5 + 5 + 5 + 5 = 10 + 10
+        """, "environment": {}}, response, self.parser))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+
+        assert result['result'].rhs == 20
+        
+        response.reset()
+        asyncio.run(evaluateMode({"expression": r"""
+        a = b = (a - b)^2
+        """, "environment": {}}, response, self.parser))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+
+        assert result['result'].rhs == (a**2 + b**2 - 2 * a * b)
+        
+        response.reset()
+        asyncio.run(evaluateMode({"expression": r"""
+        1 = 2 = 1
+        """, "environment": {}}, response, self.parser))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+
+        assert result['result'].rhs == 1
+        
+        response.reset()
+        asyncio.run(evaluateMode({"expression": r"""
+            \begin{cases}
+            2 + 2 + 2 + 2 &= 4 + 2 + 2 \\
+                          &= 4 + 4
+            \end{cases}
+            """, "environment": {}}, response, self.parser))
+        
+        assert response.hasResult()
+        
+        result = response.getResult()
+        
+        assert result['result'].rhs == 8
+        assert result['metadata']['start_line'] == 4
+        assert result['metadata']['end_line'] == 4
+        
+    # TODO: missing unit conversion tests.

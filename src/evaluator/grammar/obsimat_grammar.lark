@@ -46,7 +46,14 @@
 
 // fix implicit multiplication not working in cases after explicit multiplication,
 // functions, or matricies.
-%extend adjacent_expressions: _expression_power _expression_mul
+
+// need to override the whole thing here, as the first part of the rule needed to be modified,
+// and fixing it with an extension would lead to an ambigiouity whenever this case was encountered. 
+%override adjacent_expressions: _expression_power _expression_mul
+    | group_round_parentheses (group_round_parentheses | _one_letter_symbol)
+    | _function _function
+    | fraction _expression_mul
+
 %extend mul: _expression_mul MUL_SYMBOL adjacent_expressions
 // %extend div: _expression_mul MUL_SYMBOL adjacent_expressions
 
@@ -78,3 +85,48 @@ matrix_inner_product.1: CMD_LANGLE matrix BAR matrix CMD_RANGLE
 quick_derivative: group_round_parentheses PRIMES
 %extend _function: quick_derivative
 
+
+// multi expression environments
+ALIGN_ENV: L_BRACE "align" R_BRACE
+CASES_ENV: L_BRACE "cases" R_BRACE 
+
+CMD_BEGIN_ALIGN: CMD_BEGIN ALIGN_ENV
+CMD_BEGIN_CASES: CMD_BEGIN CASES_ENV
+CMD_END_ALIGN: CMD_END ALIGN_ENV
+CMD_END_CASES: CMD_END CASES_ENV
+
+system_of_expressions: CMD_BEGIN_ALIGN _system_of_expressions_body CMD_END_ALIGN | CMD_BEGIN_CASES _system_of_expressions_body CMD_END_CASES
+// the body should contain any latex parsable string separated by \\ character groups.
+_system_of_expressions_body: system_of_expressions_expr (MATRIX_ROW_DELIM system_of_expressions_expr)* (MATRIX_ROW_DELIM)?
+
+system_of_expressions_expr: latex_string
+
+%extend latex_string: system_of_expressions
+
+// Partial relations, that is relations which are missing a left or right side
+// eg. = 5, 25 < and so on...
+
+// enable aligning around relations, its the lesser of two evils,
+// as we cannot simply ignore the '&' because they are relevant for matricies,
+// but supporting them in all expressions would be too large of a refactor of sympy's grammar file.
+align_rel{relation}: MATRIX_COL_DELIM* relation MATRIX_COL_DELIM*
+_partial_rel{relation}: align_rel{relation} _expression | _expression align_rel{relation}
+
+partial_relation: _partial_rel{EQUAL} | _partial_rel{NOT_EQUAL} | _partial_rel{LT} | _partial_rel{LTE} | _partial_rel{GT} | _partial_rel{GTE}
+%extend latex_string: partial_relation
+
+_complete_rel{relation}: _expression align_rel{relation} _expression
+
+%override eq: _complete_rel{EQUAL}
+%override ne: _complete_rel{NOT_EQUAL}
+%override lt: _complete_rel{LT}
+%override lte: _complete_rel{LTE}
+%override gt: _complete_rel{GT}
+%override gte: _complete_rel{GTE}
+
+// chained relations
+// that is eg. a = b = c, or a < b < c and so on...
+_chained_relation{relation}: (_relation | partial_relation) relation _expression
+chained_relation: _chained_relation{EQUAL} | _chained_relation{NOT_EQUAL} | _chained_relation{LT} | _chained_relation{LTE} | _chained_relation{GT} | _chained_relation{GTE}
+
+%extend latex_string: chained_relation

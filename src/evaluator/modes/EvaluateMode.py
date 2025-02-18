@@ -1,9 +1,13 @@
 from ObsimatEnvironment import ObsimatEnvironment
 from ModeResponse import ModeResponse
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
+from grammar.ObsimatLatexParser import ObsimatLatexParser
+from grammar.SystemOfExpr import SystemOfExpr
 from copy import deepcopy
 
 from sympy import *
+from sympy.core.relational import Relational
+from sympy.core.operations import LatticeOp, AssocOp
 from typing import Any, TypedDict
 import re
 
@@ -18,10 +22,30 @@ class EvaluateModeMessage(TypedDict):
     environment: ObsimatEnvironment
 
 ## Tries to evaluate the last equality of an latex equation.
-async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse):
-    expression = message['expression'].split("=")[-1]
+async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, parser: ObsimatLatexParser):
+    # TODO: replace this with retreiving the right most side of any sympy equality returned from the parser.
+    # if a system of expressions, use the bottom one.
+    # expression = message['expression'].split("=")[-1]
 
-    sympy_expr = ObsimatEnvironmentUtils.parse_latex(expression, message['environment'])
+    parser.set_environment(message['environment'])
+    
+    with evaluate(False):
+        sympy_expr = parser.doparse(message['expression'])
+    
+    expr_lines = None
+    
+    # choose bottom / right hand most evaluatable expression.
+    while isinstance(sympy_expr, SystemOfExpr) or isinstance(sympy_expr, Relational) or isinstance(sympy_expr, LatticeOp):
+        # for system of expressions, take the last one
+        if isinstance(sympy_expr, SystemOfExpr):
+            expr_lines = (sympy_expr.get_location(-1).line, sympy_expr.get_location(-1).end_line)
+            sympy_expr = sympy_expr.get_expr(-1)
+        # for equalities, take the right hand side.
+        if isinstance(sympy_expr, Relational):
+            sympy_expr = sympy_expr.rhs
+        # for boolean operations, eg. (a + b V a + c V b + c), then we choose the right most one (b + c).
+        elif isinstance(sympy_expr, LatticeOp):
+            sympy_expr = AssocOp.make_args(sympy_expr)[-1]
 
     # store expression before units are converted and it is evaluated,
     # so we can display this intermediate step in the result.
@@ -33,4 +57,7 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse):
     sympy_expr = __try_assign(sympy_expr.simplify(), sympy_expr)
     
     with evaluate(False):
-        await response.result(Eq(before_units, sympy_expr))
+        if expr_lines:
+            await response.result(Eq(before_units, sympy_expr), metadata={ "start_line": expr_lines[0], "end_line": expr_lines[1] })
+        else:
+            await response.result(Eq(before_units, sympy_expr))

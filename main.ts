@@ -1,7 +1,7 @@
-import { Editor, finishRenderMath, MarkdownPostProcessorContext, MarkdownView, Notice, Plugin, renderMath } from 'obsidian';
+import { Editor, finishRenderMath, MarkdownPostProcessorContext, MarkdownView, Notice, Plugin, renderMath, EditorPosition } from 'obsidian';
 import { EquationExtractor } from "src/EquationExtractor";
 import { SympyEvaluator } from 'src/SympyEvaluator';
-import { SymbolSelectorModal } from 'src/SymbolSelectorModal';
+import { SolveModeModal } from 'src/SolveModeModal';
 import { ObsimatEnvironment } from 'src/ObsimatEnvironment';
 
 export default class ObsiMatPlugin extends Plugin {
@@ -65,9 +65,20 @@ export default class ObsiMatPlugin extends Plugin {
         });
         const response = await this.sympy_evaluator.receive();
 
+        const insert_pos: EditorPosition = editor.offsetToPos(equation.to)
+        const insert_content = " = " + response.result
+
+
+        // check if we have gotten a preferred insert position from SympyEvaluator,
+        // if not just place it at the end of the equation.
+        if (response.metadata.end_line !== undefined) {
+            insert_pos.line = editor.offsetToPos(equation.from).line + response.metadata.end_line - 1;
+            insert_pos.ch = editor.getLine(insert_pos.line).length;
+        }
+
         // insert result at the end of the equation.
-        editor.replaceRange(" = " + response.result, editor.offsetToPos(equation.to));
-        editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));
+        editor.replaceRange(insert_content, insert_pos);
+        editor.setCursor(editor.offsetToPos(editor.posToOffset(insert_pos) + insert_content.length));
     }
 
     private async solveCommand(editor: Editor, view: MarkdownView) {
@@ -93,11 +104,18 @@ export default class ObsiMatPlugin extends Plugin {
         // if the equation is multivariate, then we need to prompt the user for which symbols should be solved for.
 
         if (response.status === "multivariate_equation") {
-            const symbol_selector = new SymbolSelectorModal(response.result, this.app);
+            const symbol_selector = new SolveModeModal(
+                response.result['symbols'],
+                response.result['equation_count'],
+                obsimat_env.domain ?? "",
+                this.app);
             symbol_selector.open();
-            const symbol = await symbol_selector.getSelectedSymbolAsync();
+            
+            // wait for the solve configuration.
+            const config = await symbol_selector.getSolveConfig();
+            obsimat_env.domain = config.domain;
 
-            await this.sympy_evaluator.send("solve", { expression: equation.contents, environment: obsimat_env, symbol: symbol });
+            await this.sympy_evaluator.send("solve", { expression: equation.contents, environment: obsimat_env, symbols: [...config.symbols].map((symbol) => symbol.sympy_symbol) });
 
             response = await this.sympy_evaluator.receive();
         }

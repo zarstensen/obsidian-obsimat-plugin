@@ -6,6 +6,7 @@ import json
 import traceback
 import re
 
+from grammar.ObsimatLatexParser import ObsimatLatexParser
 from sympy import latex
 
 
@@ -20,16 +21,17 @@ from sympy import latex
 # to communicate back to the obsimat plugin.
 #
 class ObsimatClient:
-    def __init__(self):
+    def __init__(self, latex_parser: ObsimatLatexParser):
         self.modes = {}
         self.connection = None
+        self.__latex_parser = latex_parser
 
     # Connect to an obsimat plugin currently hosting on the local host at the given port.
     async def connect(self, port: int):
         self.connection = await websockets.connect(f"ws://localhost:{port}")
 
     # Register a message mode handler.
-    def register_mode(self, mode: str, handler: Callable[[Any, ModeResponse], None], formatter: Callable[[Any, str, dict], str] = None):
+    def register_mode(self, mode: str, handler: Callable[[Any, ModeResponse, ObsimatLatexParser], None], formatter: Callable[[Any, str, dict], str] = None):
         self.modes[mode] = {
             'handler': handler,
             'formatter': formatter or ObsimatClient.__default_sympy_formatter
@@ -51,7 +53,9 @@ class ObsimatClient:
             if mode in self.modes:
                 response = ObsimatClient.ObsimatClientResponse(self, self.modes[mode]['formatter'])
                 try:
-                    await self.modes[mode]['handler'](json.loads(payload), response)
+                    loaded_payload = json.loads(payload)
+                    self.__latex_parser.set_environment(loaded_payload['environment'])
+                    await self.modes[mode]['handler'](loaded_payload, response, self.__latex_parser)
                 except Exception as e:
                     await response.error(str(e) + "\n" + traceback.format_exc())
             else:

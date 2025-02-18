@@ -150,3 +150,5 @@ class TestEvaluate:
         assert result['result'].rhs == 8
         assert result['metadata']['start_line'] == 4
         assert result['metadata']['end_line'] == 4
+        
+    # TODO: missing unit conversion tests.

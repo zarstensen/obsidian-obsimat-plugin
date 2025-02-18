@@ -47,4 +47,37 @@ class TestSolve:
         assert response.hasResult()
         
         assert response.getResult()['result']['solution'] == FiniteSet((0, 0), (1, Rational(3, 2)))
+    
+    def test_solve_multivariate(self):
+        x, y, z = symbols('x y z')
         
+        response = TestResponse()
+        
+        asyncio.run(solveMode({ "expression": r"""
+            \begin{cases}
+            x + y = z \\
+            x - y = -z \\
+            \end{cases}
+            """,
+            "symbols": ["x", "y"],
+            "environment": {  } }, response, self.parser))
+        
+        assert response.hasResult()
+        
+        assert response.getResult()['result']['solution'] == FiniteSet((0, z))
+        assert response.getResult()['result']['symbols'] == [ x, y ]
+        
+        response.reset()        
+        asyncio.run(solveMode({ "expression": r"""
+            \begin{cases}
+            x + y = z \\
+            x - y = -z \\
+            \end{cases}
+            """,
+            "symbols": ["y", "z"],
+            "environment": {  } }, response, self.parser))
+        
+        assert response.hasResult()
+        
+        assert response.getResult()['result']['solution'] == EmptySet
+        assert response.getResult()['result']['symbols'] == [ y, z ]

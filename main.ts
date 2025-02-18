@@ -1,7 +1,7 @@
 import { Editor, finishRenderMath, MarkdownPostProcessorContext, MarkdownView, Notice, Plugin, renderMath, EditorPosition } from 'obsidian';
 import { EquationExtractor } from "src/EquationExtractor";
 import { SympyEvaluator } from 'src/SympyEvaluator';
-import { SymbolSelectorModal } from 'src/SymbolSelectorModal';
+import { SolveModeModal } from 'src/SolveModeModal';
 import { ObsimatEnvironment } from 'src/ObsimatEnvironment';
 
 export default class ObsiMatPlugin extends Plugin {
@@ -104,11 +104,18 @@ export default class ObsiMatPlugin extends Plugin {
         // if the equation is multivariate, then we need to prompt the user for which symbols should be solved for.
 
         if (response.status === "multivariate_equation") {
-            const symbol_selector = new SymbolSelectorModal(response.result, this.app);
+            const symbol_selector = new SolveModeModal(
+                response.result['symbols'],
+                response.result['equation_count'],
+                obsimat_env.domain ?? "",
+                this.app);
             symbol_selector.open();
-            const symbol = await symbol_selector.getSelectedSymbolAsync();
+            
+            // wait for the solve configuration.
+            const config = await symbol_selector.getSolveConfig();
+            obsimat_env.domain = config.domain;
 
-            await this.sympy_evaluator.send("solve", { expression: equation.contents, environment: obsimat_env, symbol: symbol });
+            await this.sympy_evaluator.send("solve", { expression: equation.contents, environment: obsimat_env, symbols: [...config.symbols].map((symbol) => symbol.sympy_symbol) });
 
             response = await this.sympy_evaluator.receive();
         }
@@ -146,7 +153,5 @@ export default class ObsiMatPlugin extends Plugin {
         finishRenderMath();
     }
 
-    private static readonly ENV_END_REGEX = /([\S\s]*?)\\end{\w*}/;
-    
     private sympy_evaluator: SympyEvaluator;
 }

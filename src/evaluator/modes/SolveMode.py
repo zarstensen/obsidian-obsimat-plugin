@@ -13,38 +13,51 @@ class SolveModeMessage(TypedDict):
     expression: str
     symbol: str | None
     environment: ObsimatEnvironment
+    
+# The maximum number of finite solution to display it as a disjunction of solutions.
+# instead of the set itself.
+MAX_RELATIONAL_FINITE_SOLUTIONS = 5
 
 # tries to solve the given latex expression.
 # if a symbol is not given, and the expression is multivariate, this mode sends a response with status multivariate_equation,
 # along with a list of possible symbols to solve for in its symbols key.
 # if successfull its sends a message with status solved, and the result in the result key.
 async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: ObsimatLatexParser):
+    
     parser.set_environment(message['environment'])
     equations = parser.doparse(message['expression'])
     equations = ObsimatEnvironmentUtils.substitute_units(equations, message['environment'])
 
+    # position information is not needed here,
+    # so extract the equations into a tuple, which sympy can work with.
     if isinstance(equations, SystemOfExpr):
         equations = equations.get_all_expr()
     else:
         equations = (equations,)
 
+    # get a list of free symbols, by combining all the equations individual free symbols.
     free_symbols = set()
     
     for equation in equations:
         free_symbols.update(equation.free_symbols)
 
+    if len(free_symbols) == 0:
+        await response.error("Cannot solve equation if no free symbols are present.")
+        return
+
     free_symbols = sorted(list(free_symbols), key=str)
 
     domain = S.Complexes
     
-    if 'domain' in message['environment']:
+    if 'domain' in message['environment'] and message['environment']['domain'].strip() != "":
         domain = sympify(message['environment']['domain'])
 
+    # determine what symbols to solve for
     if 'symbols' not in message and len(free_symbols) > len(equations):
         await response.result({ 'symbols': free_symbols, 'equation_count': len(equations) }, status="multivariate_equation")
         return
 
-    if 'symbols' in message and len(message['symbols']) != len(equation):
+    if 'symbols' in message and len(message['symbols']) != len(equations):
         await response.error("Incorrect number of symbols provided.")
         return
 
@@ -52,7 +65,7 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: O
 
     if 'symbols' in message:
         for free_symbol in free_symbols:
-            if str(free_symbol) == message['symbols']:
+            if str(free_symbol) in message['symbols']:
                 symbols.append(free_symbol)
 
         if len(symbols) != len(equations):
@@ -60,10 +73,14 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: O
             return
     else:
         symbols = list(free_symbols)
-        
-    solution_set = None
-        
-    if len(equations) == 1:
+    
+    
+    # TODO: is there another way to do this?
+    # it is sortof a mess having to distinguish between strictly 1 equation and multiple equations.
+    
+    print(symbols, flush=True)
+    
+    if len(equations) == 1 and len(symbols) == 1: # these two should always have equal lenth.
         solution_set = solveset(equations[0], symbols[0], domain=domain)
     else:
         try:
@@ -76,8 +93,9 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: O
 # Convert a result returned from solveMode, into a json encodable string.
 def solveModeFormatter(result: Any, status: str, _metadata: dict) -> str:
     # return list of all possible symbols to solve for.
+    # include the sympy comparable string version, and a latex version, which should only be used for visuals.
     if status == 'multivariate_equation':
-        result['symbols'] = [ str(s) for s in result['symbols'] ]
+        result['symbols'] = [ { "sympy_symbol": str(s), "latex_symbol": latex(s) } for s in result['symbols'] ]
         return result
     
     # format the solution set, depending on its type and size.
@@ -88,24 +106,9 @@ def solveModeFormatter(result: Any, status: str, _metadata: dict) -> str:
         if len(result['symbols']) == 1:
             symbols = result['symbols'][0]
         else:
-            symbols = type(result['symbols'])
+            symbols = tuple(result['symbols'])
         
-        if len(result['solution']) == 1 and isinstance(result['solution'].args[0], FiniteSet) and len(result['solution'].args[0]) <= 5:
-            return result['solution'].as_relational(symbols)
+        if isinstance(solutions_set, FiniteSet) and len(solutions_set) <= MAX_RELATIONAL_FINITE_SOLUTIONS:
+            return latex(solutions_set.as_relational(symbols))
         else:
-            return f"{symbols} \\in {latex(result['solution'])}"
-            
-
-        for symbol, solution in zip(symbols, list(solutions_set)):  
-            # if solution is finite set, do magic, otherwise do simple stuff
-            if type(result['solution']) is FiniteSet and len(result['solution']) <= 5:
-                result_str += f"{align_token}{latex(solution.as_relational(symbol))}{newline_token}"
-            else:
-                result_str += f"{symbol} {align_token}\\in {latex(solution)}{newline_token}"
-                return f"{result['symbol']} \\in {latex(result['solution'])}"
-        
-        if len(symbols) > 1:
-            result_str += "\\end{align}"
-            
-        return result_str
-
+            return f"{latex(symbols)} \\in {latex(solutions_set)}"

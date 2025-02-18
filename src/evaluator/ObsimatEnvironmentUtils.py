@@ -1,17 +1,8 @@
-from grammar.ObsimatLarkTransformer import ObsimatLarkTransformer
+from grammar.SystemOfExpr import SystemOfExpr
 
 import sympy.physics.units as u
 from sympy import *
-from sympy.parsing.latex.lark import LarkLaTeXParser
-import sympy.parsing.latex.lark as sympy_lark
-from sympy.core import Expr
-from typing import Any, Callable
-from lark import Tree
 from ObsimatEnvironment import ObsimatEnvironment
-import regex
-import os
-from tempfile import TemporaryDirectory
-import shutil
 
 ## The ObsimatEnvironmentUtils provide various utility functions for a math expression present in an ObsimatEnvironment.
 class ObsimatEnvironmentUtils:
@@ -33,10 +24,16 @@ class ObsimatEnvironmentUtils:
     
     # Substitute any symbols present in the sympy expression with the corresponding unit from the environment.
     # Also convert all non base units to base units where possible.
-    # TODO: make this work with SystemOfExpr
     @staticmethod
     def substitute_units(sympy_expr, environment: ObsimatEnvironment):
         if 'units' not in environment:
+            return sympy_expr
+        
+        # substitute units recursively for all system of equations.
+        if isinstance(sympy_expr, SystemOfExpr):
+            for i in range(len(sympy_expr)):
+                sympy_expr.change_expr(i, lambda e: ObsimatEnvironmentUtils.substitute_units(e, environment))
+            
             return sympy_expr
         
         # check if any symbol matches a unit string

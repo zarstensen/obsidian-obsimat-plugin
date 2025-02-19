@@ -7,7 +7,7 @@ import traceback
 import re
 
 from grammar.ObsimatLatexParser import ObsimatLatexParser
-from sympy import latex
+from sympy import latex, evaluate
 
 
 #
@@ -82,6 +82,9 @@ class ObsimatClient:
             await self.client.send('warn', { 'message': message })
 
         async def result(self, result: Any, status: str = 'success', metadata: dict[str, str] = {}):
-            await self.client.send('result', { 'result': self.formatter(result, status, metadata), 'status': status, 'metadata': metadata })
+            # Sympy sometimes errors out when trying to convert a sympy expression to a string,
+            # when evaluate is set to false, so here it is forced to always be true.
+            with evaluate(True):
+                await self.client.send('result', { 'result': self.formatter(result, status, metadata), 'status': status, 'metadata': metadata })
 
         

@@ -49,15 +49,17 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, par
 
     # store expression before units are converted and it is evaluated,
     # so we can display this intermediate step in the result.
-    before_units = deepcopy(sympy_expr)
+    before_evaluate = deepcopy(sympy_expr)
     sympy_expr = ObsimatEnvironmentUtils.substitute_units(sympy_expr, message['environment'])
 
     sympy_expr = __try_assign(sympy_expr.doit(), sympy_expr)
     sympy_expr = __try_assign(sympy_expr.expand(),  sympy_expr)
     sympy_expr = __try_assign(sympy_expr.simplify(), sympy_expr)
     
-    with evaluate(False):
-        if expr_lines:
-            await response.result(Eq(before_units, sympy_expr), metadata={ "start_line": expr_lines[0], "end_line": expr_lines[1] })
-        else:
-            await response.result(Eq(before_units, sympy_expr))
+    if sympy_expr != before_evaluate:
+        sympy_expr = Eq(before_evaluate, sympy_expr, evaluate=False)
+    
+    if expr_lines:
+        await response.result(sympy_expr, metadata={ "start_line": expr_lines[0], "end_line": expr_lines[1] })
+    else:
+        await response.result(sympy_expr)

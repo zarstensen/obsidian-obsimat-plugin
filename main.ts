@@ -28,7 +28,8 @@ export default class ObsiMatPlugin extends Plugin {
         this.registerMarkdownCodeBlockProcessor("obsimat", this.renderObsimatCodeBlock.bind(this));
 
 
-        // Add the evaluate command
+        // Add commands
+
         this.addCommand({
             id: 'evaluate-latex-expression-command',
             name: 'Evaluate LaTeX Expression (Sympy)',
@@ -36,12 +37,17 @@ export default class ObsiMatPlugin extends Plugin {
             editorCallback: this.evaluateCommand.bind(this)
         });
         
-        // Add the solve command
         this.addCommand({
             id: 'solve-latex-expression-command',
             name: 'Solve LaTeX Expression (Sympy)',
             hotkeys: [ { modifiers: ["Alt"], key: "l" } ],
             editorCallback: this.solveCommand.bind(this)
+        });
+
+        this.addCommand({
+            id: 'convert-to-sympy-command',
+            name: 'Convert LaTeX Expression To Sympy',
+            editorCallback: this.convertToSympyCommand.bind(this)
         });
     }
 
@@ -130,6 +136,34 @@ export default class ObsiMatPlugin extends Plugin {
             console.error(response);
             new Notice("Unable to solve equation, unknown error");
         }
+    }
+
+    private async convertToSympyCommand(editor: Editor, view: MarkdownView) {
+        // Extract the equation to convert
+        const equation = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor);
+
+        if (equation === null) {
+            new Notice("You are not inside a math block");
+            return;
+        }
+        
+        const obsimat_env = ObsimatEnvironment.fromMarkdownView(this.app, view);
+
+        await this.sympy_evaluator.send("convert-sympy", {
+            expression: equation.contents,
+            environment: obsimat_env
+        });
+
+        let response = await this.sympy_evaluator.receive();
+
+        console.log(response);
+
+        // place the convertet python code into a code block right below the math block.
+
+        const sympy_code_block = "\n```python\n" + response.result + "\n```\n";
+
+        editor.replaceRange(sympy_code_block, editor.offsetToPos(equation.block_to));
+        editor.setCursor(editor.offsetToPos(equation.to + sympy_code_block.length));
     }
 
     private async renderObsimatCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {

@@ -1,9 +1,8 @@
-from ObsimatClient import ObsimatClient
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from ObsimatEnvironment import ObsimatEnvironment
-
+from grammar.SympyParser import SympyParser
 from ModeResponse import ModeResponse
-from grammar.ObsimatLatexParser import ObsimatLatexParser
+
 from sympy import *
 from typing import Any, TypedDict
 
@@ -42,8 +41,7 @@ class SymbolSetModeMessage(TypedDict):
     environment: ObsimatEnvironment
 
 # generates an latex array of symbols and their belonging sets, based on the given environment.
-async def symbolSetMode(message: SymbolSetModeMessage, response: ModeResponse, parser: ObsimatLatexParser):
-    parser.set_environment(message['environment'])
+async def symbolSetMode(message: SymbolSetModeMessage, response: ModeResponse, _parser: SympyParser):
     environment: ObsimatEnvironment = message['environment']
     
     set_symbols = {set: [] for set in SETS}

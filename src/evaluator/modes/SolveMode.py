@@ -1,9 +1,9 @@
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from ObsimatEnvironment import ObsimatEnvironment
 from ModeResponse import ModeResponse
-
 from grammar.SystemOfExpr import SystemOfExpr
-from grammar.ObsimatLatexParser import ObsimatLatexParser
+from grammar.SympyParser import SympyParser
+
 from sympy import *
 from typing import Any, TypedDict
 
@@ -22,10 +22,8 @@ MAX_RELATIONAL_FINITE_SOLUTIONS = 5
 # if a symbol is not given, and the expression is multivariate, this mode sends a response with status multivariate_equation,
 # along with a list of possible symbols to solve for in its symbols key.
 # if successfull its sends a message with status solved, and the result in the result key.
-async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: ObsimatLatexParser):
-    
-    parser.set_environment(message['environment'])
-    equations = parser.doparse(message['expression'])
+async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: SympyParser):    
+    equations = parser.doparse(message['expression'], message['environment'])
     equations = ObsimatEnvironmentUtils.substitute_units(equations, message['environment'])
 
     # position information is not needed here,

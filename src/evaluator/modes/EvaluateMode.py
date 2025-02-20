@@ -1,15 +1,14 @@
 from ObsimatEnvironment import ObsimatEnvironment
 from ModeResponse import ModeResponse
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from grammar.ObsimatLatexParser import ObsimatLatexParser
+from grammar.SympyParser import SympyParser
 from grammar.SystemOfExpr import SystemOfExpr
-from copy import deepcopy
 
+from copy import deepcopy
 from sympy import *
 from sympy.core.relational import Relational
 from sympy.core.operations import LatticeOp, AssocOp
-from typing import Any, TypedDict
-import re
+from typing import TypedDict
 
 def __try_assign(new_value, original_value):
     if new_value is not None:
@@ -22,15 +21,9 @@ class EvaluateModeMessage(TypedDict):
     environment: ObsimatEnvironment
 
 ## Tries to evaluate the last equality of an latex equation.
-async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, parser: ObsimatLatexParser):
-    # TODO: replace this with retreiving the right most side of any sympy equality returned from the parser.
-    # if a system of expressions, use the bottom one.
-    # expression = message['expression'].split("=")[-1]
-
-    parser.set_environment(message['environment'])
-    
+async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, parser: SympyParser):    
     with evaluate(False):
-        sympy_expr = parser.doparse(message['expression'])
+        sympy_expr = parser.doparse(message['expression'], message['environment'])
     
     expr_lines = None
     

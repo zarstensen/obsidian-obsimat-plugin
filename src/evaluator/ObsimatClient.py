@@ -7,6 +7,7 @@ import traceback
 import re
 
 from grammar.ObsimatLatexParser import ObsimatLatexParser
+from grammar.SympyParser import SympyParser
 from sympy import latex, evaluate
 
 
@@ -31,7 +32,7 @@ class ObsimatClient:
         self.connection = await websockets.connect(f"ws://localhost:{port}")
 
     # Register a message mode handler.
-    def register_mode(self, mode: str, handler: Callable[[Any, ModeResponse, ObsimatLatexParser], None], formatter: Callable[[Any, str, dict], str] = None):
+    def register_mode(self, mode: str, handler: Callable[[Any, ModeResponse, SympyParser], None], formatter: Callable[[Any, str, dict], str] = None):
         self.modes[mode] = {
             'handler': handler,
             'formatter': formatter or ObsimatClient.__default_sympy_formatter
@@ -54,7 +55,6 @@ class ObsimatClient:
                 response = ObsimatClient.ObsimatClientResponse(self, self.modes[mode]['formatter'])
                 try:
                     loaded_payload = json.loads(payload)
-                    self.__latex_parser.set_environment(loaded_payload['environment'])
                     await self.modes[mode]['handler'](loaded_payload, response, self.__latex_parser)
                 except Exception as e:
                     await response.error(str(e) + "\n" + traceback.format_exc())

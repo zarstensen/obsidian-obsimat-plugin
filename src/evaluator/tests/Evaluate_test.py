@@ -150,5 +150,51 @@ class TestEvaluate:
         assert result['result'] == 8
         assert result['metadata']['start_line'] == 4
         assert result['metadata']['end_line'] == 4
+    
+    def test_variable_substitution(self):
         
+        response = TestResponse()
+        
+        asyncio.run(evaluateMode({
+            "expression": r"a + b",
+            "environment": {
+                "variables": {
+                    "a": "2",
+                    "b": "3"
+                    }
+                }
+            },
+            response,
+            self.parser
+        ))
+        
+        assert response.hasResult()
+        assert response.getResult()['result'] == 5
+        
+        response.reset()
+        asyncio.run(evaluateMode({
+            "expression": r"A^T B",
+            "environment": {
+                "variables": {
+                    "A": r"""
+                    \begin{bmatrix}
+                    1 \\ 2
+                    \end{bmatrix}
+                    """,
+                    "B": r"""
+                    \begin{bmatrix}
+                    3 \\ 4
+                    \end{bmatrix}
+                    """
+                    }
+                }
+            },
+            response,
+            self.parser
+        ))
+        
+        assert response.hasResult()
+        assert response.getResult()['result'].rhs == Matrix([11])
+        
+    
     # TODO: missing unit conversion tests.

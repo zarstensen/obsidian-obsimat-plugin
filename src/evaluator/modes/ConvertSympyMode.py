@@ -1,6 +1,6 @@
 from ObsimatEnvironment import ObsimatEnvironment
 from ModeResponse import ModeResponse
-from grammar.ObsimatLatexParser import ObsimatLatexParser
+from grammar.SympyParser import SympyParser
 
 from sympy import *
 from typing import Any, TypedDict
@@ -10,11 +10,9 @@ class ConvertSympyModeMessage(TypedDict):
     environment: ObsimatEnvironment
 
 # Parses a latex string into a sympy object.
-async def convertSympyMode(message: ConvertSympyModeMessage, response: ModeResponse, parser: ObsimatLatexParser):
-    parser.set_environment(message['environment'])
-    
+async def convertSympyMode(message: ConvertSympyModeMessage, response: ModeResponse, parser: SympyParser):
     with evaluate(False):
-        sympy_expr = parser.doparse(message['expression'])
+        sympy_expr = parser.doparse(message['expression'], message['environment'])
     
     await response.result(sympy_expr)
 

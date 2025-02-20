@@ -3,7 +3,7 @@ from grammar.SubstitutionCache import SubstitutionCache
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 from sympy import *
-from lark import Token
+from lark import Token, Discard
 
 
 # The ObsimatLarkTransofmer class provides functions for transforming
@@ -18,7 +18,8 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         'LATIN_SYMBOL_WITH_GREEK_SUBSCRIPT',
         'GREEK_SYMBOL_WITH_GREEK_SUBSCRIPT',
         'multi_letter_symbol',
-        'symbol_prime'
+        'symbol_prime',
+        'ext_multi_letter_symbol'
         ]
 
     # Constructs an ObsimatLarkTransformer.
@@ -45,6 +46,12 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             return substituted_value
         else:
             return symbol
+
+    def whitespace(self, _tokens):
+        return Discard
+
+    def ext_multi_letter_symbol(self, tokens):
+        return Symbol(tokens[0])
 
     def matrix_norm(self, tokens):
         with evaluate(True):

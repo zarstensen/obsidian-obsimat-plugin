@@ -61,40 +61,12 @@ class ObsimatLatexParser(SympyParser):
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
     def doparse(self, latex_str: str, environment: ObsimatEnvironment = {}):
-        # Surround all detected multi-letter variables with \mathit{} so sympy knows to treat them as single variables.
-        # TODO: should happen in the lark parser instead
-        latex_str = ObsimatLatexParser.__MULTI_LETTER_VARIABLE_REGEX.sub(
-            ObsimatLatexParser.__multi_letter_variable_substituter, latex_str
-        )
-        
         substitution_cache = SubstitutionCache(environment, self)
         transformer = ObsimatLarkTransformer(substitution_cache)
-        expr =  transformer.transform(self.parser.parse(latex_str))
+        expr = transformer.transform(self.parser.parse(latex_str))
         
         # choose the highest prioritized ambiguity.
         if isinstance(expr, Tree):
             expr = expr.children[0]
         
         return expr
-
-    __MULTI_LETTER_VARIABLE_REGEX = regex.compile(
-        r"(?<!\\end)(?<!\\begin)(?:[^\w\\]|^){1,}?(?P<multiletter_variable>[a-zA-Z]{2,})(?=[^\w]|$)"
-    )
-
-    # TODO: comments here
-
-    @staticmethod
-    def __multi_letter_variable_substituter(match: regex.Match[str]) -> str:
-        spans = match.regs
-        match_span = spans[0]
-        variable_span = spans[
-            ObsimatLatexParser.__MULTI_LETTER_VARIABLE_REGEX.groupindex[
-                "multiletter_variable"
-            ]
-        ]
-        return f"\\mathit{{{match.groupdict()['multiletter_variable']}}}".join(
-            (
-                match.string[match_span[0] : variable_span[0]],
-                match.string[variable_span[1] : match_span[1]],
-            )
-        )

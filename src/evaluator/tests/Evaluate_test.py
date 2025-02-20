@@ -196,5 +196,41 @@ class TestEvaluate:
         assert response.hasResult()
         assert response.getResult()['result'].rhs == Matrix([11])
         
+        response.reset()
+        asyncio.run(evaluateMode({
+            "expression": r"\sin{abc}",
+            "environment": {
+                "variables": {
+                    "abc": "1"
+                    }
+                }
+            },
+            response,
+            self.parser
+        ))
+        
+        assert response.hasResult()
+        assert response.getResult()['result'] == sin(1)
+        
+                
+        response.reset()
+        asyncio.run(evaluateMode({
+            "expression": r"\sqrt{ val_{sub} + val_2^val_{three}}",
+            "environment": {
+                "variables": {
+                    "val_{sub}": "7",
+                    "val_2": "3",
+                    "val_{three}": "2"
+                    }
+                }
+            },
+            response,
+            self.parser
+        ))
+        
+        assert response.hasResult()
+        assert response.getResult()['result'] == 4
+        
+        
     
     # TODO: missing unit conversion tests.

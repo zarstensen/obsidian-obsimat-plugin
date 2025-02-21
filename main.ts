@@ -12,10 +12,10 @@ interface ObsimatPluginSettings {
 
 const DEFAULT_SETTINGS: ObsimatPluginSettings = {
     dev_mode: false
-}
+};
 
 export default class ObsiMatPlugin extends Plugin {
-    settings: ObsimatPluginSettings
+    settings: ObsimatPluginSettings;
 
     async onload() {
         await this.loadSettings();
@@ -95,8 +95,8 @@ export default class ObsiMatPlugin extends Plugin {
         });
         const response = await this.sympy_evaluator.receive();
 
-        const insert_pos: EditorPosition = editor.offsetToPos(equation.to)
-        const insert_content = " = " + response.result
+        const insert_pos: EditorPosition = editor.offsetToPos(equation.to);
+        const insert_content = " = " + response.result;
 
 
         // check if we have gotten a preferred insert position from SympyEvaluator,
@@ -193,7 +193,7 @@ export default class ObsiMatPlugin extends Plugin {
     private async renderObsimatCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
         // Add the standard code block background div,
         // to ensure a consistent look with other code blocks.
-        const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg")
+        const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg");
         div.style.cssText = "overflow: auto;";
         // same goes with the code block flair
         const flair = div.createSpan("code-block-flair obsimat-block-flair");
@@ -205,7 +205,7 @@ export default class ObsiMatPlugin extends Plugin {
         // retreive to be rendered latex from python.
         await this.sympy_evaluator.send("symbolsets", { environment: ObsimatEnvironment.fromCodeBlock(source, {}) });
         const response = await this.sympy_evaluator.receive();
-        
+
         // render the latex.
         div.appendChild(renderMath(response.result, true));
         finishRenderMath();

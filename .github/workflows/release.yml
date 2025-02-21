@@ -57,9 +57,9 @@ jobs:
         id: build-executable
         run: | 
           .venv/scripts/activate
-          pyinstaller --onefile --collect-data sympy --path=".venv/Lib/site-packages" --add-data "./sympy-client/src/grammar/obsimat_grammar.lark:grammar" sympy-client/src/SympyClient.py
+          pyinstaller --onefile --collect-data sympy --add-data "./sympy-client/src/grammar/obsimat_grammar.lark:grammar" sympy-client/src/SympyClient.py
 
-      - name: Upload SympyClient Executable
+      - name: Upload Executable
         uses: actions/upload-artifact@v4
         with:
           name: SympyClient

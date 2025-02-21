@@ -1,16 +1,17 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import getPort from 'get-port';
 import { join } from 'path';
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams } from 'child_process';
 import { FileSystemAdapter, Vault } from 'obsidian';
+import { SympyClientSpawner } from './SympyClientSpawner';
 
 // The PythonEvalServer class manages a connection as well as message encoding and handling, with an SympyEvaluator script instance.
 // Also manages the python process itself.
 export class SympyEvaluator {
 
-    public initialize(vault: Vault, plugin_dir: string, python_exec = "python"): Promise<void> {
-        this.initialized_promise = this.initializeAsync(vault, plugin_dir, python_exec);
-        return this.initialized_promise
+    public initialize(vault: Vault, plugin_dir: string, sympy_client_spawner: SympyClientSpawner): Promise<void> {
+        this.initialized_promise = this.initializeAsync(vault, plugin_dir, sympy_client_spawner);
+        return this.initialized_promise;
     }
 
     // Assign an error callback handler.
@@ -21,7 +22,7 @@ export class SympyEvaluator {
 
     // Send a message to the SympyEvaluator process.
     public async send(mode: string, data: any): Promise<void> {
-        await this.initialized_promise
+        await this.initialized_promise;
         this.ws_python.send(mode + "|" + JSON.stringify(data));
     }
 
@@ -50,8 +51,8 @@ export class SympyEvaluator {
         });
     }
 
-    private initialized_promise: Promise<void>
-    private python_process: ChildProcessWithoutNullStreams
+    private initialized_promise: Promise<void>;
+    private python_process: ChildProcessWithoutNullStreams;
     private ws_python: WebSocket;
     private ws_python_server: WebSocketServer;
     private error_callback: (error: string) => void;
@@ -65,7 +66,7 @@ export class SympyEvaluator {
     // Start the SympyEvaluator python process, and establish an connection to it.
     // vault_dir: the directory of the vault, which thsi plugin is installed in.
     // python_exec: the python executable to use to start the SympyEvaluator process.
-    private async initializeAsync(vault: Vault, plugin_dir: string, python_exec = "python"): Promise<void> {
+    private async initializeAsync(vault: Vault, plugin_dir: string, sympy_client_spawner: SympyClientSpawner): Promise<void> {
         // Start by setting up the web socket server, so we can get a port to give to the python program.
         const server_port = await getPort();
 
@@ -76,8 +77,8 @@ export class SympyEvaluator {
         const adapter = vault.adapter as FileSystemAdapter;
 
         // now start the python process
-        this.python_process = spawn(python_exec, [join(adapter.getBasePath(), plugin_dir, "src/evaluator/SympyEvaluator.py"), server_port.toString()]);
-
+        this.python_process = sympy_client_spawner.spawnClient(join(adapter.getBasePath(), plugin_dir), server_port);
+        
         // setup output to be logged in the developer console
         this.python_process.stdout.on('data', (data) => {
             console.log(`stdout: ${data}`);

@@ -156,4 +156,19 @@ class TestParse:
         
         assert result.get_expr(0) == Eq(x, 2*y)
         assert result.get_location(0).line == 3
+    
+
+    def test_matrix_operations(self):
+        result = self.parser.doparse(r"A A^\ast",
+        {
+            "variables": {
+                "A": r"""
+\begin{bmatrix}
+1 & 2 \\
+i & 2 i
+\end{bmatrix}    
+"""
+            }
+        })
         
+        assert result.doit() == Matrix([[5, - 5 * I], [5 * I, 5]])	

@@ -11,8 +11,7 @@ class ConvertSympyModeMessage(TypedDict):
 
 # Parses a latex string into a sympy object.
 async def convertSympyMode(message: ConvertSympyModeMessage, response: ModeResponse, parser: SympyParser):
-    with evaluate(False):
-        sympy_expr = parser.doparse(message['expression'], message['environment'])
+    sympy_expr = parser.doparse(message['expression'], message['environment'])
     
     await response.result(sympy_expr)
 

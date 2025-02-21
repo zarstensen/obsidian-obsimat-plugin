@@ -22,9 +22,8 @@ class EvaluateModeMessage(TypedDict):
 
 ## Tries to evaluate the last equality of an latex equation.
 async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, parser: SympyParser):    
-    with evaluate(False):
-        sympy_expr = parser.doparse(message['expression'], message['environment'])
     
+    sympy_expr = parser.doparse(message['expression'], message['environment'])
     expr_lines = None
     
     # choose bottom / right hand most evaluatable expression.

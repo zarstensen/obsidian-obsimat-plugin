@@ -120,12 +120,10 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         def visit_wrapper(f, data, children, meta):
             relation_type = ObsimatLarkTransformer._relation_token_to_type(children[1])
 
-            # see a chained relation as a system of equations.
-            # TODO: maybe check if left hand side is SystemOfExpr, and create a new SystemOfExpr containing the right hand side if so.
             return SystemOfExpr(
                 [
                     (children[0], meta),
-                    (relation_type(children[0].rhs, children[2]), meta),
+                    (relation_type(children[0].rhs, children[2], evaluate=False), meta),
                 ]
             )
 
@@ -146,3 +144,21 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
                 return Ge
             case _:
                 raise ValueError("Invalid relation token")
+            
+    def eq(self, tokens):
+        return Eq(tokens[0], tokens[2], evaluate=False)
+    
+    def ne(self, tokens):
+        return Be(tokens[0], tokens[2], evaluate=False)
+
+    def lt(self, tokens):
+        return Lt(tokens[0], tokens[2], evaluate=False)
+    
+    def lte(self, tokens):
+        return Le(tokens[0], tokens[2], evaluate=False)
+    
+    def gt(self, tokens):
+        return Gt(tokens[0], tokens[2], evaluate=False)
+    
+    def gte(self, tokens):
+        return Ge(tokens[0], tokens[2], evaluate=False)

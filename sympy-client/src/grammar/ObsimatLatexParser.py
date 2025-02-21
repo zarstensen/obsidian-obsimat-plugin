@@ -1,14 +1,12 @@
-from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from ObsimatEnvironment import ObsimatEnvironment
 from grammar.ObsimatLarkTransformer import ObsimatLarkTransformer
 from grammar.SympyParser import SympyParser
 from grammar.SubstitutionCache import SubstitutionCache
 
+from time import sleep
 from sympy import *
 import sympy.parsing.latex.lark as sympy_lark
-from typing import Any
 from lark import Tree, Lark
-import regex
 import os
 from tempfile import TemporaryDirectory
 import shutil

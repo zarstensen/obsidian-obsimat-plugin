@@ -3,10 +3,24 @@ import { EquationExtractor } from "src/EquationExtractor";
 import { SympyEvaluator } from 'src/SympyEvaluator';
 import { SolveModeModal } from 'src/SolveModeModal';
 import { ObsimatEnvironment } from 'src/ObsimatEnvironment';
+import { ExecutableSpawner, SourceCodeSpawner } from 'src/SympyClientSpawner';
+import { ObsimatSettingsTab } from 'src/ObsimatSettingsTab';
+
+interface ObsimatPluginSettings {
+    dev_mode: boolean;
+}
+
+const DEFAULT_SETTINGS: ObsimatPluginSettings = {
+    dev_mode: false
+};
 
 export default class ObsiMatPlugin extends Plugin {
+    settings: ObsimatPluginSettings;
 
     async onload() {
+        await this.loadSettings();
+        this.addSettingTab(new ObsimatSettingsTab(this.app, this));
+
         this.sympy_evaluator = new SympyEvaluator();
 
         this.sympy_evaluator.onError((error) => {
@@ -22,8 +36,10 @@ export default class ObsiMatPlugin extends Plugin {
             new Notice("Obsimat could not determine its plugin directory, aborting load.");
             return;
         }
+        
+        const sympy_client_spawner = this.settings.dev_mode ? new SourceCodeSpawner() : new ExecutableSpawner();
 
-        this.sympy_evaluator.initialize(this.app.vault, this.manifest.dir);
+        this.sympy_evaluator.initialize(this.app.vault, this.manifest.dir, sympy_client_spawner);
 
         this.registerMarkdownCodeBlockProcessor("obsimat", this.renderObsimatCodeBlock.bind(this));
 
@@ -55,6 +71,14 @@ export default class ObsiMatPlugin extends Plugin {
         // TODO: unload a BUNCH of stuff here.
     }
 
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
+
     private async evaluateCommand(editor: Editor, view: MarkdownView) {
         // Extract equation to evaluate
         const equation = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor);
@@ -71,8 +95,8 @@ export default class ObsiMatPlugin extends Plugin {
         });
         const response = await this.sympy_evaluator.receive();
 
-        const insert_pos: EditorPosition = editor.offsetToPos(equation.to)
-        const insert_content = " = " + response.result
+        const insert_pos: EditorPosition = editor.offsetToPos(equation.to);
+        const insert_content = " = " + response.result;
 
 
         // check if we have gotten a preferred insert position from SympyEvaluator,
@@ -154,7 +178,7 @@ export default class ObsiMatPlugin extends Plugin {
             environment: obsimat_env
         });
 
-        let response = await this.sympy_evaluator.receive();
+        const response = await this.sympy_evaluator.receive();
 
         console.log(response);
 
@@ -169,7 +193,7 @@ export default class ObsiMatPlugin extends Plugin {
     private async renderObsimatCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
         // Add the standard code block background div,
         // to ensure a consistent look with other code blocks.
-        const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg")
+        const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg");
         div.style.cssText = "overflow: auto;";
         // same goes with the code block flair
         const flair = div.createSpan("code-block-flair obsimat-block-flair");
@@ -181,7 +205,7 @@ export default class ObsiMatPlugin extends Plugin {
         // retreive to be rendered latex from python.
         await this.sympy_evaluator.send("symbolsets", { environment: ObsimatEnvironment.fromCodeBlock(source, {}) });
         const response = await this.sympy_evaluator.receive();
-        
+
         // render the latex.
         div.appendChild(renderMath(response.result, true));
         finishRenderMath();

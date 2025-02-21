@@ -6,7 +6,6 @@ from modes.SolveMode import solveMode, solveModeFormatter
 from modes.SymbolSetMode import symbolSetMode, symbolSetModeFormatter
 from modes.ConvertSympyMode import convertSympyMode, convertSympyModeFormatter
 
-from sympy.parsing.latex import parse_latex_lark
 import asyncio
 import sys
 

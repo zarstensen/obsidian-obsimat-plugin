@@ -50,13 +50,14 @@ jobs:
         run: |
           python -m venv .venv
           .venv/scripts/activate
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Build Executable
         id: build-executable
         run: | 
           .venv/scripts/activate
-          pyinstaller --onefile --collect-data sympy --path = .venv/Lib/site-packages --add-data ./src/sympy-client/src/grammar/obsimat_grammar.lark:grammar SympyClient.py
+          pyinstaller --onefile --collect-data sympy --path=".venv/Lib/site-packages" --add-data "./sympy-client/src/grammar/obsimat_grammar.lark:grammar" sympy-client/src/SympyClient.py
 
       - name: Upload SympyClient Executable
         uses: actions/upload-artifact@v4

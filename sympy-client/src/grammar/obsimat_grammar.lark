@@ -103,6 +103,11 @@ HESSIAN: "\mathbf{H}"
 hessian: HESSIAN _expression_func
 %extend _function: hessian
 
+// add jacobian operator
+JACOBIAN: "\mathbf{J}"
+jacobian: JACOBIAN _expression_func
+%extend _function: jacobian
+
 // add quick hand notation for differentiating expressions
 // e.g. (x^2)' -> 2x
 %override matrix_prime: matrix PRIMES

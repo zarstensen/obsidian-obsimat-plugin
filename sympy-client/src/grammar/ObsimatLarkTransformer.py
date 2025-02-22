@@ -62,7 +62,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             return tokens[1].doit().dot(tokens[3].doit(), hermitian=True, conjugate_convention="right")
 
     def gradient(self, tokens):
-        return Matrix([ [ diff(tokens[1], symbol, evaluate=False) for symbol in sorted(tokens[1].free_symbols, key=str)] ])
+        return self._expr_gradient(tokens[1], tokens[1].free_symbols)
 
     def hessian(self, tokens):
 
@@ -73,6 +73,26 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
                 diff(tokens[1], symbol_col, symbol_row, evaluate=False) for symbol_col in symbols
             ] for symbol_row in symbols
         ])
+        
+    def jacobian(self, tokens):
+        matrix = tokens[1]
+        
+        if not self._obj_is_sympy_Matrix(matrix):
+            matrix = Matrix([matrix])
+            
+        if not matrix.rows == 1 and not matrix.cols == 1:
+            raise ShapeError("Jacobian expects a single row or column vector")
+        
+        # sympy has a built in jacobian, but it does not have an evaluate option,
+        # so we just do it manually here.
+        
+        gradients = []
+        
+        for item in matrix:
+            gradients.append(self._expr_gradient(item, matrix.free_symbols))
+        
+        return Matrix.vstack(*gradients)
+        
 
     def quick_derivative(self, tokens):
         if len(tokens[0].free_symbols) == 0:
@@ -175,3 +195,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
     
     def gte(self, tokens):
         return Ge(tokens[0], tokens[2], evaluate=False)
+    
+    @staticmethod
+    def _expr_gradient(expression: Expr, free_symbols):
+        return Matrix([ [ diff(expression, symbol, evaluate=False) for symbol in sorted(free_symbols, key=str)] ])

@@ -196,3 +196,8 @@ i & 2 i
         result = self.parser.doparse(r"\mathbf{H}(x^2 + y^2)")
         
         assert result.doit() == Matrix([[2, 0], [0, 2]])
+        
+    def test_jacobian(self):
+        result = self.parser.doparse(r"\mathbf{J}\begin{bmatrix} x + y \\ x \\ y\end{bmatrix}")
+        
+        assert result.doit() == Matrix([[1, 1], [1, 0], [0, 1]])

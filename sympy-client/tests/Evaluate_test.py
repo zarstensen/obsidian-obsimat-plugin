@@ -232,5 +232,19 @@ class TestEvaluate:
         assert response.getResult()['result'] == 4
         
         
+    def test_gradient(self):
+        x, y = symbols("x y")
+        response = TestResponse()
+        
+        asyncio.run(evaluateMode({
+            "expression": r"\nabla (x^2 y + y^2 x)",
+            "environment": { }
+            },
+            response,
+            self.parser
+        ))
+        
+        assert response.hasResult()
+        assert response.getResult()['result'].rhs == Matrix([[y * (2 * x + y), x * (2 * y + x)]])
     
     # TODO: missing unit conversion tests.

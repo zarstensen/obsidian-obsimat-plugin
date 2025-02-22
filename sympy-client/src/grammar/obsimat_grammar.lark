@@ -93,13 +93,18 @@ matrix_inner_product.1: CMD_LANGLE _expression INNER_PRODUCT_CENTER _expression 
 // remove the physics inner product...
 %override inner_product: /a^/
 
+// add gradient operator
+GRADIENT: "\\nabla"
+gradient: GRADIENT _expression_func
+%extend _function: gradient
+
 // add quick hand notation for differentiating expressions
 // e.g. (x^2)' -> 2x
 %override matrix_prime: matrix PRIMES
 quick_derivative: group_round_parentheses PRIMES
 %extend _function: quick_derivative
 
-// multi expression environments
+// ==== multi expression environments ====
 ALIGN_ENV: L_BRACE "align" R_BRACE
 CASES_ENV: L_BRACE "cases" R_BRACE 
 

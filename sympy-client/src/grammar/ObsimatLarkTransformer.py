@@ -61,11 +61,14 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         with evaluate(True):
             return tokens[1].doit().dot(tokens[3].doit(), hermitian=True, conjugate_convention="right")
 
+    def gradient(self, tokens):
+        return Matrix([ [ diff(tokens[1], symbol) for symbol in sorted(tokens[1].free_symbols, key=str)] ])
+
     def quick_derivative(self, tokens):
         if len(tokens[0].free_symbols) == 0:
             return S(0)
         else:
-            return diff(tokens[0], list(tokens[0].free_symbols)[0], len(tokens[1]))
+            return diff(tokens[0], next(sorted(tokens[0].free_symbols, key=str)), len(tokens[1]))
 
     def math_constant(self, tokens):
         match str(tokens[0]):

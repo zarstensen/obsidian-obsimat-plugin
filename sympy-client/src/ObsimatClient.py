@@ -50,6 +50,9 @@ class ObsimatClient:
             message = await self.connection.recv()
             mode, payload = message.split("|", 1)
 
+            if mode == "exit":
+                await self.send("exit", {})
+                break
             
             if mode in self.modes:
                 response = ObsimatClient.ObsimatClientResponse(self, self.modes[mode]['formatter'])

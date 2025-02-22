@@ -4,14 +4,27 @@ import { join } from 'path';
 import { ChildProcessWithoutNullStreams } from 'child_process';
 import { FileSystemAdapter, Vault } from 'obsidian';
 import { SympyClientSpawner } from './SympyClientSpawner';
+import { assert } from 'console';
 
 // The PythonEvalServer class manages a connection as well as message encoding and handling, with an SympyEvaluator script instance.
 // Also manages the python process itself.
 export class SympyEvaluator {
 
+    
+
     public initialize(vault: Vault, plugin_dir: string, sympy_client_spawner: SympyClientSpawner): Promise<void> {
         this.initialized_promise = this.initializeAsync(vault, plugin_dir, sympy_client_spawner);
         return this.initialized_promise;
+    }
+
+    public async shutdown(): Promise<void> {
+        await this.send("exit", {});
+        const result = await this.receive();
+
+        assert(result === "exit");
+
+        this.ws_python.close();
+        this.ws_python_server.close();
     }
 
     // Assign an error callback handler.
@@ -44,6 +57,8 @@ export class SympyEvaluator {
                     }
 
                     reject(payload.message);
+                } else if(status === "exit") {
+                    resolve("exit");
                 } else {
                     resolve(payload);
                 }

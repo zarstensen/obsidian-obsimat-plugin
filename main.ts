@@ -68,7 +68,7 @@ export default class ObsiMatPlugin extends Plugin {
     }
 
     onunload() {
-        // TODO: unload a BUNCH of stuff here.
+        this.sympy_evaluator.shutdown();
     }
 
     async loadSettings() {

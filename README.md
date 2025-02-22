@@ -1,6 +1,6 @@
 # Obsimat
 
-**Obsimat** is an [Obsidian](https://obsidian.md/) plugin that enables the evaluation of $\LaTeX$ blocks with [Sympy](https://www.sympy.org).
+**Obsimat** is an [Obsidian](https://obsidian.md/) plugin that enables the evaluation of LaTeX blocks with [Sympy](https://www.sympy.org).
 
 <!-- omit in toc -->
 ## Table of Contents
@@ -36,7 +36,7 @@ If an equation has too many free variables to solve for all of them, a modal wil
 
 To solve a system of equations, place each equation on a new line inside either a `\begin{cases}` or `\begin{align}` LaTeX environment, and execute the solve command.
 
-If an expression with no relation is solved, it is assumed it is set equal to $0$.
+If an expression with no relation is solved, it is assumed it is set equal to 0.
 For example, `a^2 + b` would be interpreted as `a^2 + b = 0`.
 
 ### Variables
@@ -51,7 +51,10 @@ Whenever this variable is used after it has been defined, it will be replaced by
 
 Variable persistence is based on the location they were defined inside the document, meaning a variable cannot be used in the note above its LaTeX block definition. Furthermore, all Obsimat code blocks remove all variable definitions above themselves.
 
-> [!TIP] Variable Definition Example
+> [!NOTE]
+> **Variable Definition Example**
+>
+> 
 > Define a variable `x` with the value `\sqrt{99}`.
 >
 > `$x := \sqrt{99}$`
@@ -63,7 +66,6 @@ Variable persistence is based on the location they were defined inside the docum
 > Evaluate an expression containing the above variables after they have been defined.
 >
 > `$x^2 + y` evaluates to 198
->
 
 ### Obsimat Code Block
 
@@ -71,11 +73,11 @@ Obsimat code blocks define a math environment for which all expressions followin
 
 Each Obsimat code block functions as a complete reset, ignoring any previous variable definitions and Obsimat code blocks.
 
-> [!TIP] Obsimat Code Block Example
+> [!NOTE]
+> **Obsimat Code Block Example**
 >
-> ````toml
+> ````text
 > ```obsimat
->
 > [symbols]
 > x = [ "real", "positive" ]
 > y = [ "integer" ]
@@ -87,7 +89,6 @@ Each Obsimat code block functions as a complete reset, ignoring any previous var
 >
 > [domain]
 > domain="Reals"
->
 > ```
 > ````
 >
@@ -97,7 +98,7 @@ Each Obsimat code block functions as a complete reset, ignoring any previous var
 > | :--------------------------------------------- | :-------- | :------------------------- |
 > | $x^2=2$                                        | Solve     | $\sqrt{2}$                 |
 > | $30 \frac{km}{h}$                              | Evaluate  | $\frac{25}{3} \frac{m}{s}$ |
-> | $\begin{cases} x + y = 1 \\ x = y \end{cases}$ | Solve     | $False$                    |
+> | `\begin{cases} x + y = 1 \\ x = y \end{cases}` | Solve     | $False$                    |
 >
 
 #### Symbol Assumptions

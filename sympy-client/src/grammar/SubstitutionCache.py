@@ -29,7 +29,6 @@ class SubstitutionCache:
         return variable_value
     
     def _cache_new_symbol(self, symbol_name: str):
-        symbol_config = self._environment['symbols'][symbol_name]
-        symbol_value = ObsimatEnvironmentUtils.create_sympy_symbol(symbol_config, self._environment)
+        symbol_value = ObsimatEnvironmentUtils.create_sympy_symbol(symbol_name, self._environment)
         self._cached_substitutions[symbol_name] = symbol_value
         return symbol_value

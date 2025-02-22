@@ -172,3 +172,23 @@ i & 2 i
         })
         
         assert result.doit() == Matrix([[5, - 5 * I], [5 * I, 5]])	
+        
+        
+    def test_symbols(self):
+        result = self.parser.doparse(r"x", { "symbols": { "x": [ "real" ] } })
+        assert result == symbols("x", real=True)
+        
+        x = symbols("x", real=True)
+        y = symbols("y", positive=True)
+        result = self.parser.doparse(r"a + b", {
+            "symbols": {
+                "x": [ "real" ], "y": ["positive"]
+                },
+            "variables": {
+                "a": "x + y",
+                "b": "y"
+            }
+            })
+        
+        assert result == x + y + y
+        

@@ -92,7 +92,12 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             gradients.append(self._expr_gradient(item, matrix.free_symbols))
         
         return Matrix.vstack(*gradients)
+      
+    def rref(self, tokens):
+        if not self._obj_is_sympy_Matrix(tokens[1]):
+            raise ValueError("RREF expects a matrix")
         
+        return tokens[1].rref()[0]
 
     def quick_derivative(self, tokens):
         if len(tokens[0].free_symbols) == 0:

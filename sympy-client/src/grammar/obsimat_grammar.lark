@@ -108,6 +108,11 @@ JACOBIAN: "\\mathbf{J}"
 jacobian: JACOBIAN _expression_func
 %extend _function: jacobian
 
+// add rref operator
+RREF: "\\mathrm{rref}"
+rref: RREF _expression_func
+%extend _function: rref
+
 // add quick hand notation for differentiating expressions
 // e.g. (x^2)' -> 2x
 %override matrix_prime: matrix PRIMES

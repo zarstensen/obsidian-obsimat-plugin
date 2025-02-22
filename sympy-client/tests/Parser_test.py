@@ -192,3 +192,6 @@ i & 2 i
         
         assert result == x + y + y
         
+    def test_left_right_ignore(self):
+        result = self.parser.doparse(r"\left 2 + 2")
+        assert result == 4

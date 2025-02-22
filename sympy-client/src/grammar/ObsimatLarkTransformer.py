@@ -62,13 +62,23 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             return tokens[1].doit().dot(tokens[3].doit(), hermitian=True, conjugate_convention="right")
 
     def gradient(self, tokens):
-        return Matrix([ [ diff(tokens[1], symbol) for symbol in sorted(tokens[1].free_symbols, key=str)] ])
+        return Matrix([ [ diff(tokens[1], symbol, evaluate=False) for symbol in sorted(tokens[1].free_symbols, key=str)] ])
+
+    def hessian(self, tokens):
+
+        symbols = list(sorted(tokens[1].free_symbols, key=str))
+        
+        return Matrix([
+            [
+                diff(tokens[1], symbol_col, symbol_row, evaluate=False) for symbol_col in symbols
+            ] for symbol_row in symbols
+        ])
 
     def quick_derivative(self, tokens):
         if len(tokens[0].free_symbols) == 0:
             return S(0)
         else:
-            return diff(tokens[0], next(sorted(tokens[0].free_symbols, key=str)), len(tokens[1]))
+            return diff(tokens[0], next(sorted(tokens[0].free_symbols, key=str)), len(tokens[1]), evaluate=False)
 
     def math_constant(self, tokens):
         match str(tokens[0]):

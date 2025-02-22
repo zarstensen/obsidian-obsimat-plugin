@@ -191,4 +191,8 @@ i & 2 i
             })
         
         assert result == x + y + y
+    
+    def test_hessian(self):
+        result = self.parser.doparse(r"\mathbf{H}(x^2 + y^2)")
         
+        assert result.doit() == Matrix([[2, 0], [0, 2]])

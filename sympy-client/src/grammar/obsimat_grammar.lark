@@ -98,6 +98,11 @@ GRADIENT: "\\nabla"
 gradient: GRADIENT _expression_func
 %extend _function: gradient
 
+// add hessian operator
+HESSIAN: "\mathbf{H}"
+hessian: HESSIAN _expression_func
+%extend _function: hessian
+
 // add quick hand notation for differentiating expressions
 // e.g. (x^2)' -> 2x
 %override matrix_prime: matrix PRIMES

@@ -99,12 +99,12 @@ gradient: GRADIENT _expression_func
 %extend _function: gradient
 
 // add hessian operator
-HESSIAN: "\mathbf{H}"
+HESSIAN: "\\mathbf{H}"
 hessian: HESSIAN _expression_func
 %extend _function: hessian
 
 // add jacobian operator
-JACOBIAN: "\mathbf{J}"
+JACOBIAN: "\\mathbf{J}"
 jacobian: JACOBIAN _expression_func
 %extend _function: jacobian
 

@@ -65,7 +65,7 @@ Variable persistence is based on the location they were defined inside the docum
 >
 > Evaluate an expression containing the above variables after they have been defined.
 >
-> `$x^2 + y` evaluates to 198
+> `$x^2 + y$` evaluates to 198
 
 ### Obsimat Code Block
 

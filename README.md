@@ -18,11 +18,11 @@
 
 ### Evaluate
 
-Evaluate a $\LaTeX$ math expressions with the `Evaluate LaTeX Expression` command (alt + B).
+Evaluate a LaTeX math expressions with the `Evaluate LaTeX Expression` command (alt + B).
 
-Obsimat supports various math operations, ranging from basic addition and multiplication to more complex operations such as integration and differentiation. In general, Obsimat will support any operation that Sympy's Lark $\LaTeX$ parser can parse. Furthermore, the Lark parser has been extended to support the following additional operations:
+Obsimat supports various math operations, ranging from basic addition and multiplication to more complex operations such as integration and differentiation. In general, Obsimat will support any operation that Sympy's Lark LaTeX parser can parse. Furthermore, the Lark parser has been extended to support the following additional operations:
 
-| Operation                | $\LaTeX$                | Rendered $\LaTeX$      |
+| Operation                | LaTeX                   | Rendered LaTeX         |
 | :----------------------- | :---------------------- | :--------------------- |
 | Inner product of vectors | `\langle x , y \rangle` | $\langle x, y \rangle$ |
 | Norm of a single vector  | `\Vert x \Vert`         | $\Vert x \Vert$        |
@@ -30,23 +30,23 @@ Obsimat supports various math operations, ranging from basic addition and multip
 
 ### Solve
 
-Solve $\LaTeX$ equations with the `Solve LaTeX Expression` command (alt + L).
+Solve LaTeX equations with the `Solve LaTeX Expression` command (alt + L).
 
 If an equation has too many free variables to solve for all of them, a modal will pop up where you can pick which symbols to solve for. The solution domain can also be specified here [^1].
 
-To solve a system of equations, place each equation on a new line inside either a `\begin{cases}` or `\begin{align}` $\LaTeX$ environment, and execute the solve command.
+To solve a system of equations, place each equation on a new line inside either a `\begin{cases}` or `\begin{align}` LaTeX environment, and execute the solve command.
 
 If an expression with no relation is solved, it is assumed it is set equal to $0$.
-For example, $a^2 + b$ would be interpreted as $a^2 + b = 0$.
+For example, `a^2 + b` would be interpreted as `a^2 + b = 0`.
 
 ### Variables
 
-Define variables inside $\LaTeX$ blocks with the `:=` operator.
+Define variables inside LaTeX blocks with the `:=` operator.
 The left-hand side specifies the name of the variable, and the right-hand side its value.
 Whenever this variable is used after it has been defined, it will be replaced by its value.
 
 > [!IMPORTANT]
-> Only one variable can be defined per $\LaTeX$ block.
+> Only one variable can be defined per LaTeX block.
 >
 
 Variable persistence is based on the location they were defined inside the document, meaning a variable cannot be used in the note above its LaTeX block definition. Furthermore, all Obsimat code blocks remove all variable definitions above themselves.
@@ -54,15 +54,15 @@ Variable persistence is based on the location they were defined inside the docum
 > [!TIP] Variable Definition Example
 > Define a variable `x` with the value `\sqrt{99}`.
 >
-> $\text{\verb|x := \sqrt{99}|} \to x := \sqrt{99}$
+> `$x := \sqrt{99}$`
 >
 > Define a variable `y` dependent on the value of `x`.
 >
-> $\text{\verb|y := x^2|} \to y := x^2$
+> `$y := x^2$`
 >
 > Evaluate an expression containing the above variables after they have been defined.
 >
-> $\text{\verb|x^2 + y|} \to x^2 + y \text{\verb| evaluates to |} 198$
+> `$x^2 + y` evaluates to 198
 >
 
 ### Obsimat Code Block
@@ -122,11 +122,11 @@ The `domain` key in the `domain` table specifies the default domain to restrict 
 
 The value should be a sympify'able Python expression that evaluates to a [sympy set](https://docs.sympy.org/latest/modules/sets.html).
 
-If not specified, the default domain is the complex ($\mathbb{C}$) set.
+If not specified, the default domain is the complex set.
 
 ### Sympy Conversion
 
-Convert a $\LaTeX$ block to Sympy Python code with the `Convert LaTeX Expression To Sympy` command.
+Convert a LaTeX block to Sympy Python code with the `Convert LaTeX Expression To Sympy` command.
 
 ## Installing
 

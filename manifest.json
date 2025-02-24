@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-obsimat-plugin",
 	"name": "Obsimat",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"minAppVersion": "0.15.0",
 	"description": "Obsimat is an Obsidian plugin that enables the evaluation of LaTeX blocks with Sympy.",
 	"author": "Zarstensen",

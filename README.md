@@ -22,11 +22,15 @@ Evaluate a LaTeX math expressions with the `Evaluate LaTeX Expression` command (
 
 Obsimat supports various math operations, ranging from basic addition and multiplication to more complex operations such as integration and differentiation. In general, Obsimat will support any operation that Sympy's Lark LaTeX parser can parse. Furthermore, the Lark parser has been extended to support the following additional operations:
 
-| Operation                | LaTeX                   | Rendered LaTeX         |
-| :----------------------- | :---------------------- | :--------------------- |
-| Inner product of vectors | `\langle x , y \rangle` | $\langle x, y \rangle$ |
-| Norm of a single vector  | `\Vert x \Vert`         | $\Vert x \Vert$        |
-| Quick differentiation    | `(x)''...`              | $(x)''^{\cdots}$       |
+| Operation                     | LaTeX                   | Rendered LaTeX         |
+|:------------------------------|:------------------------|:-----------------------|
+| Inner product of vectors      | `\langle x , y \rangle` | $\langle x, y \rangle$ |
+| Norm of a single vector       | `\Vert x \Vert`         | $\Vert x \Vert$        |
+| Quick differentiation         | `(x)''...`              | $(x)''^{\cdots}$       |
+| Gradient vector of expression | `\nabla(x)`             | $\nabla(x)$            |
+| Hessian matrix of expression  | `\mathbf{H}(x)`         | $\mathbf{H}(x)$        |
+| Jacobi matrix of expression   | `\mathbf{J}(x)`         | $\mathbf{J}(x)$        |
+| rref of matrix                | `\mathrm{rref}(x)`      | $\mathrm{rref}(x)$     |
 
 ### Solve
 

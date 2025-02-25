@@ -171,6 +171,22 @@ class TestEvaluate:
         assert response.hasResult()
         assert response.getResult()['result'] == 5
         
+        asyncio.run(evaluateMode({
+            "expression": r"\alpha",
+            "environment": {
+                "variables": {
+                    "\\alpha": "2"
+                    }
+                }
+            },
+            response,
+            self.parser
+        ))
+        
+        assert response.hasResult()
+        assert response.getResult()['result'] == 2
+        
+        
         response.reset()
         asyncio.run(evaluateMode({
             "expression": r"A^T B",

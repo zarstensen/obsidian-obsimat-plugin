@@ -40,7 +40,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
     def _try_substitute(self, symbol_transform, tokens):
         symbol = symbol_transform(tokens)
         
-        substituted_value = self._substitution_cache.get_substitution(str(symbol))
+        substituted_value = self._substitution_cache.get_substitution(str(symbol)) or self._substitution_cache.get_substitution(f"\\{str(symbol)}")
         
         if substituted_value is not None:
             return substituted_value

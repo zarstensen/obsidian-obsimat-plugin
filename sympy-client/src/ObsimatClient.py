@@ -9,7 +9,7 @@ import re
 from grammar.ObsimatLatexParser import ObsimatLatexParser
 from grammar.SympyParser import SympyParser
 from sympy import latex, evaluate
-
+import jsonpickle
 
 #
 # The ObsimatClient class manages a connection and message parsing + encoding between an active obsimat plugin.
@@ -40,7 +40,7 @@ class ObsimatClient:
     
     # Send the given json dumpable object back to the plugin.
     async def send(self, mode: str, message: dict):
-        await self.connection.send(f"{mode}|{json.dumps(message)}")
+        await self.connection.send(f"{mode}|{jsonpickle.encode(message)}")
 
     # Signal to the plugin an error has occured, and give the following error message to it.
 
@@ -57,7 +57,7 @@ class ObsimatClient:
             if mode in self.modes:
                 response = ObsimatClient.ObsimatClientResponse(self, self.modes[mode]['formatter'])
                 try:
-                    loaded_payload = json.loads(payload)
+                    loaded_payload = jsonpickle.decode(payload)
                     await self.modes[mode]['handler'](loaded_payload, response, self.__latex_parser)
                 except Exception as e:
                     await response.error(str(e) + "\n" + traceback.format_exc())

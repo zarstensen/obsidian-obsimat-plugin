@@ -4,3 +4,4 @@ sympy@git+https://github.com/sympy/sympy.git#930b991
 regex
 pytest
 pyinstaller
+jsonpickle

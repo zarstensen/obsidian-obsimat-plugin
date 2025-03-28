@@ -8,21 +8,13 @@ from copy import deepcopy
 from sympy import *
 from sympy.core.relational import Relational
 from sympy.core.operations import LatticeOp, AssocOp
-from typing import TypedDict
+from typing import Any, Callable, TypedDict
 
-def __try_assign(new_value, original_value):
-    if new_value is not None:
-        return new_value
-    else:
-        return original_value
-
-class EvaluateModeMessage(TypedDict):
+class EvaluateMessage(TypedDict):
     expression: str
     environment: ObsimatEnvironment
 
-## Tries to evaluate the last equality of an latex equation.
-async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, parser: SympyParser):    
-    
+async def eval_mode_base(message: EvaluateMessage, response: ModeResponse, parser: SympyParser, evaluate_callback: Callable[[Any], Any]):
     sympy_expr = parser.doparse(message['expression'], message['environment'])
     expr_lines = None
     
@@ -44,10 +36,8 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, par
     before_evaluate = deepcopy(sympy_expr)
     sympy_expr = ObsimatEnvironmentUtils.substitute_units(sympy_expr, message['environment'])
 
-    sympy_expr = __try_assign(sympy_expr.doit(), sympy_expr)
-    sympy_expr = __try_assign(sympy_expr.expand(),  sympy_expr)
-    sympy_expr = __try_assign(sympy_expr.simplify(), sympy_expr)
-    
+    sympy_expr = evaluate_callback(sympy_expr)
+
     if sympy_expr != before_evaluate:
         sympy_expr = Eq(before_evaluate, sympy_expr, evaluate=False)
     
@@ -55,3 +45,9 @@ async def evaluateMode(message: EvaluateModeMessage, response: ModeResponse, par
         await response.result(sympy_expr, metadata={ "start_line": expr_lines[0], "end_line": expr_lines[1] })
     else:
         await response.result(sympy_expr)
+
+def try_assign(new_value, original_value):
+    if new_value is not None:
+        return new_value
+    else:
+        return original_value

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from ObsimatEnvironment import ObsimatEnvironment
 from ModeResponse import ModeResponse
@@ -13,6 +14,16 @@ class SolveModeMessage(TypedDict):
     expression: str
     symbol: str | None
     environment: ObsimatEnvironment
+
+@dataclass
+class MultivariateResult:
+    symbols: list[Any]
+    equation_count: int
+    
+@dataclass
+class SolveResult:
+    solution: Any
+    symbols: list[Any]
     
 # The maximum number of finite solution to display it as a disjunction of solutions.
 # instead of the set itself.
@@ -22,7 +33,7 @@ MAX_RELATIONAL_FINITE_SOLUTIONS = 5
 # if a symbol is not given, and the expression is multivariate, this mode sends a response with status multivariate_equation,
 # along with a list of possible symbols to solve for in its symbols key.
 # if successfull its sends a message with status solved, and the result in the result key.
-async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: SympyParser):    
+async def solve_handler(message: SolveModeMessage, response: ModeResponse, parser: SympyParser):    
     equations = parser.doparse(message['expression'], message['environment'])
     equations = ObsimatEnvironmentUtils.substitute_units(equations, message['environment'])
 
@@ -52,7 +63,7 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: S
 
     # determine what symbols to solve for
     if 'symbols' not in message and len(free_symbols) > len(equations):
-        await response.result({ 'symbols': free_symbols, 'equation_count': len(equations) }, status="multivariate_equation")
+        await response.result(MultivariateResult(symbols=free_symbols, equation_count=len(equations)), status="multivariate_equation")
         return
 
     if 'symbols' in message and len(message['symbols']) != len(equations):
@@ -76,8 +87,6 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: S
     # TODO: is there another way to do this?
     # it is sortof a mess having to distinguish between strictly 1 equation and multiple equations.
     
-    print(symbols, flush=True)
-    
     if len(equations) == 1 and len(symbols) == 1: # these two should always have equal lenth.
         solution_set = solveset(equations[0], symbols[0], domain=domain)
     else:
@@ -86,25 +95,25 @@ async def solveMode(message: SolveModeMessage, response: ModeResponse, parser: S
         except NonlinearError:
             solution_set = nonlinsolve(equations, symbols)
     
-    await response.result({ 'solution': solution_set, 'symbols': symbols })
+    await response.result(SolveResult(solution=solution_set, symbols=symbols))
 
 # Convert a result returned from solveMode, into a json encodable string.
-def solveModeFormatter(result: Any, status: str, _metadata: dict) -> str:
+def solve_serializer(result: MultivariateResult | SolveResult, status: str, _metadata: dict) -> str:
     # return list of all possible symbols to solve for.
     # include the sympy comparable string version, and a latex version, which should only be used for visuals.
     if status == 'multivariate_equation':
-        result['symbols'] = [ { "sympy_symbol": str(s), "latex_symbol": latex(s) } for s in result['symbols'] ]
+        result.symbols = [ { "sympy_symbol": str(s), "latex_symbol": latex(s) } for s in result.symbols ]
         return result
     
     # format the solution set, depending on its type and size.
     elif status=='success':
         
-        solutions_set = result['solution']
+        solutions_set = result.solution
         
-        if len(result['symbols']) == 1:
-            symbols = result['symbols'][0]
+        if len(result.symbols) == 1:
+            symbols = result.symbols[0]
         else:
-            symbols = tuple(result['symbols'])
+            symbols = tuple(result.symbols)
         
         if isinstance(solutions_set, FiniteSet) and len(solutions_set) <= MAX_RELATIONAL_FINITE_SOLUTIONS:
             return latex(solutions_set.as_relational(symbols))

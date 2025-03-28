@@ -1,9 +1,13 @@
 from ObsimatClient import ObsimatClient
 
 from grammar.ObsimatLatexParser import ObsimatLatexParser
-from modes.EvaluateMode import evaluateMode
-from modes.SolveMode import solveMode, solveModeFormatter
-from modes.SymbolSetMode import symbolSetMode, symbolSetModeFormatter
+from modes.EvalMode import eval_handler
+from modes.EvalfMode import evalf_handler
+from modes.ExpandMode import expand_handler
+from modes.FactorMode import factor_handler
+from modes.ApartMode import apart_handler
+from modes.SolveMode import solve_handler, solve_serializer
+from modes.SymbolSetMode import symbol_set_handler, symbol_set_serializer
 from modes.ConvertSympyMode import convertSympyMode, convertSympyModeFormatter
 
 import asyncio
@@ -17,9 +21,13 @@ port = int(sys.argv[1])
 
 
 client = ObsimatClient(ObsimatLatexParser())
-client.register_mode("evaluate", evaluateMode)
-client.register_mode("solve", solveMode, solveModeFormatter)
-client.register_mode("symbolsets", symbolSetMode, symbolSetModeFormatter)
+client.register_mode("eval", eval_handler)
+client.register_mode("evalf", evalf_handler)
+client.register_mode("expand", expand_handler)
+client.register_mode("factor", factor_handler)
+client.register_mode("apart", apart_handler)
+client.register_mode("solve", solve_handler, solve_serializer)
+client.register_mode("symbolsets", symbol_set_handler, symbol_set_serializer)
 client.register_mode("convert-sympy", convertSympyMode, convertSympyModeFormatter)
 
 

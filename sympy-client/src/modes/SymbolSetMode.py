@@ -41,7 +41,7 @@ class SymbolSetModeMessage(TypedDict):
     environment: ObsimatEnvironment
 
 # generates an latex array of symbols and their belonging sets, based on the given environment.
-async def symbolSetMode(message: SymbolSetModeMessage, response: ModeResponse, _parser: SympyParser):
+async def symbol_set_handler(message: SymbolSetModeMessage, response: ModeResponse, _parser: SympyParser):
     environment: ObsimatEnvironment = message['environment']
     
     set_symbols = {set: [] for set in SETS}
@@ -70,7 +70,7 @@ async def symbolSetMode(message: SymbolSetModeMessage, response: ModeResponse, _
     await response.result(set_symbols)
 
 # Convert a set_symbols object returned rom symbolSetMode, into a latex formatted list of symbols and their belonging sets.
-def symbolSetModeFormatter(set_symbols: Any, status: str, metadata: dict) -> str:
+def symbol_set_serializer(set_symbols: Any, status: str, metadata: dict) -> str:
     latex_sets = []
     
     for set, symbols in set_symbols.items():

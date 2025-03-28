@@ -1,6 +1,10 @@
 from grammar.ObsimatLatexParser import ObsimatLatexParser
 from tests.TestResponse import TestResponse
-from modes.EvaluateMode import evaluateMode
+from modes.EvalMode import eval_handler
+from modes.EvalfMode import evalf_handler
+from modes.FactorMode import factor_handler
+from modes.ExpandMode import expand_handler
+from modes.ApartMode import apart_handler
 import asyncio
 
 from sympy import *
@@ -12,7 +16,7 @@ class TestEvaluate:
     
     def test_simple_evaluate(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": "1+1", "environment": {}}, response, self.parser))
+        asyncio.run(eval_handler({"expression": "1+1", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -22,7 +26,7 @@ class TestEvaluate:
             
     def test_escaped_spaces(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"1\ + \ 1", "environment": {}}, response, self.parser))
+        asyncio.run(eval_handler({"expression": r"1\ + \ 1", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -33,7 +37,7 @@ class TestEvaluate:
         
     def test_matrix_single_line(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}}, response, self.parser))
+        asyncio.run(eval_handler({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}}, response, self.parser))
         assert response.hasResult()
         
         result = response.getResult()
@@ -43,7 +47,7 @@ class TestEvaluate:
                 
     def test_matrix_multi_line(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"""
+        asyncio.run(eval_handler({"expression": r"""
         2
         \cdot 
         \begin{bmatrix} 
@@ -59,7 +63,7 @@ class TestEvaluate:
         
     def test_matrix_normal(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"""
+        asyncio.run(eval_handler({"expression": r"""
         \Vert
         \begin{bmatrix}
         20 \\
@@ -78,7 +82,7 @@ class TestEvaluate:
         
     def test_matrix_inner_prodcut(self):
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"""
+        asyncio.run(eval_handler({"expression": r"""
         \langle 
         \begin{bmatrix}
         1 \\
@@ -103,7 +107,7 @@ class TestEvaluate:
         a, b = symbols("a b")
         
         response = TestResponse()
-        asyncio.run(evaluateMode({"expression": r"""
+        asyncio.run(eval_handler({"expression": r"""
         5 + 5 + 5 + 5 = 10 + 10
         """, "environment": {}}, response, self.parser))
         
@@ -114,7 +118,7 @@ class TestEvaluate:
         assert result['result'] == 20
         
         response.reset()
-        asyncio.run(evaluateMode({"expression": r"""
+        asyncio.run(eval_handler({"expression": r"""
         a = b = (a - b)^2
         """, "environment": {}}, response, self.parser))
         
@@ -122,10 +126,10 @@ class TestEvaluate:
         
         result = response.getResult()
 
-        assert result['result'].rhs == (a**2 + b**2 - 2 * a * b)
+        assert result['result'] == (a - b)**2
         
         response.reset()
-        asyncio.run(evaluateMode({"expression": r"""
+        asyncio.run(eval_handler({"expression": r"""
         1 = 2 = 1
         """, "environment": {}}, response, self.parser))
         
@@ -136,7 +140,7 @@ class TestEvaluate:
         assert result['result'] == 1
         
         response.reset()
-        asyncio.run(evaluateMode({"expression": r"""
+        asyncio.run(eval_handler({"expression": r"""
             \begin{cases}
             2 + 2 + 2 + 2 &= 4 + 2 + 2 \\
                           &= 4 + 4
@@ -155,7 +159,7 @@ class TestEvaluate:
         
         response = TestResponse()
         
-        asyncio.run(evaluateMode({
+        asyncio.run(eval_handler({
             "expression": r"a + b",
             "environment": {
                 "variables": {
@@ -171,7 +175,7 @@ class TestEvaluate:
         assert response.hasResult()
         assert response.getResult()['result'] == 5
         
-        asyncio.run(evaluateMode({
+        asyncio.run(eval_handler({
             "expression": r"\alpha",
             "environment": {
                 "variables": {
@@ -188,7 +192,7 @@ class TestEvaluate:
         
         
         response.reset()
-        asyncio.run(evaluateMode({
+        asyncio.run(eval_handler({
             "expression": r"A^T B",
             "environment": {
                 "variables": {
@@ -213,7 +217,7 @@ class TestEvaluate:
         assert response.getResult()['result'].rhs == Matrix([11])
         
         response.reset()
-        asyncio.run(evaluateMode({
+        asyncio.run(eval_handler({
             "expression": r"\sin{abc}",
             "environment": {
                 "variables": {
@@ -230,7 +234,7 @@ class TestEvaluate:
         
                 
         response.reset()
-        asyncio.run(evaluateMode({
+        asyncio.run(eval_handler({
             "expression": r"\sqrt{ val_{sub} + val_2^val_{three}}",
             "environment": {
                 "variables": {
@@ -252,7 +256,7 @@ class TestEvaluate:
         x, y = symbols("x y")
         response = TestResponse()
         
-        asyncio.run(evaluateMode({
+        asyncio.run(eval_handler({
             "expression": r"\nabla (x^2 y + y^2 x)",
             "environment": { }
             },
@@ -262,5 +266,46 @@ class TestEvaluate:
         
         assert response.hasResult()
         assert response.getResult()['result'].rhs == Matrix([[y * (2 * x + y), x * (2 * y + x)]])
+    
+    def test_evalf(self):
+        response = TestResponse()
+        asyncio.run(evalf_handler({"expression": "5/2", "environment": {}}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()
+            
+        assert result['result'].rhs == 2.5
+    
+    
+    def test_expand(self):
+        a, b = symbols("a b")
+        response = TestResponse()
+        asyncio.run(expand_handler({"expression": "(a + b)^2", "environment": {}}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()['result'].rhs
+        assert result == a**2 + 2 * a * b + b**2
+    
+    
+    def test_factor(self):
+        x = symbols("x")
+        response = TestResponse()
+        asyncio.run(factor_handler({"expression": "x^3 - 10x^2 + 3x + 54", "environment": {}}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()['result'].rhs
+        assert result == (x - 9) * (x - 3) * (x + 2)
+
+    
+    
+    def test_apart(self):
+        x = symbols("x")
+        response = TestResponse()
+        asyncio.run(apart_handler({"expression": "\\frac{8x + 7}{x^2 + x - 2}", "environment": {}}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()['result'].rhs
+        assert result == 3 / (x + 2) + 5 / (x - 1)
+
     
     # TODO: missing unit conversion tests.

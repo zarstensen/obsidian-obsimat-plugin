@@ -49,6 +49,7 @@ export default class ObsiMatPlugin extends Plugin {
 
         this.addObsimatCommands(new Map([
             [ new EvaluateCommand("eval"), 'Evaluate LaTeX Expression (Sympy)' ],
+            [ new EvaluateCommand("evalf"), 'Evalf LaTeX Expression (Sympy)' ],
             [ new EvaluateCommand("expand"), 'Expand LaTeX Expression (Sympy)' ],
             [ new EvaluateCommand("factor"), 'Factor LaTeX Expression (Sympy)' ],
             [ new EvaluateCommand("apart"), 'Partial Fraction Decomposition On LaTeX Expression (Sympy)' ],

@@ -18,7 +18,7 @@ async def eval_mode_base(message: EvaluateMessage, response: ModeResponse, parse
     sympy_expr = parser.doparse(message['expression'], message['environment'])
     expr_lines = None
     
-    # choose bottom / right hand most evaluatable expression.
+    # choose bottom / right most evaluatable expression.
     while isinstance(sympy_expr, SystemOfExpr) or isinstance(sympy_expr, Relational) or isinstance(sympy_expr, LatticeOp):
         # for system of expressions, take the last one
         if isinstance(sympy_expr, SystemOfExpr):

@@ -68,4 +68,4 @@ class TestUnitConversion:
         
         result = response.getResult()['result']
         
-        assert result.solution == 25 * units.kilogram
+        assert result.solution == FiniteSet(25 * units.kilogram)

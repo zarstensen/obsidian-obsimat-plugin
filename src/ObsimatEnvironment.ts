@@ -16,7 +16,7 @@ export class ObsimatEnvironment {
     // the units which any expression in this environment should handle.
     public units_enabled: boolean | undefined;
     // the base_units list specifies a list of units which any expression result should convert its own units to.
-    public excluded_units: string[] | undefined;
+    public excluded_symbols: string[] | undefined;
     
     // the domain is a sympy expression, evaluating to the default solution domain of any equation solutions.
     public domain: string | undefined;
@@ -98,11 +98,11 @@ export class ObsimatEnvironment {
     private static readonly OBSIMAT_VARIABLE_DEF_REGEX = /\$\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*:=\s*(?<value>[^=$]*?)\s*\$/g;
     private static readonly OBSIMAT_FUNCTION_DEF_REGEX = /\$\s*(?<name>\w)\((?<args>(?:[^=\s$]*?,?\s*))\)\s*:=\s*(?<body>[^=$]*?)\s*\$/g;
 
-    private constructor(symbols?: { [symbol: string]: string[] }, variables?: { [variable: string]: string }, units_enabled?: boolean, excluded_units?: string[], domain?: string) {
+    private constructor(symbols?: { [symbol: string]: string[] }, variables?: { [variable: string]: string }, units_enabled?: boolean, excluded_symbols?: string[], domain?: string) {
         this.symbols = symbols;
         this.variables = variables;
         this.units_enabled = units_enabled;
-        this.excluded_units = excluded_units;
+        this.excluded_symbols = excluded_symbols;
         this.domain = domain;
     }
 

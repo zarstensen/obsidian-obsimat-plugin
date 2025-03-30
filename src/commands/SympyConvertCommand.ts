@@ -7,7 +7,7 @@ import { ObsimatEnvironment } from "src/ObsimatEnvironment";
 export class SympyConvertCommand implements IObsimatCommand {
     readonly id: string = 'convert-to-sympy-command';
 
-    async functioncallback(app: App, evaluator: SympyEvaluator, editor: Editor, view: MarkdownView): Promise<void> {
+    async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
         let equation: { from: number, to: number, block_to: number, contents: string } | null = null;
         
         // Extract equation to evaluate
@@ -26,17 +26,13 @@ export class SympyConvertCommand implements IObsimatCommand {
             new Notice("You are not inside a math block");
             return;
         }
-        
-        const obsimat_env = ObsimatEnvironment.fromMarkdownView(app, view);
 
         await evaluator.send("convert-sympy", {
             expression: equation.contents,
-            environment: obsimat_env
+            environment: ObsimatEnvironment.fromMarkdownView(app, view)
         });
 
         const response = await evaluator.receive();
-
-        console.log(response);
 
         // place the convertet python code into a code block right below the math block.
 

@@ -7,8 +7,9 @@ from modes.ExpandMode import expand_handler
 from modes.FactorMode import factor_handler
 from modes.ApartMode import apart_handler
 from modes.SolveMode import solve_handler, solve_serializer
+from modes.ConvertUnitsMode import convert_units_handler
 from modes.SymbolSetMode import symbol_set_handler, symbol_set_serializer
-from modes.ConvertSympyMode import convertSympyMode, convertSympyModeFormatter
+from modes.ConvertSympyMode import convert_sympy_handler, convert_sympy_formatter
 
 import asyncio
 import sys
@@ -28,8 +29,8 @@ client.register_mode("factor", factor_handler)
 client.register_mode("apart", apart_handler)
 client.register_mode("solve", solve_handler, solve_serializer)
 client.register_mode("symbolsets", symbol_set_handler, symbol_set_serializer)
-client.register_mode("convert-sympy", convertSympyMode, convertSympyModeFormatter)
-
+client.register_mode("convert-sympy", convert_sympy_handler, convert_sympy_formatter)
+client.register_mode("convert-units", convert_units_handler)
 
 async def main():
     await client.connect(port)

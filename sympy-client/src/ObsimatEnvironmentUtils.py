@@ -5,6 +5,7 @@ from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.systems import SI
 from sympy import *
 from ObsimatEnvironment import ObsimatEnvironment
+import UnitsUtils
 
 ## The ObsimatEnvironmentUtils provide various utility functions for a math expression present in an ObsimatEnvironment.
 class ObsimatEnvironmentUtils:
@@ -38,53 +39,16 @@ class ObsimatEnvironmentUtils:
             
             return sympy_expr
         
-        # check if any symbol matches a unit string
-        for symbol in sympy_expr.free_symbols:
-            if 'excluded_units' in environment and str(symbol) in environment['excluded_units']:
-                continue
-            
-            # attempt to replace the symbol with a corresponding unit.
-            try:
-                units = u.find_unit(str(symbol))
-                if units[0] == str(symbol):
-                    sympy_expr = sympy_expr.subs({symbol: getattr(u, units[0])})
-            except AttributeError:
-                # unit was not found.
-                continue
+        excluded_symbols = []
         
-        if not isinstance(sympy_expr, Add):
-            sympy_expr = [sympy_expr]
-        else:
-            sympy_expr = list(sympy_expr.args)
+        if 'excluded_symbols' in environment:
+            for symbol_str in environment['excluded_symbols']:
+                if 'symbols' in environment and symbol_str in environment['symbols']:
+                    excluded_symbols.append(ObsimatEnvironmentUtils.create_sympy_symbol(symbol_str, environment))
+                else:
+                    excluded_symbols.append(Symbol(symbol_str))
         
-        converted_expressions = []
+        sympy_expr = UnitsUtils.substitute_units(sympy_expr, excluded_symbols)
+        sympy_expr = UnitsUtils.auto_convert(sympy_expr)
         
-        for expr in sympy_expr:
-            curr_complexity = ObsimatEnvironmentUtils._get_unit_complexity(expr)
-            
-            # Conver to using all base units of system.
-            for units in [ SI._base_units, *SI.get_units_non_prefixed() ]:
-                converted_expr = u.convert_to(expr, units)
-                converted_expr_complexity = ObsimatEnvironmentUtils._get_unit_complexity(converted_expr)
-                
-                if converted_expr_complexity < curr_complexity:
-                    curr_complexity = converted_expr_complexity
-                    expr = converted_expr
-
-            converted_expressions.append(expr)
-
-        return Add(*converted_expressions)
-
-    @staticmethod
-    def _get_unit_complexity(expression):
-        complexity = 0
-        
-        for val, pow in expression.as_powers_dict().items():
-            if isinstance(val, Quantity):
-                
-                if 0 < abs(pow) < 1:
-                    pow = 1 / pow
-                
-                complexity += abs(pow)
-                
-        return complexity
+        return sympy_expr

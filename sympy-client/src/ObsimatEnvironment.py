@@ -7,6 +7,6 @@ class ObsimatEnvironment(TypedDict):
     variables: dict[str, str]
 
     units_enabled: bool
-    excluded_units: list[str]
+    excluded_symbols: list[str]
 
     domain: str

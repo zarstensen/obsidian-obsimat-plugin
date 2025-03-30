@@ -18,12 +18,12 @@
 
 ### Evaluate
 
-Evaluate a LaTeX math expressions with the `Evaluate LaTeX Expression` command (alt + B).
+Evaluate a LaTeX math expressions with the `Evaluate LaTeX Expression` command.
 
 Obsimat supports various math operations, ranging from basic addition and multiplication to more complex operations such as integration and differentiation. In general, Obsimat will support any operation that Sympy's Lark LaTeX parser can parse. Furthermore, the Lark parser has been extended to support the following additional operations:
 
 | Operation                     | LaTeX                   | Rendered LaTeX         |
-|:------------------------------|:------------------------|:-----------------------|
+| :---------------------------- | :---------------------- | :--------------------- |
 | Inner product of vectors      | `\langle x , y \rangle` | $\langle x, y \rangle$ |
 | Norm of a single vector       | `\Vert x \Vert`         | $\Vert x \Vert$        |
 | Quick differentiation         | `(x)''...`              | $(x)''^{\cdots}$       |
@@ -32,9 +32,23 @@ Obsimat supports various math operations, ranging from basic addition and multip
 | Jacobi matrix of expression   | `\mathbf{J}(x)`         | $\mathbf{J}(x)$        |
 | rref of matrix                | `\mathrm{rref}(x)`      | $\mathrm{rref}(x)$     |
 
+#### Variants
+
+The evaluate command has a series of variants, which all evaluates a given LaTeX expression, and then proceed to rewrite the result in some way.
+Below is a table overview of the variants, as well as their function.
+
+| Command Name                        | Function                                                                                |
+| :---------------------------------- | :-------------------------------------------------------------------------------------- |
+| `Evalf LaTeX Expression`            | Evaluate LaTeX expression and convert it to floating point values instead of fractions. |
+| `Expand LaTeX Expression`           | Evaluate and expand LaTeX expression.                                                   |
+| `Factor LaTeX Expression`           | Evaluate and factor LaTeX expression.                                                   |
+| `Apart LaTeX Expression`            | Evaluate and perform partial fraction decomposition on LaTeX expression.                |
+| `Convert Units in LaTeX Expression` | Evaluate LaTeX expression and convert result to units provided by the user.             |
+
+
 ### Solve
 
-Solve LaTeX equations with the `Solve LaTeX Expression` command (alt + L).
+Solve LaTeX equations with the `Solve LaTeX Expression` command.
 
 If an equation has too many free variables to solve for all of them, a modal will pop up where you can pick which symbols to solve for. The solution domain can also be specified here [^1].
 
@@ -87,8 +101,8 @@ Each Obsimat code block functions as a complete reset, ignoring any previous var
 > y = [ "integer" ]
 >
 > [units]
-> units = [ "km", "h" ]
-> base-units = [ "m", "s" ]
+> enable = true
+> exclude = [ "g" ]
 >
 >
 > [domain]
@@ -101,7 +115,7 @@ Each Obsimat code block functions as a complete reset, ignoring any previous var
 > | Expression                                     | Operation | Result                     |
 > | :--------------------------------------------- | :-------- | :------------------------- |
 > | $x^2=2$                                        | Solve     | $\sqrt{2}$                 |
-> | $30 \frac{km}{h}$                              | Evaluate  | $\frac{25}{3} \frac{m}{s}$ |
+> | $30 \frac{kg \ m}{s^2}$                        | Evaluate  | $30 N$                     |
 > | `\begin{cases} x + y = 1 \\ x = y \end{cases}` | Solve     | $False$                    |
 >
 
@@ -113,13 +127,12 @@ This is done by setting the symbol name as a key in the `symbols` table, equal t
 
 #### Units
 
-Units and unit conversions can be specified in the `units` table.
+Unit conversion can be enabled and configured in the `units` table.
 
-The `units` key specifies a list of all units that can be used in the environment.
+The `enable` key specifies whether symbols will be replaced with units and converted to other units during evaluation.
 
-The `base-units` key specifies a list of units, which all results will be converted to.
-
-Units specified in `base-units` do not have to be present in `units`.
+The `exclude` key specifies a list of symbols, which should not be interpreted as units.
+An example of this being useful could be $g$ which is often used as a symbol for earths gravitational acceleration, but will be interpreted as $grams$ when units are enabled.
 
 #### Solution Domain
 

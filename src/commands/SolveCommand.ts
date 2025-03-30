@@ -7,7 +7,8 @@ import { SolveModeModal } from "src/SolveModeModal";
 
 export class SolveCommand implements IObsimatCommand {
     readonly id: string = 'solve-latex-expression-command';
-    async functioncallback(app: App, evaluator: SympyEvaluator, editor: Editor, view: MarkdownView): Promise<void> {
+
+    async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
         // Extract the equation to solve
         const equation = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor);
 

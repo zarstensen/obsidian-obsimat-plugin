@@ -12,7 +12,7 @@ export class EvaluateCommand implements IObsimatCommand {
         this.evaluate_mode = evaluate_mode;
     }
     
-    public async functioncallback(app: App, evaluator: SympyEvaluator, editor: Editor, view: MarkdownView): Promise<void> {
+    public async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
                 
         let equation: { from: number, to: number, contents: string } | null = null;
         
@@ -32,11 +32,11 @@ export class EvaluateCommand implements IObsimatCommand {
             return;
         }
 
+        message.expression = equation.contents;
+        message.environment = ObsimatEnvironment.fromMarkdownView(app, view);
+
         // send it to python and wait for response.
-        await evaluator.send(this.evaluate_mode, {
-            expression: equation.contents,
-            environment: ObsimatEnvironment.fromMarkdownView(app, view)
-        });
+        await evaluator.send(this.evaluate_mode, message);
         const response = await evaluator.receive();
 
         const insert_pos: EditorPosition = editor.offsetToPos(equation.to);

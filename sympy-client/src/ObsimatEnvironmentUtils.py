@@ -1,8 +1,11 @@
 from grammar.SystemOfExpr import SystemOfExpr
 
 import sympy.physics.units as u
+from sympy.physics.units.quantities import Quantity 
+from sympy.physics.units.systems import SI
 from sympy import *
 from ObsimatEnvironment import ObsimatEnvironment
+import UnitsUtils
 
 ## The ObsimatEnvironmentUtils provide various utility functions for a math expression present in an ObsimatEnvironment.
 class ObsimatEnvironmentUtils:
@@ -26,7 +29,7 @@ class ObsimatEnvironmentUtils:
     # Also convert all non base units to base units where possible.
     @staticmethod
     def substitute_units(sympy_expr, environment: ObsimatEnvironment):
-        if 'units' not in environment:
+        if 'units_enabled' not in environment or not environment['units_enabled']:
             return sympy_expr
         
         # substitute units recursively for all system of equations.
@@ -36,32 +39,16 @@ class ObsimatEnvironmentUtils:
             
             return sympy_expr
         
-        # check if any symbol matches a unit string
-        for symbol in sympy_expr.free_symbols:
-            if str(symbol) not in environment['units'] and  str(symbol) not in environment['base_units']:
-                continue
-            
-            # attempt to replace the symbol with a corresponding unit.
-            try:
-                units = u.find_unit(str(symbol))
-                if units[0] == str(symbol):
-                    sympy_expr = sympy_expr.subs({symbol: getattr(u, units[0])})
-            except AttributeError:
-                continue
-            
-        if 'base_units' in environment:
-            # finally do unit conversion if needed.
-            convert_units = environment['base_units']
-
-            if len(convert_units) > 0:
-                sympy_units = []
-                for unit_symbol in convert_units:
-                    try:
-                        units = u.find_unit(str(unit_symbol))
-                        sympy_units.append(getattr(u, units[0]))
-                    except AttributeError:
-                        continue
-                    
-                sympy_expr = u.convert_to(sympy_expr, sympy_units)
-
+        excluded_symbols = []
+        
+        if 'excluded_symbols' in environment:
+            for symbol_str in environment['excluded_symbols']:
+                if 'symbols' in environment and symbol_str in environment['symbols']:
+                    excluded_symbols.append(ObsimatEnvironmentUtils.create_sympy_symbol(symbol_str, environment))
+                else:
+                    excluded_symbols.append(Symbol(symbol_str))
+        
+        sympy_expr = UnitsUtils.substitute_units(sympy_expr, excluded_symbols)
+        sympy_expr = UnitsUtils.auto_convert(sympy_expr)
+        
         return sympy_expr

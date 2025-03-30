@@ -1,4 +1,4 @@
-import { finishRenderMath, MarkdownPostProcessorContext, Notice, Plugin, renderMath } from 'obsidian';
+import { finishRenderMath, MarkdownPostProcessorContext, MarkdownView, Notice, Plugin, renderMath } from 'obsidian';
 import { SympyEvaluator } from 'src/SympyEvaluator';
 import { ObsimatEnvironment } from 'src/ObsimatEnvironment';
 import { ExecutableSpawner, SourceCodeSpawner } from 'src/SympyClientSpawner';
@@ -7,6 +7,7 @@ import { IObsimatCommand } from 'src/commands/IObsimatCommand';
 import { EvaluateCommand } from 'src/commands/EvaluateCommand';
 import { SolveCommand } from 'src/commands/SolveCommand';
 import { SympyConvertCommand } from 'src/commands/SympyConvertCommand';
+import { UnitConvertCommand } from 'src/commands/UnitConvertCommand';
 
 interface ObsimatPluginSettings {
     dev_mode: boolean;
@@ -49,21 +50,26 @@ export default class ObsiMatPlugin extends Plugin {
 
         this.addObsimatCommands(new Map([
             [ new EvaluateCommand("eval"), 'Evaluate LaTeX Expression (Sympy)' ],
+            [ new EvaluateCommand("evalf"), 'Evalf LaTeX Expression (Sympy)' ],
             [ new EvaluateCommand("expand"), 'Expand LaTeX Expression (Sympy)' ],
             [ new EvaluateCommand("factor"), 'Factor LaTeX Expression (Sympy)' ],
             [ new EvaluateCommand("apart"), 'Partial Fraction Decomposition On LaTeX Expression (Sympy)' ],
             [ new SolveCommand(), 'Solve LaTeX Expression (Sympy)' ],
             [ new SympyConvertCommand(), 'Convert LaTeX Expression To Sympy' ],
+            [ new UnitConvertCommand(), 'Convert Units in LaTeX Expression' ]
         ]));
     }
 
-
+    // setsup the given map of commands as obsidian commands.
+    // the provided values for each command will be set as the command description.
     addObsimatCommands(commands: Map<IObsimatCommand, string>) {
         commands.forEach((description, command) => {
           this.addCommand({
             id: command.id,
             name: description,
-            editorCallback: command.functioncallback.bind(command, this.app, this.sympy_evaluator)
+            editorCallback: (e, v) => { 
+                command.functionCallback(this.sympy_evaluator, this.app, e, v as MarkdownView, {});
+            }
             });
         });
     }

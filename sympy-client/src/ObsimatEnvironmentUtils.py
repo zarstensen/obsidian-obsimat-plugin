@@ -3,6 +3,7 @@ from grammar.SystemOfExpr import SystemOfExpr
 import sympy.physics.units as u
 from sympy.physics.units.quantities import Quantity 
 from sympy.physics.units.systems import SI
+from sympy.core.relational import Relational
 from sympy import *
 from ObsimatEnvironment import ObsimatEnvironment
 import UnitsUtils
@@ -38,6 +39,10 @@ class ObsimatEnvironmentUtils:
                 sympy_expr.change_expr(i, lambda e: ObsimatEnvironmentUtils.substitute_units(e, environment))
             
             return sympy_expr
+        if isinstance(sympy_expr, Relational):
+            lhs = ObsimatEnvironmentUtils.substitute_units(sympy_expr.lhs, environment)
+            rhs = ObsimatEnvironmentUtils.substitute_units(sympy_expr.rhs, environment)
+            return sympy_expr.func(lhs, rhs)
         
         excluded_symbols = []
         

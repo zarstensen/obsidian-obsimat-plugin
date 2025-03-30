@@ -2,6 +2,7 @@ from grammar.ObsimatLatexParser import ObsimatLatexParser
 from tests.TestResponse import TestResponse
 from modes.EvalMode import eval_handler
 from modes.ConvertUnitsMode import convert_units_handler
+from modes.SolveMode import solve_handler
 import asyncio
 
 from sympy import *
@@ -49,7 +50,7 @@ class TestUnitConversion:
         result = response.getResult()['result'].rhs
         
         assert result == J * units.newton
-        
+      
     def test_explicit_conversion(self):
         response = TestResponse()
         asyncio.run(convert_units_handler({"expression": "7.2 * km / h", "target_units": [ "m", "s" ], "environment": {  }}, response, self.parser))
@@ -59,3 +60,12 @@ class TestUnitConversion:
         
         assert result == 2.0 * units.meter / units.second
         
+        
+    def test_solve_conversion(self):
+        response = TestResponse()
+        asyncio.run(solve_handler({"expression": "2 x = 50 kg", "environment": { "units_enabled": True }}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()['result']
+        
+        assert result.solution == 25 * units.kilogram

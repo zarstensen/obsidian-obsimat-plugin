@@ -159,7 +159,7 @@ _complete_rel{relation}: _expression align_rel{relation} _expression
 
 // chained relations
 // that is eg. a = b = c, or a < b < c and so on...
-_chained_relation{relation}: (_relation | partial_relation) relation _expression
+_chained_relation{relation}: (_relation | chained_relation | partial_relation) relation _expression
 chained_relation: _chained_relation{EQUAL} | _chained_relation{NOT_EQUAL} | _chained_relation{LT} | _chained_relation{LTE} | _chained_relation{GT} | _chained_relation{GTE}
 
 %extend latex_string: chained_relation

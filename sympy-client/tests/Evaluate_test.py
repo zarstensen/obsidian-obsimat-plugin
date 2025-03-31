@@ -154,6 +154,18 @@ class TestEvaluate:
         assert result['result'] == 8
         assert result['metadata']['start_line'] == 4
         assert result['metadata']['end_line'] == 4
+        
+        response.reset()
+
+        asyncio.run(eval_handler({"expression": r"""
+            1 = 2 = 3 = 4 = 5 = 6 = 7 = 8
+            """, "environment": {}}, response, self.parser))
+
+        assert response.hasResult()
+        
+        result = response.getResult()
+        assert result['result'] == 8
+        
     
     def test_variable_substitution(self):
         

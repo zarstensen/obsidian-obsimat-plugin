@@ -12,6 +12,9 @@ class SystemOfExpr:
     def __len__(self):
         return len(self.__expressions)
     
+    def extend(self, expressions: list[tuple[Any, Meta]]):
+        return SystemOfExpr([ *[ (e, m) for e, m in zip(self.__expressions, self.__location_data) ], *expressions])
+    
     # modify a single expression in the system.
     def change_expr(self, expression_index: int, change_func: Callable[[Any], Any]):
         self.__expressions[expression_index] = change_func(self.__expressions[expression_index])

@@ -61,7 +61,8 @@ class ObsimatLatexParser(SympyParser):
     def doparse(self, latex_str: str, environment: ObsimatEnvironment = {}):
         substitution_cache = SubstitutionCache(environment, self)
         transformer = ObsimatLarkTransformer(substitution_cache)
-        expr = transformer.transform(self.parser.parse(latex_str))
+        parse_tree = self.parser.parse(latex_str)
+        expr = transformer.transform(parse_tree)
         
         # choose the highest prioritized ambiguity.
         if isinstance(expr, Tree):

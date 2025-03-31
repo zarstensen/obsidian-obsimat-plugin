@@ -2,6 +2,7 @@ from grammar.SystemOfExpr import SystemOfExpr
 from grammar.SubstitutionCache import SubstitutionCache
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
+from sympy.core.relational import Relational
 from sympy import *
 from lark import Token, Discard
 
@@ -158,12 +159,19 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         def visit_wrapper(f, data, children, meta):
             relation_type = ObsimatLarkTransformer._relation_token_to_type(children[1])
 
-            return SystemOfExpr(
-                [
-                    (children[0], meta),
-                    (relation_type(children[0].rhs, children[2], evaluate=False), meta),
-                ]
-            )
+            relation = children[0]
+            
+            if isinstance(relation, Relational):
+                return SystemOfExpr(
+                    [
+                        (children[0], meta),
+                        (relation_type(children[0].rhs, children[2], evaluate=False), meta),
+                    ]
+                )
+            elif isinstance(relation, SystemOfExpr):
+                return relation.extend([ (relation_type(relation.get_expr(-1).rhs, children[2], evaluate=False), meta) ])
+            else:
+                raise ValueError("Chained relation must be between a sympy relation or a system of expressions, where the last expression is a relation.")
 
     @staticmethod
     def _relation_token_to_type(token):

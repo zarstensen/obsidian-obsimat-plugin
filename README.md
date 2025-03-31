@@ -132,7 +132,7 @@ Unit conversion can be enabled and configured in the `units` table.
 The `enable` key specifies whether symbols will be replaced with units and converted to other units during evaluation.
 
 The `exclude` key specifies a list of symbols, which should not be interpreted as units.
-An example of this being useful could be $g$ which is often used as a symbol for earths gravitational acceleration, but will be interpreted as $grams$ when units are enabled.
+An example of this being useful could be *g* which is often used as a symbol for earths gravitational acceleration, but will be interpreted as *grams* when units are enabled.
 
 #### Solution Domain
 

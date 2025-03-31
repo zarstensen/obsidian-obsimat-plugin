@@ -35,7 +35,7 @@ class ObsimatClient:
     def register_mode(self, mode: str, handler: Callable[[Any, ModeResponse, SympyParser], None], formatter: Callable[[Any, str, dict], str] = None):
         self.modes[mode] = {
             'handler': handler,
-            'formatter': formatter or ObsimatClient.__default_sympy_formatter
+            'formatter': formatter or ObsimatClient.default_sympy_formatter
         }
     
     # Send the given json dumpable object back to the plugin.
@@ -68,7 +68,7 @@ class ObsimatClient:
     # into a displayable string.
     # simply converts the given expression to latex, and remove any text formatting.
     @staticmethod
-    def __default_sympy_formatter(sympy_expr: Any, _status: str, _metadata: dict) -> str:
+    def default_sympy_formatter(sympy_expr: Any, _status: str, _metadata: dict) -> str:
         return re.sub(r"\\text\{(.*?)\}", r"\1", latex(sympy_expr))
     
     # The ObsimatClientResponse class is a helper class for the ObsimatClient,

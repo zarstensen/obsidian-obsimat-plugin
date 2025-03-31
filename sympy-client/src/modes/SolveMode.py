@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from ObsimatEnvironment import ObsimatEnvironment
+from ObsimatClient import ObsimatClient
 from ModeResponse import ModeResponse
 from grammar.SystemOfExpr import SystemOfExpr
 from grammar.SympyParser import SympyParser
@@ -97,12 +98,14 @@ async def solve_handler(message: SolveModeMessage, response: ModeResponse, parse
     
     await response.result(SolveResult(solution=solution_set, symbols=symbols))
 
+# TODO: cleanup default_sympy_formatter, should be somewhere else.
+
 # Convert a result returned from solveMode, into a json encodable string.
-def solve_serializer(result: MultivariateResult | SolveResult, status: str, _metadata: dict) -> str:
+def solve_formatter(result: MultivariateResult | SolveResult, status: str, _metadata: dict) -> str:
     # return list of all possible symbols to solve for.
     # include the sympy comparable string version, and a latex version, which should only be used for visuals.
     if status == 'multivariate_equation':
-        result.symbols = [ { "sympy_symbol": str(s), "latex_symbol": latex(s) } for s in result.symbols ]
+        result.symbols = [ { "sympy_symbol": str(s), "latex_symbol": ObsimatClient.default_sympy_formatter(s,None,None) } for s in result.symbols ]
         return result
     
     # format the solution set, depending on its type and size.
@@ -116,6 +119,6 @@ def solve_serializer(result: MultivariateResult | SolveResult, status: str, _met
             symbols = tuple(result.symbols)
         
         if isinstance(solutions_set, FiniteSet) and len(solutions_set) <= MAX_RELATIONAL_FINITE_SOLUTIONS:
-            return latex(solutions_set.as_relational(symbols))
+            return ObsimatClient.default_sympy_formatter(solutions_set.as_relational(symbols),None,None)
         else:
-            return f"{latex(symbols)} \\in {latex(solutions_set)}"
+            return f"{ObsimatClient.default_sympy_formatter(symbols,None,None)} \\in {ObsimatClient.default_sympy_formatter(solutions_set,None,None)}"

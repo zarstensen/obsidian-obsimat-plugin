@@ -70,7 +70,7 @@ async def symbol_set_handler(message: SymbolSetModeMessage, response: ModeRespon
     await response.result(set_symbols)
 
 # Convert a set_symbols object returned rom symbolSetMode, into a latex formatted list of symbols and their belonging sets.
-def symbol_set_serializer(set_symbols: Any, status: str, metadata: dict) -> str:
+def symbol_set_formatter(set_symbols: Any, status: str, metadata: dict) -> str:
     latex_sets = []
     
     for set, symbols in set_symbols.items():

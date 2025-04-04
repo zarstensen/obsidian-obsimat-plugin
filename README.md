@@ -31,6 +31,7 @@ Obsimat supports various math operations, ranging from basic addition and multip
 | Hessian matrix of expression  | `\mathbf{H}(x)`         | $\mathbf{H}(x)$        |
 | Jacobi matrix of expression   | `\mathbf{J}(x)`         | $\mathbf{J}(x)$        |
 | rref of matrix                | `\mathrm{rref}(x)`      | $\mathrm{rref}(x)$     |
+| eigenvalues of matrix         | `\mathrm{eig}(x)`       | $\mathrm{eig}(x)$      |
 
 #### Variants
 

@@ -12,7 +12,6 @@ on:
       - main
 env:
   PLUGIN_NAME: obsidian-obsimat-plugin
-  OS: [windows-latest, macos-latest]
 
 jobs:
   test:
@@ -40,11 +39,10 @@ jobs:
   sympy-client-build:
     runs-on: ${{ matrix.os }}
     if: startsWith(github.ref, 'refs/tags/')
-
     strategy:
       matrix:
-        os: ${{ env.OS }}
-
+        os: [windows-latest, macos-latest]
+        
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -52,17 +50,19 @@ jobs:
           python-version: "3.12"
       
       - name: Install Pip Dependencies
+        shell: bash
         id: install-pip-dependencies
         run: |
           python -m venv .venv
-          source .venv/bin/activate || .venv/scripts/activate
+          source .venv/bin/activate || . .venv/Scripts/activate
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Build Executable
         id: build-executable
+        shell: bash
         run: | 
-          source .venv/bin/activate || .venv/scripts/activate
+          source .venv/bin/activate || . .venv/Scripts/activate
           pyinstaller --onefile --collect-data sympy --add-data "./sympy-client/src/grammar/obsimat_grammar.lark:grammar" sympy-client/src/SympyClient.py
 
       - name: Upload Executable
@@ -123,6 +123,7 @@ jobs:
           release_name: ${{ github.ref }}
           draft: true
           prerelease: false
+
 
       - name: Upload Release Asset
         id: upload-release-asset

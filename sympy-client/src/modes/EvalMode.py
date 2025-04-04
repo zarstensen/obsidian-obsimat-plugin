@@ -8,12 +8,16 @@ from sympy import *
 async def eval_handler(message: EvaluateMessage, response: ModeResponse, parser: SympyParser):
     def evaluate(sympy_expr):
 
-        # If it is a dictonary, we cant call doit or simplify on it
-        if not isinstance(sympy_expr, dict):
+        if isinstance(sympy_expr, dict):
+            res = {}
+            for key, value in sympy_expr.items():
+                new_key = evaluate(key)
+                new_value = evaluate(value)
+                res[new_key] = new_value
+            sympy_expr = res
+        else:
             sympy_expr = try_assign(sympy_expr.doit(), sympy_expr)
             sympy_expr = try_assign(sympy_expr.simplify(), sympy_expr)
-
-        # TODO: Could call recursively on a dictonary when this is returned
         return sympy_expr
            
     return await eval_mode_base(message, response, parser, evaluate)

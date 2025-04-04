@@ -113,6 +113,11 @@ RREF: "\\mathrm{rref}"
 rref: RREF _expression_func
 %extend _function: rref
 
+// add eigvalues operator
+EIGENVALS: "\\mathrm{eig}"
+eigenvals: EIGENVALS _expression_func
+%extend _function: eigenvals
+
 // add quick hand notation for differentiating expressions
 // e.g. (x^2)' -> 2x
 %override matrix_prime: matrix PRIMES

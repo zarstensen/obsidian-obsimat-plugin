@@ -100,6 +100,20 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         
         return tokens[1].rref()[0]
 
+    def eigenvals(self, tokens):
+        if not self._obj_is_sympy_Matrix(tokens[1]):
+            raise ValueError("eig (eigenvals) expects a matrix")
+
+        return tokens[1].eigenvals()
+
+
+    def determinant(self, tokens):
+        if not self._obj_is_sympy_Matrix(tokens[1]):
+            raise ValueError("Determinant expects a matrix")
+        
+        return tokens[1].det()
+
+
     def quick_derivative(self, tokens):
         if len(tokens[0].free_symbols) == 0:
             return S(0)

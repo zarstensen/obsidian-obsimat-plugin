@@ -37,8 +37,12 @@ jobs:
 
 
   sympy-client-build:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+        
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,29 +50,34 @@ jobs:
           python-version: "3.12"
       
       - name: Install Pip Dependencies
+        shell: bash
         id: install-pip-dependencies
         run: |
           python -m venv .venv
-          .venv/scripts/activate
+          source .venv/bin/activate || . .venv/Scripts/activate
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Build Executable
         id: build-executable
+        shell: bash
         run: | 
-          .venv/scripts/activate
+          source .venv/bin/activate || . .venv/Scripts/activate
           pyinstaller --onefile --collect-data sympy --add-data "./sympy-client/src/grammar/obsimat_grammar.lark:grammar" sympy-client/src/SympyClient.py
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
         with:
-          name: SympyClient
-          path: ./dist/SympyClient.exe
+          name: SympyClient-${{ matrix.os }}
+          path: |
+            ./dist/SympyClient.exe
+            ./dist/SympyClient
 
   plugin-build:
     runs-on: ubuntu-latest
     needs: [ test, sympy-client-build ]
     if: startsWith(github.ref, 'refs/tags/')
+
     permissions:
       contents: write
     steps:
@@ -84,16 +93,23 @@ jobs:
           npm install
           npm run build
       
-      - name: Download SympyClient Executable
+      - name: Download Windows Executable
         uses: actions/download-artifact@v4
         with:
-          name: SympyClient
+          name: SympyClient-windows-latest
           path: bin
-        
+
+      - name: Download MacOS Executable
+        uses: actions/download-artifact@v4
+        with:
+          name: SympyClient-macos-latest
+          path: bin
+
       - name: Create Plugin Zip
         run: |
           mkdir ${{ env.PLUGIN_NAME }}
-          cp main.js manifest.json styles.css bin/SympyClient.exe ${{ env.PLUGIN_NAME }}
+          chmod +x bin/SympyClient
+          cp main.js manifest.json styles.css bin/SympyClient.exe bin/SympyClient ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }} ${{ env.PLUGIN_NAME }}
 
       - name: Create Release
@@ -108,6 +124,7 @@ jobs:
           draft: true
           prerelease: false
 
+
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -119,4 +136,3 @@ jobs:
           asset_name: ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.zip
           asset_content_type: application/zip
 
-      

@@ -1,5 +1,8 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { join } from "path";
+import { platform } from "os";
+
+const EXECUTABLE_NAME = platform() === "win32" ? "SympyClient.exe" : "SympyClient";
 
 // Interface for spawning a sympy client process.
 export interface SympyClientSpawner {
@@ -21,6 +24,6 @@ export class ExecutableSpawner implements SympyClientSpawner{
     constructor() {}
 
     public spawnClient(plugin_dir: string, port: number): ChildProcessWithoutNullStreams {
-        return spawn(join(plugin_dir, "SympyClient.exe"), [port.toString()]);
+        return spawn(join(plugin_dir, EXECUTABLE_NAME), [port.toString()]);
     }   
 }

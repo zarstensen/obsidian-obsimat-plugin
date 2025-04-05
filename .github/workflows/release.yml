@@ -104,6 +104,7 @@ jobs:
           mkdir ${{ env.PLUGIN_NAME }}
           cp main.js manifest.json styles.css bin/SympyClient.* ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}-windows ${{ env.PLUGIN_NAME }}
+          rm -rf ${{ env.PLUGIN_NAME }}
 
       - name: Download MacOS Executable
         uses: actions/download-artifact@v4
@@ -117,6 +118,7 @@ jobs:
           chmod +x bin/SympyClient
           cp main.js manifest.json styles.css bin/SympyClient ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}-macos ${{ env.PLUGIN_NAME }}
+          rm -rf ${{ env.PLUGIN_NAME }}
 
       - name: Create Release
         id: create_release

@@ -70,7 +70,8 @@ jobs:
         with:
           name: SympyClient-${{ matrix.os }}
           path: |
-            ./dist/SympyClient(?:.*)?
+            ./dist/SympyClient
+            ./dist/SympyClient.*
 
   plugin-build:
     runs-on: ubuntu-latest

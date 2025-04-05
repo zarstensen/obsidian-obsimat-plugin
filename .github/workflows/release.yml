@@ -70,8 +70,7 @@ jobs:
         with:
           name: SympyClient-${{ matrix.os }}
           path: |
-            ./dist/SympyClient.exe
-            ./dist/SympyClient
+            ./dist/SympyClient.*
 
   plugin-build:
     runs-on: ubuntu-latest
@@ -99,18 +98,25 @@ jobs:
           name: SympyClient-windows-latest
           path: bin
 
+      - name: Create Windows Zip
+        run: |
+          mkdir ${{ env.PLUGIN_NAME }}
+          chmod +x bin/SympyClient
+          cp main.js manifest.json styles.css bin/SympyClient.* ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}-windows ${{ env.PLUGIN_NAME }}
+
       - name: Download MacOS Executable
         uses: actions/download-artifact@v4
         with:
           name: SympyClient-macos-latest
           path: bin
 
-      - name: Create Plugin Zip
+      - name: Create MacOS Zip
         run: |
           mkdir ${{ env.PLUGIN_NAME }}
           chmod +x bin/SympyClient
-          cp main.js manifest.json styles.css bin/SympyClient.exe bin/SympyClient ${{ env.PLUGIN_NAME }}
-          zip -r ${{ env.PLUGIN_NAME }} ${{ env.PLUGIN_NAME }}
+          cp main.js manifest.json styles.css bin/SympyClient.* ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}-macos ${{ env.PLUGIN_NAME }}
 
       - name: Create Release
         id: create_release

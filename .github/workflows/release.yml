@@ -36,13 +36,24 @@ jobs:
           pytest --ignore=sympy
 
 
+  define-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{toJson(matrix)}}
+    strategy:
+      matrix:
+        os:
+          - name: windows-latest
+            rel_name: win
+          - name: macos-latest
+            rel_name: macos
+
   sympy-client-build:
+    needs: define-matrix
     runs-on: ${{ matrix.os }}
     if: startsWith(github.ref, 'refs/tags/')
     strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-        
+      matrix: ${{ fromJson(needs.define-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

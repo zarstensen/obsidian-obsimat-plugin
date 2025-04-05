@@ -102,7 +102,6 @@ jobs:
       - name: Create Windows Zip
         run: |
           mkdir ${{ env.PLUGIN_NAME }}
-          chmod +x bin/SympyClient
           cp main.js manifest.json styles.css bin/SympyClient.* ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}-windows ${{ env.PLUGIN_NAME }}
 
@@ -116,7 +115,7 @@ jobs:
         run: |
           mkdir ${{ env.PLUGIN_NAME }}
           chmod +x bin/SympyClient
-          cp main.js manifest.json styles.css bin/SympyClient.* ${{ env.PLUGIN_NAME }}
+          cp main.js manifest.json styles.css bin/SympyClient ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}-macos ${{ env.PLUGIN_NAME }}
 
       - name: Create Release

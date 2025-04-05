@@ -47,6 +47,8 @@ jobs:
             rel_name: win
           - name: macos-latest
             rel_name: macos
+    steps:
+      - run: echo Matrix Defined
 
   sympy-client-build:
     needs: define-matrix

@@ -103,7 +103,7 @@ jobs:
         run: |
           mkdir ${{ env.PLUGIN_NAME }}
           cp main.js manifest.json styles.css bin/SympyClient.* ${{ env.PLUGIN_NAME }}
-          zip -r ${{ env.PLUGIN_NAME }}-windows ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}-win ${{ env.PLUGIN_NAME }}
           rm -rf ${{ env.PLUGIN_NAME }}
 
       - name: Download MacOS Executable
@@ -133,14 +133,25 @@ jobs:
           prerelease: false
 
 
-      - name: Upload Release Asset
-        id: upload-release-asset
+      - name: Upload Windows Release Asset
+        id: upload-win-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ env.PLUGIN_NAME }}.zip
-          asset_name: ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.zip
+          asset_path: ./${{ env.PLUGIN_NAME }}-win.zip
+          asset_name: ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}-win.zip
+          asset_content_type: application/zip
+
+      - name: Upload Macos Release Asset
+        id: upload-macos-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ env.PLUGIN_NAME }}-macos.zip
+          asset_name: ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}-macos.zip
           asset_content_type: application/zip
 

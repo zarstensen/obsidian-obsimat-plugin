@@ -110,10 +110,10 @@ jobs:
       
       - name: Create Zips for Subfolders in Bin
         run: |
-          for dir in bin/*/; do
-            zip_name=$(basename "$dir")
-            zip -r "bin/${zip_name}.zip" "$dir"
-          done
+            for dir in bin/*/; do
+              zip_name=$(basename "$dir" | sed 's/SympyClient-//')
+              zip -r "./${zip_name}.zip" "$dir"
+            done
 
       - name: List All
         run: |

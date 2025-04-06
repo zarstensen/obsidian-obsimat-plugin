@@ -111,13 +111,14 @@ jobs:
       - name: Create Zips for Subfolders in Bin
         run: |
             for dir in bin/*/; do
-              zip_name=$(basename "$dir" | sed 's/SympyClient-//')
-              zip -r "./${zip_name}.zip" "$dir"
+              cp main.js manifest.json styles.css "$dir"
+              rel_name=$(basename "$dir" | sed 's/SympyClient-//')
+              zip -r "./rel-assets/${{env.PLUGIN_NAME}}-${{ github.ref_name}}-${rel_name}.zip" "$dir"
             done
 
       - name: List All
         run: |
-            ls -lR ./
+            ls -lR ./rel-assets
 
       # - name: Create Windows Zip
       #   run: |

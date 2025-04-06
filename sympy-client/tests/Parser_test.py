@@ -206,3 +206,8 @@ i & 2 i
         result = self.parser.doparse(r"\mathrm{rref} \begin{bmatrix} 20 & 50 \\ 10 & 25\end{bmatrix}")
         
         assert result == Matrix([[1, Rational(5, 2)], [0, 0]])
+
+    def test_eigenvals(self):
+        result = self.parser.doparse(r"\mathrm{eig} \begin{bmatrix} 20 & 50 \\ 10 & 25\end{bmatrix}")
+        print(result)
+        assert result == {0: 1, 45: 1}

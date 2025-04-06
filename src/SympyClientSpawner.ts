@@ -1,6 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { join } from "path";
 
+
 // Interface for spawning a sympy client process.
 export interface SympyClientSpawner {
     spawnClient(plugin_dir: string, port: number): ChildProcessWithoutNullStreams
@@ -12,15 +13,17 @@ export class SourceCodeSpawner implements SympyClientSpawner{
 
     public spawnClient(plugin_dir: string, port: number): ChildProcessWithoutNullStreams {
         
-        return spawn(join(plugin_dir, ".venv/scripts", this.python_exe), [join(plugin_dir, "sympy-client/src/SympyClient.py"), port.toString()]);
+        return spawn(join(plugin_dir, this.venv, "scripts", this.python_exe), [join(plugin_dir, "sympy-client/src/SympyClient.py"), port.toString()]);
     }   
 }
 
 // Spawns a sympy client with a pyinstalled executable.
 export class ExecutableSpawner implements SympyClientSpawner{
+    private static readonly EXECUTABLE_NAME = "SympyClient";
+
     constructor() {}
 
     public spawnClient(plugin_dir: string, port: number): ChildProcessWithoutNullStreams {
-        return spawn(join(plugin_dir, "SympyClient.exe"), [port.toString()]);
+        return spawn(join(plugin_dir, ExecutableSpawner.EXECUTABLE_NAME), [port.toString()]);
     }   
 }

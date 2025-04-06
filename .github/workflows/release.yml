@@ -121,6 +121,30 @@ jobs:
         run: |
             ls -lR ./rel-assets
 
+      # - name: Create Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     VERSION: ${{ github.ref }}
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: ${{ github.ref }}
+      #     draft: true
+      #     prerelease: false
+
+      - name: Upload Windows Release Asset
+        id: upload-win-release-asset
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          prerelease: false
+          generate_release_notes: true
+          files:
+            ./rel-assets/*
+
       # - name: Create Windows Zip
       #   run: |
       #     mkdir ${{ env.PLUGIN_NAME }}
@@ -142,17 +166,7 @@ jobs:
       #     zip -r ${{ env.PLUGIN_NAME }}-macos ${{ env.PLUGIN_NAME }}
       #     rm -rf ${{ env.PLUGIN_NAME }}
 
-      # - name: Create Release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     VERSION: ${{ github.ref }}
-      #   with:
-      #     tag_name: ${{ github.ref }}
-      #     release_name: ${{ github.ref }}
-      #     draft: true
-      #     prerelease: false
+
 
 
       # - name: Upload Windows Release Asset

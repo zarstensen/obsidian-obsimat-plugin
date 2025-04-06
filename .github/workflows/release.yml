@@ -35,8 +35,6 @@ jobs:
         run: |
           pytest --ignore=sympy
 
-
-
   sympy-client-build:
     runs-on: ${{ matrix.os.os_name }}
     if: startsWith(github.ref, 'refs/tags/')
@@ -98,17 +96,13 @@ jobs:
           npm install
           npm run build
       
-      - name: Download Sympy Client
+      - name: Download Sympy Clients
         uses: actions/download-artifact@v4
         with:
           pattern: SympyClient-*
           path: bin
-
-      - name: List Binaries
-        run: |
-            ls -lR bin
       
-      - name: Create Zips for Subfolders in Bin
+      - name: Create Release Assets
         run: |
             mkdir rel-assets
             for dir in bin/*/; do
@@ -117,24 +111,8 @@ jobs:
               zip -r -j "./rel-assets/${{env.PLUGIN_NAME}}-${{ github.ref_name}}-${rel_name}.zip" "$dir"
             done
 
-      - name: List All
-        run: |
-            ls -lR ./rel-assets
-
-      # - name: Create Release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     VERSION: ${{ github.ref }}
-      #   with:
-      #     tag_name: ${{ github.ref }}
-      #     release_name: ${{ github.ref }}
-      #     draft: true
-      #     prerelease: false
-
-      - name: Upload Windows Release Asset
-        id: upload-win-release-asset
+      - name: Create Release With Assets
+        id: create-release-with-assets
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -144,50 +122,3 @@ jobs:
           generate_release_notes: true
           files:
             ./rel-assets/*
-
-      # - name: Create Windows Zip
-      #   run: |
-      #     mkdir ${{ env.PLUGIN_NAME }}
-      #     cp main.js manifest.json styles.css bin/SympyClient.* ${{ env.PLUGIN_NAME }}
-      #     zip -r ${{ env.PLUGIN_NAME }}-win ${{ env.PLUGIN_NAME }}
-      #     rm -rf ${{ env.PLUGIN_NAME }}
-
-      # - name: Download MacOS Executable
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: SympyClient-macos-latest
-      #     path: bin
-
-      # - name: Create MacOS Zip
-      #   run: |
-      #     mkdir ${{ env.PLUGIN_NAME }}
-      #     chmod +x bin/SympyClient
-      #     cp main.js manifest.json styles.css bin/SympyClient ${{ env.PLUGIN_NAME }}
-      #     zip -r ${{ env.PLUGIN_NAME }}-macos ${{ env.PLUGIN_NAME }}
-      #     rm -rf ${{ env.PLUGIN_NAME }}
-
-
-
-
-      # - name: Upload Windows Release Asset
-      #   id: upload-win-release-asset
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./${{ env.PLUGIN_NAME }}-win.zip
-      #     asset_name: ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}-win.zip
-      #     asset_content_type: application/zip
-
-      # - name: Upload Macos Release Asset
-      #   id: upload-macos-release-asset
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./${{ env.PLUGIN_NAME }}-macos.zip
-      #     asset_name: ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}-macos.zip
-      #     asset_content_type: application/zip
-

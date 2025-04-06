@@ -114,7 +114,7 @@ jobs:
             for dir in bin/*/; do
               cp main.js manifest.json styles.css "$dir"
               rel_name=$(basename "$dir" | sed 's/SympyClient-//')
-              zip -r "./rel-assets/${{env.PLUGIN_NAME}}-${{ github.ref_name}}-${rel_name}.zip" $(basename "$dir")
+              zip -r -j "./rel-assets/${{env.PLUGIN_NAME}}-${{ github.ref_name}}-${rel_name}.zip" "$dir"
             done
 
       - name: List All

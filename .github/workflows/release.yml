@@ -106,7 +106,7 @@ jobs:
 
       - name: List Binaries
         run: |
-          ls -l bin
+            ls -lR bin
 
       # - name: Create Windows Zip
       #   run: |

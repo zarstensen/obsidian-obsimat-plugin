@@ -107,6 +107,17 @@ jobs:
       - name: List Binaries
         run: |
             ls -lR bin
+      
+      - name: Create Zips for Subfolders in Bin
+        run: |
+          for dir in bin/*/; do
+            zip_name=$(basename "$dir")
+            zip -r "bin/${zip_name}.zip" "$dir"
+          done
+
+      - name: List All
+        run: |
+            ls -lR ./
 
       # - name: Create Windows Zip
       #   run: |

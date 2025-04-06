@@ -3,6 +3,7 @@ import { SympyEvaluator } from "src/SympyEvaluator";
 import { IObsimatCommand } from "./IObsimatCommand";
 import { EquationExtractor } from "src/EquationExtractor";
 import { ObsimatEnvironment } from "src/ObsimatEnvironment";
+import { formatLatex } from "src/FormatLatex";
 
 export class EvaluateCommand implements IObsimatCommand {
     readonly id: string;
@@ -51,7 +52,7 @@ export class EvaluateCommand implements IObsimatCommand {
         }
 
         // insert result at the end of the equation.
-        editor.replaceRange(insert_content, insert_pos);
+        editor.replaceRange(await formatLatex(insert_content), insert_pos);
         editor.setCursor(editor.offsetToPos(editor.posToOffset(insert_pos) + insert_content.length));
     }
     

@@ -4,6 +4,7 @@ import { IObsimatCommand } from "./IObsimatCommand";
 import { EquationExtractor } from "src/EquationExtractor";
 import { ObsimatEnvironment } from "src/ObsimatEnvironment";
 import { SolveModeModal } from "src/SolveModeModal";
+import { formatLatex } from "src/FormatLatex";
 
 export class SolveCommand implements IObsimatCommand {
     readonly id: string = 'solve-latex-expression-command';
@@ -51,7 +52,7 @@ export class SolveCommand implements IObsimatCommand {
         // if not, something has gone wrong somewhere.
         if (response.status === "success") {
             // Insert solution as a new math block, right after the current one.
-            editor.replaceRange("\n$$" + response.result + "$$", editor.offsetToPos(equation.block_to));
+            editor.replaceRange("\n$$" + await formatLatex(response.result) + "$$", editor.offsetToPos(equation.block_to));
             editor.setCursor(editor.offsetToPos(equation.to + response.result.length + 3));
         } else {
             console.error(response);

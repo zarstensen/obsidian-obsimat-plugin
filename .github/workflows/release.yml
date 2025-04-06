@@ -110,6 +110,7 @@ jobs:
       
       - name: Create Zips for Subfolders in Bin
         run: |
+            mkdir rel-assets
             for dir in bin/*/; do
               cp main.js manifest.json styles.css "$dir"
               rel_name=$(basename "$dir" | sed 's/SympyClient-//')

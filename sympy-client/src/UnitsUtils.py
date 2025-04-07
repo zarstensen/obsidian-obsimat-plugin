@@ -1,4 +1,4 @@
-from sympy import Add, Symbol
+from sympy import Add, Matrix, MatrixBase, Symbol
 import sympy.physics.units as u
 from sympy.physics.units.quantities import Quantity 
 from sympy.physics.units.systems import SI
@@ -25,6 +25,13 @@ def substitute_units(sympy_expr, excluded_symbols: list[Symbol]):
 # attempt to automatically convert the units in the given sympy expression.
 # this convertion method prioritizes as few units as possible raised to the lowest power possible (or lowest root possible).
 def auto_convert(sympy_expr):
+    if isinstance(sympy_expr, MatrixBase):
+        converted_matrix = Matrix.zeros(*sympy_expr.shape)
+        for index, value in enumerate(sympy_expr):
+            converted_matrix[index] = auto_convert(value)
+        
+        return converted_matrix
+    
     if not isinstance(sympy_expr, Add):
         sympy_expr = [sympy_expr]
     else:

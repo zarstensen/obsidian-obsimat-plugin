@@ -69,3 +69,20 @@ class TestUnitConversion:
         result = response.getResult()['result']
         
         assert result.solution == FiniteSet(25 * units.kilogram)
+        
+    def test_units_in_matrix(self):
+        response = MockResponse()
+        asyncio.run(eval_handler({ "expression": r"""
+                                km
+                                \begin{bmatrix}
+                                1 km \\
+                                2 s/km \\
+                                3 N
+                                \end{bmatrix}
+                            """,
+                            "environment": {"units_enabled": True}}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()['result']
+        
+        assert result == Matrix([units.kilometer**2, 2 * units.second, 3 * units.joule])

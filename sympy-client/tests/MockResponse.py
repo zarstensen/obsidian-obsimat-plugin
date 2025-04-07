@@ -2,7 +2,7 @@ from src.ModeResponse import ModeResponse
 from typing import Any
 
 ## Implements the ModeResponse interface for testing purposes.
-class TestResponse(ModeResponse):
+class MockResponse(ModeResponse):
     
     def __init__(self):
         self.reset()

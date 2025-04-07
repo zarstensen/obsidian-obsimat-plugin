@@ -1,6 +1,6 @@
 from grammar.ObsimatLatexParser import ObsimatLatexParser
 from modes.SolveMode import solve_handler
-from tests.TestResponse import TestResponse
+from tests.MockResponse import MockResponse
 import asyncio
 
 from sympy import *
@@ -11,7 +11,7 @@ class TestSolve:
     def test_solve_with_domain(self):
         x = symbols('x')
         
-        response = TestResponse()
+        response = MockResponse()
         asyncio.run(solve_handler({ "expression": r"\sin(x) = 0", "environment": { "domain": "Interval.Ropen(0, 2 * pi)"} }, response, self.parser))
         assert response.hasResult()
         
@@ -21,7 +21,7 @@ class TestSolve:
     def test_solve_soe(self):
         x = symbols('x')
         
-        response = TestResponse()
+        response = MockResponse()
         
         asyncio.run(solve_handler({ "expression": r"""
             \begin{align}
@@ -51,7 +51,7 @@ class TestSolve:
     def test_solve_multivariate(self):
         x, y, z = symbols('x y z')
         
-        response = TestResponse()
+        response = MockResponse()
         
         asyncio.run(solve_handler({ "expression": r"""
             \begin{cases}

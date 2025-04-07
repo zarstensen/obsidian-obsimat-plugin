@@ -104,7 +104,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         if len(tokens[0].free_symbols) == 0:
             return S(0)
         else:
-            return diff(tokens[0], next(sorted(tokens[0].free_symbols, key=str)), len(tokens[1]), evaluate=False)
+            return diff(tokens[0], sorted(tokens[0].free_symbols, key=str)[0], len(tokens[1]), evaluate=False)
 
     def math_constant(self, tokens):
         match str(tokens[0]):
@@ -195,7 +195,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         return Eq(tokens[0], tokens[2], evaluate=False)
     
     def ne(self, tokens):
-        return Be(tokens[0], tokens[2], evaluate=False)
+        return Ne(tokens[0], tokens[2], evaluate=False)
 
     def lt(self, tokens):
         return Lt(tokens[0], tokens[2], evaluate=False)

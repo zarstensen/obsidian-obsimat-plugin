@@ -1,5 +1,5 @@
 from grammar.ObsimatLatexParser import ObsimatLatexParser
-from tests.TestResponse import TestResponse
+from tests.MockResponse import MockResponse
 from modes.ConvertSympyMode import convert_sympy_handler
 import asyncio
 
@@ -13,7 +13,7 @@ class TestConvertSympy:
     def test_convert_simple(self):
         a, b = symbols("a b")
         
-        response = TestResponse()
+        response = MockResponse()
         asyncio.run(convert_sympy_handler({"expression": "a + b", "environment": {}}, response, self.parser))
         assert response.hasResult()
         

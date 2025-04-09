@@ -41,6 +41,15 @@ export class EquationExtractor {
             block_to = to + 2;
         }
 
+        // move from and to as right and left most as possible, until from and to no longer starts on whitespace
+        while (to > block_from && /^\s$/.test(editor.getRange(editor.offsetToPos(to - 1), editor.offsetToPos(to)))) {
+            to--;
+        }
+
+        while (from < to && /^\s$/.test(editor.getRange(editor.offsetToPos(from), editor.offsetToPos(from + 1)))) {
+            from++;
+        }
+
         return {
             from: from,
             to: to,

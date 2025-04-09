@@ -2,6 +2,7 @@ from grammar.SystemOfExpr import SystemOfExpr
 from grammar.SubstitutionCache import SubstitutionCache
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
+from sympy.core.relational import Relational
 from sympy import *
 from lark import Token, Discard
 
@@ -40,7 +41,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
     def _try_substitute(self, symbol_transform, tokens):
         symbol = symbol_transform(tokens)
         
-        substituted_value = self._substitution_cache.get_substitution(str(symbol))
+        substituted_value = self._substitution_cache.get_substitution(str(symbol)) or self._substitution_cache.get_substitution(f"\\{str(symbol)}")
         
         if substituted_value is not None:
             return substituted_value
@@ -61,11 +62,49 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         with evaluate(True):
             return tokens[1].doit().dot(tokens[3].doit(), hermitian=True, conjugate_convention="right")
 
+    def gradient(self, tokens):
+        return self._expr_gradient(tokens[1], tokens[1].free_symbols)
+
+    def hessian(self, tokens):
+
+        symbols = list(sorted(tokens[1].free_symbols, key=str))
+        
+        return Matrix([
+            [
+                diff(tokens[1], symbol_col, symbol_row, evaluate=False) for symbol_col in symbols
+            ] for symbol_row in symbols
+        ])
+        
+    def jacobian(self, tokens):
+        matrix = tokens[1]
+        
+        if not self._obj_is_sympy_Matrix(matrix):
+            matrix = Matrix([matrix])
+            
+        if not matrix.rows == 1 and not matrix.cols == 1:
+            raise ShapeError("Jacobian expects a single row or column vector")
+        
+        # sympy has a built in jacobian, but it does not have an evaluate option,
+        # so we just do it manually here.
+        
+        gradients = []
+        
+        for item in matrix:
+            gradients.append(self._expr_gradient(item, matrix.free_symbols))
+        
+        return Matrix.vstack(*gradients)
+      
+    def rref(self, tokens):
+        if not self._obj_is_sympy_Matrix(tokens[1]):
+            raise ValueError("RREF expects a matrix")
+        
+        return tokens[1].rref()[0]
+
     def quick_derivative(self, tokens):
         if len(tokens[0].free_symbols) == 0:
             return S(0)
         else:
-            return diff(tokens[0], list(tokens[0].free_symbols)[0], len(tokens[1]))
+            return diff(tokens[0], sorted(tokens[0].free_symbols, key=str)[0], len(tokens[1]), evaluate=False)
 
     def math_constant(self, tokens):
         match str(tokens[0]):
@@ -120,12 +159,19 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         def visit_wrapper(f, data, children, meta):
             relation_type = ObsimatLarkTransformer._relation_token_to_type(children[1])
 
-            return SystemOfExpr(
-                [
-                    (children[0], meta),
-                    (relation_type(children[0].rhs, children[2], evaluate=False), meta),
-                ]
-            )
+            relation = children[0]
+            
+            if isinstance(relation, Relational):
+                return SystemOfExpr(
+                    [
+                        (children[0], meta),
+                        (relation_type(children[0].rhs, children[2], evaluate=False), meta),
+                    ]
+                )
+            elif isinstance(relation, SystemOfExpr):
+                return relation.extend([ (relation_type(relation.get_expr(-1).rhs, children[2], evaluate=False), meta) ])
+            else:
+                raise ValueError("Chained relation must be between a sympy relation or a system of expressions, where the last expression is a relation.")
 
     @staticmethod
     def _relation_token_to_type(token):
@@ -149,7 +195,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         return Eq(tokens[0], tokens[2], evaluate=False)
     
     def ne(self, tokens):
-        return Be(tokens[0], tokens[2], evaluate=False)
+        return Ne(tokens[0], tokens[2], evaluate=False)
 
     def lt(self, tokens):
         return Lt(tokens[0], tokens[2], evaluate=False)
@@ -162,3 +208,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
     
     def gte(self, tokens):
         return Ge(tokens[0], tokens[2], evaluate=False)
+    
+    @staticmethod
+    def _expr_gradient(expression: Expr, free_symbols):
+        return Matrix([ [ diff(expression, symbol, evaluate=False) for symbol in sorted(free_symbols, key=str)] ])

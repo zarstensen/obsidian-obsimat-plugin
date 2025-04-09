@@ -9,7 +9,7 @@ import re
 from grammar.ObsimatLatexParser import ObsimatLatexParser
 from grammar.SympyParser import SympyParser
 from sympy import latex, evaluate
-
+import jsonpickle
 
 #
 # The ObsimatClient class manages a connection and message parsing + encoding between an active obsimat plugin.
@@ -35,12 +35,12 @@ class ObsimatClient:
     def register_mode(self, mode: str, handler: Callable[[Any, ModeResponse, SympyParser], None], formatter: Callable[[Any, str, dict], str] = None):
         self.modes[mode] = {
             'handler': handler,
-            'formatter': formatter or ObsimatClient.__default_sympy_formatter
+            'formatter': formatter or ObsimatClient.default_sympy_formatter
         }
     
     # Send the given json dumpable object back to the plugin.
     async def send(self, mode: str, message: dict):
-        await self.connection.send(f"{mode}|{json.dumps(message)}")
+        await self.connection.send(f"{mode}|{jsonpickle.encode(message)}")
 
     # Signal to the plugin an error has occured, and give the following error message to it.
 
@@ -57,7 +57,7 @@ class ObsimatClient:
             if mode in self.modes:
                 response = ObsimatClient.ObsimatClientResponse(self, self.modes[mode]['formatter'])
                 try:
-                    loaded_payload = json.loads(payload)
+                    loaded_payload = jsonpickle.decode(payload)
                     await self.modes[mode]['handler'](loaded_payload, response, self.__latex_parser)
                 except Exception as e:
                     await response.error(str(e) + "\n" + traceback.format_exc())
@@ -68,7 +68,7 @@ class ObsimatClient:
     # into a displayable string.
     # simply converts the given expression to latex, and remove any text formatting.
     @staticmethod
-    def __default_sympy_formatter(sympy_expr: Any, _status: str, _metadata: dict) -> str:
+    def default_sympy_formatter(sympy_expr: Any, _status: str, _metadata: dict) -> str:
         return re.sub(r"\\text\{(.*?)\}", r"\1", latex(sympy_expr))
     
     # The ObsimatClientResponse class is a helper class for the ObsimatClient,

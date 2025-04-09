@@ -93,13 +93,33 @@ matrix_inner_product.1: CMD_LANGLE _expression INNER_PRODUCT_CENTER _expression 
 // remove the physics inner product...
 %override inner_product: /a^/
 
+// add gradient operator
+GRADIENT: "\\nabla"
+gradient: GRADIENT _expression_func
+%extend _function: gradient
+
+// add hessian operator
+HESSIAN: "\\mathbf{H}"
+hessian: HESSIAN _expression_func
+%extend _function: hessian
+
+// add jacobian operator
+JACOBIAN: "\\mathbf{J}"
+jacobian: JACOBIAN _expression_func
+%extend _function: jacobian
+
+// add rref operator
+RREF: "\\mathrm{rref}"
+rref: RREF _expression_func
+%extend _function: rref
+
 // add quick hand notation for differentiating expressions
 // e.g. (x^2)' -> 2x
 %override matrix_prime: matrix PRIMES
 quick_derivative: group_round_parentheses PRIMES
 %extend _function: quick_derivative
 
-// multi expression environments
+// ==== multi expression environments ====
 ALIGN_ENV: L_BRACE "align" R_BRACE
 CASES_ENV: L_BRACE "cases" R_BRACE 
 
@@ -139,7 +159,7 @@ _complete_rel{relation}: _expression align_rel{relation} _expression
 
 // chained relations
 // that is eg. a = b = c, or a < b < c and so on...
-_chained_relation{relation}: (_relation | partial_relation) relation _expression
+_chained_relation{relation}: (_relation | chained_relation | partial_relation) relation _expression
 chained_relation: _chained_relation{EQUAL} | _chained_relation{NOT_EQUAL} | _chained_relation{LT} | _chained_relation{LTE} | _chained_relation{GT} | _chained_relation{GTE}
 
 %extend latex_string: chained_relation

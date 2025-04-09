@@ -19,7 +19,7 @@ export class SolveModeModal extends Modal {
             this.symbol_selection.set(symbol, false);
         }
 
-        this.solve_config_promise = new Promise((resolve, reject) => {
+        this.solve_config_promise = new Promise((resolve, _reject) => {
             this.solve_config_resolve = resolve;
         });
 
@@ -49,7 +49,7 @@ export class SolveModeModal extends Modal {
             symbol_entry.onclick = () => {
                 this.symbol_selection.set(symbol, !this.symbol_selection.get(symbol));
                 symbol_entry.toggleClass("is-selected", this.symbol_selection.get(symbol) ?? false);
-            }
+            };
         }
         
         finishRenderMath();
@@ -71,7 +71,7 @@ export class SolveModeModal extends Modal {
                         this.close();
                         this.solve_config_resolve({ domain: this.domain, symbols: selected_symbols });
                     });
-            })
+            });
     }
 
     // returns a promise that resolves to the user selected solve configuration.

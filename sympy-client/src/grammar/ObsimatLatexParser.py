@@ -1,7 +1,8 @@
 from ObsimatEnvironment import ObsimatEnvironment
 from grammar.ObsimatLarkTransformer import ObsimatLarkTransformer
 from grammar.SympyParser import SympyParser
-from grammar.SubstitutionCache import SubstitutionCache
+from grammar.CachedSymbolSubstitutor import CachedSymbolSubstitutor
+from grammar.FunctionSubstitutor import FunctionSubstitutor
 
 from time import sleep
 from sympy import *
@@ -59,8 +60,10 @@ class ObsimatLatexParser(SympyParser):
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
     def doparse(self, latex_str: str, environment: ObsimatEnvironment = {}):
-        substitution_cache = SubstitutionCache(environment, self)
-        transformer = ObsimatLarkTransformer(substitution_cache)
+        symbol_substitutor = CachedSymbolSubstitutor(environment, self)
+        function_substitutor = FunctionSubstitutor(environment, self)
+        
+        transformer = ObsimatLarkTransformer(symbol_substitutor, function_substitutor)
         parse_tree = self.parser.parse(latex_str)
         expr = transformer.transform(parse_tree)
         

@@ -328,5 +328,36 @@ class TestEvaluate:
         result = response.getResult()['result'].rhs
         
         assert result == 60 * x**2 + 72 * x
+    
+    def test_function(self):
         
+        # standard function
+        response = MockResponse()
+        asyncio.run(expand_handler({"expression": "f(25, -2)", "environment": { "functions": { "f": { "args": ["x", "y"], "expr": "2x + y^2" } } }}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()['result']
+        
+        assert result == 54
+        
+        # function with arg name defined as variables
+        response.reset()
+        asyncio.run(expand_handler({"expression": "f(y)", "environment": { "functions": { "f": { "args": ["x"], "expr": "2x" } }, "variables": { "x": "-1", "y": "99" } }}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()['result']
+        
+        assert result == 198
+        
+        
+        # function with matrices as input.
+        
+        response.reset()
+        asyncio.run(expand_handler({"expression": r"f(\begin{bmatrix} 5 & 10 \end{bmatrix})", "environment": { "functions": { "f": { "args": ["x"], "expr": "x x^T" } }, "variables": { "x": "-1", "y": "99" } }}, response, self.parser))
+        assert response.hasResult()
+        
+        result = response.getResult()['result'].rhs
+        
+        assert result == Matrix([125])
+    
     # TODO: add hessian test, jacobi tests and so on...

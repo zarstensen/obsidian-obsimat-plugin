@@ -80,6 +80,7 @@ export class ObsimatEnvironment {
         }
 
         if(!closest_section) {
+            this.parseFunctions(editor.offsetToPos(0), position, editor);
             return new ObsimatEnvironment(undefined, this.parseVariables(editor.offsetToPos(0), position, editor));
         }
 
@@ -87,6 +88,7 @@ export class ObsimatEnvironment {
 
         const obsimat_block = editor.getRange(editor.offsetToPos(closest_section.position.start.offset), editor.offsetToPos(closest_section.position.end.offset));
         const obsimat_block_content = obsimat_block.match(this.OBSIMAT_BLOCK_REGEX)?.[1];
+        this.parseFunctions(editor.offsetToPos(closest_section.position.end.offset), position, editor);
         const obsimat_variables = this.parseVariables(editor.offsetToPos(closest_section.position.end.offset), position, editor);
 
         return ObsimatEnvironment.fromCodeBlock(obsimat_block_content, obsimat_variables);
@@ -94,9 +96,10 @@ export class ObsimatEnvironment {
 
     // regex for extracting the contents of an obsimat code block.
     private static readonly OBSIMAT_BLOCK_REGEX = /^```obsimat\s*(?:\r\n|\r|\n)([\s\S]*?)```$/;
+    private static readonly OBSIMAT_VARIABLE_REGEX = /\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*/;
     // regex for finding variable definitions in markdown code.
-    private static readonly OBSIMAT_VARIABLE_DEF_REGEX = /\$\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*:=\s*(?<value>[^=$]*?)\s*\$/g;
-    private static readonly OBSIMAT_FUNCTION_DEF_REGEX = /\$\s*(?<name>\w)\((?<args>(?:[^=\s$]*?,?\s*))\)\s*:=\s*(?<body>[^=$]*?)\s*\$/g;
+    private static readonly OBSIMAT_VARIABLE_DEF_REGEX = new RegExp(String.raw`\$${this.OBSIMAT_VARIABLE_REGEX.source}:=\s*(?<value>[^=$]*?)\s*\$`, 'g');
+    private static readonly OBSIMAT_FUNCTION_DEF_REGEX = new RegExp(String.raw`\$${this.OBSIMAT_VARIABLE_REGEX.source}\((?<args>(?:[^=$]*?\s*))\)\s*:=\s*(?<body>[^=$]*?)\s*\$`, 'g');
 
     private constructor(symbols?: { [symbol: string]: string[] }, variables?: { [variable: string]: string }, units_enabled?: boolean, excluded_symbols?: string[], domain?: string) {
         this.symbols = symbols;
@@ -110,7 +113,7 @@ export class ObsimatEnvironment {
     // and parse them into a variables map.
     private static parseVariables(from: EditorPosition, to: EditorPosition, editor: Editor) {
         const variables: { [variable: string]: string } = {};
-
+        
         const search_range = editor.getRange(from, to);
         const variable_definitions = search_range.matchAll(this.OBSIMAT_VARIABLE_DEF_REGEX);
 
@@ -123,5 +126,16 @@ export class ObsimatEnvironment {
         }
 
         return variables;
+    }
+
+    private static parseFunctions(from: EditorPosition, to: EditorPosition, editor: Editor) {
+        const functions: { [func: string]: { args: string[], expr: string } } = {};
+        
+        const search_range = editor.getRange(from, to);
+        const function_definitions = search_range.matchAll(this.OBSIMAT_FUNCTION_DEF_REGEX);
+
+        console.log(function_definitions);
+        
+        // return variables;
     }
 }

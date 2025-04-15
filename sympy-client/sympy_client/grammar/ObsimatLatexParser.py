@@ -1,7 +1,7 @@
-from ObsimatEnvironment import ObsimatEnvironment
-from grammar.ObsimatLarkTransformer import ObsimatLarkTransformer
-from grammar.SympyParser import SympyParser
-from grammar.SubstitutionCache import SubstitutionCache
+from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from .ObsimatLarkTransformer import ObsimatLarkTransformer
+from .SympyParser import SympyParser
+from .SubstitutionCache import SubstitutionCache
 
 from time import sleep
 from sympy import *

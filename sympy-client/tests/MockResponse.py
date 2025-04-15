@@ -1,4 +1,4 @@
-from src.ModeResponse import ModeResponse
+from sympy_client.ModeResponse import ModeResponse
 from typing import Any
 
 ## Implements the ModeResponse interface for testing purposes.

@@ -1,15 +1,14 @@
-from ObsimatClient import ObsimatClient
-
-from grammar.ObsimatLatexParser import ObsimatLatexParser
-from modes.EvalMode import eval_handler
-from modes.EvalfMode import evalf_handler
-from modes.ExpandMode import expand_handler
-from modes.FactorMode import factor_handler
-from modes.ApartMode import apart_handler
-from modes.SolveMode import solve_handler, solve_formatter
-from modes.ConvertUnitsMode import convert_units_handler
-from modes.SymbolSetMode import symbol_set_handler, symbol_set_formatter
-from modes.ConvertSympyMode import convert_sympy_handler, convert_sympy_formatter
+from sympy_client.ObsimatClient import ObsimatClient
+from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.modes.EvalMode import eval_handler
+from sympy_client.modes.EvalfMode import evalf_handler
+from sympy_client.modes.ExpandMode import expand_handler
+from sympy_client.modes.FactorMode import factor_handler
+from sympy_client.modes.ApartMode import apart_handler
+from sympy_client.modes.SolveMode import solve_handler, solve_formatter
+from sympy_client.modes.ConvertUnitsMode import convert_units_handler
+from sympy_client.modes.SymbolSetMode import symbol_set_handler, symbol_set_formatter
+from sympy_client.modes.ConvertSympyMode import convert_sympy_handler, convert_sympy_formatter
 
 import asyncio
 import sys

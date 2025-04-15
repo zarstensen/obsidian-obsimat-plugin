@@ -1,5 +1,4 @@
 from sympy import Add, Matrix, MatrixBase, Symbol
-from sympy import Add, Matrix, MatrixBase, Symbol
 import sympy.physics.units as u
 from sympy.physics.units.quantities import Quantity 
 from sympy.physics.units.systems import SI

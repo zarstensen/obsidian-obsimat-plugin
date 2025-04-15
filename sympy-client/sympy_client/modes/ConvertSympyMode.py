@@ -1,6 +1,6 @@
-from ObsimatEnvironment import ObsimatEnvironment
-from ModeResponse import ModeResponse
-from grammar.SympyParser import SympyParser
+from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.ModeResponse import ModeResponse
+from sympy_client.grammar.SympyParser import SympyParser
 
 from sympy import *
 from typing import Any, TypedDict

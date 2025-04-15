@@ -1,12 +1,12 @@
-from grammar.SystemOfExpr import SystemOfExpr
+from .grammar.SystemOfExpr import SystemOfExpr
+from .ObsimatEnvironment import ObsimatEnvironment
+from . import UnitsUtils
 
 import sympy.physics.units as u
 from sympy.physics.units.quantities import Quantity 
 from sympy.physics.units.systems import SI
 from sympy.core.relational import Relational
 from sympy import *
-from ObsimatEnvironment import ObsimatEnvironment
-import UnitsUtils
 
 ## The ObsimatEnvironmentUtils provide various utility functions for a math expression present in an ObsimatEnvironment.
 class ObsimatEnvironmentUtils:

@@ -1,4 +1,6 @@
-from ModeResponse import ModeResponse
+from .ModeResponse import ModeResponse
+from .grammar.ObsimatLatexParser import ObsimatLatexParser
+from .grammar.SympyParser import SympyParser
 
 from typing import *
 import websockets
@@ -6,8 +8,6 @@ import json
 import traceback
 import re
 
-from grammar.ObsimatLatexParser import ObsimatLatexParser
-from grammar.SympyParser import SympyParser
 from sympy import latex, evaluate
 import jsonpickle
 

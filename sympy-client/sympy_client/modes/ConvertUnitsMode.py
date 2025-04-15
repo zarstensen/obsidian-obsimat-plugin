@@ -1,8 +1,8 @@
-from modes.EvalModeBase import EvaluateMessage, eval_mode_base, try_assign
-from ModeResponse import ModeResponse
-from grammar.SympyParser import SympyParser
+from sympy_client.modes.EvalModeBase import EvaluateMessage, eval_mode_base
+from sympy_client.ModeResponse import ModeResponse
+from sympy_client.grammar.SympyParser import SympyParser
 from sympy.physics.units import convert_to
-import UnitsUtils
+import sympy_client.UnitsUtils as UnitsUtils
 
 from sympy import *
 

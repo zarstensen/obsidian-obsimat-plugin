@@ -1,6 +1,6 @@
-from grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.modes.ConvertSympyMode import convert_sympy_handler
 from tests.MockResponse import MockResponse
-from modes.ConvertSympyMode import convert_sympy_handler
 import asyncio
 
 from sympy import *

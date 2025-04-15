@@ -1,15 +1,15 @@
-from dataclasses import dataclass
-from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from ObsimatEnvironment import ObsimatEnvironment
-from ObsimatClient import ObsimatClient
-from ModeResponse import ModeResponse
-from grammar.SystemOfExpr import SystemOfExpr
-from grammar.SympyParser import SympyParser
+from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
+from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.ObsimatClient import ObsimatClient
+from sympy_client.ModeResponse import ModeResponse
+from sympy_client.grammar.SystemOfExpr import SystemOfExpr
+from sympy_client.grammar.SympyParser import SympyParser
 
+from dataclasses import dataclass
 from sympy import *
+from sympy.solvers.solveset import NonlinearError
 from typing import Any, TypedDict
 
-from sympy.solvers.solveset import NonlinearError
 
 class SolveModeMessage(TypedDict):
     expression: str

@@ -1,5 +1,5 @@
-from grammar.ObsimatLatexParser import ObsimatLatexParser
-from grammar.SystemOfExpr import SystemOfExpr
+from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
 from sympy import *
 

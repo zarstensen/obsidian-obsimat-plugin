@@ -1,5 +1,5 @@
-from grammar.SystemOfExpr import SystemOfExpr
-from grammar.SubstitutionCache import SubstitutionCache
+from .SystemOfExpr import SystemOfExpr
+from .SubstitutionCache import SubstitutionCache
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 from sympy.core.relational import Relational

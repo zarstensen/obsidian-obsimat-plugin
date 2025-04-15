@@ -1,5 +1,5 @@
-from grammar.ObsimatLatexParser import ObsimatLatexParser
-from modes.SolveMode import solve_handler
+from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.modes.SolveMode import solve_handler
 from tests.MockResponse import MockResponse
 import asyncio
 

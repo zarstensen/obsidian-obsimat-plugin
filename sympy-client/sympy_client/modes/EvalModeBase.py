@@ -1,8 +1,8 @@
-from ObsimatEnvironment import ObsimatEnvironment
-from ModeResponse import ModeResponse
-from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from grammar.SympyParser import SympyParser
-from grammar.SystemOfExpr import SystemOfExpr
+from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.ModeResponse import ModeResponse
+from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
+from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
 from copy import deepcopy
 from sympy import *
@@ -45,9 +45,3 @@ async def eval_mode_base(message: EvaluateMessage, response: ModeResponse, parse
         await response.result(sympy_expr, metadata={ "start_line": expr_lines[0], "end_line": expr_lines[1] })
     else:
         await response.result(sympy_expr)
-
-def try_assign(new_value, original_value):
-    if new_value is not None:
-        return new_value
-    else:
-        return original_value

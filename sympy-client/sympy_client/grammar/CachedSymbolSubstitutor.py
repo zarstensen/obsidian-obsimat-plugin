@@ -1,6 +1,6 @@
-from ObsimatEnvironment import ObsimatEnvironment
-from ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from grammar.SympyParser import SympyParser
+from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
+from .SympyParser import SympyParser
 from copy import deepcopy
 from sympy import *
 

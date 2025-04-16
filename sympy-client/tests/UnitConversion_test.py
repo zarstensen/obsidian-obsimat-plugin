@@ -1,8 +1,8 @@
-from grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.modes.EvalMode import eval_handler
+from sympy_client.modes.ConvertUnitsMode import convert_units_handler
+from sympy_client.modes.SolveMode import solve_handler
 from tests.MockResponse import MockResponse
-from modes.EvalMode import eval_handler
-from modes.ConvertUnitsMode import convert_units_handler
-from modes.SolveMode import solve_handler
 import asyncio
 
 from sympy import *

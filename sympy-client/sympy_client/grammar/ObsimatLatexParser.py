@@ -1,10 +1,9 @@
-from ObsimatEnvironment import ObsimatEnvironment
-from grammar.ObsimatLarkTransformer import ObsimatLarkTransformer
-from grammar.SympyParser import SympyParser
-from grammar.CachedSymbolSubstitutor import CachedSymbolSubstitutor
-from grammar.FunctionSubstitutor import FunctionSubstitutor
+from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from .ObsimatLarkTransformer import ObsimatLarkTransformer
+from .SympyParser import SympyParser
+from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
+from .FunctionSubstitutor import FunctionSubstitutor
 
-from time import sleep
 from sympy import *
 import sympy.parsing.latex.lark as sympy_lark
 from lark import Tree, Lark

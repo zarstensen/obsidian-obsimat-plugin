@@ -1,10 +1,10 @@
-from grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.modes.EvalMode import eval_handler
+from sympy_client.modes.EvalfMode import evalf_handler
+from sympy_client.modes.FactorMode import factor_handler
+from sympy_client.modes.ExpandMode import expand_handler
+from sympy_client.modes.ApartMode import apart_handler
 from tests.MockResponse import MockResponse
-from modes.EvalMode import eval_handler
-from modes.EvalfMode import evalf_handler
-from modes.FactorMode import factor_handler
-from modes.ExpandMode import expand_handler
-from modes.ApartMode import apart_handler
 import asyncio
 
 from sympy import *

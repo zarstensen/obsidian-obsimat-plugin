@@ -1,6 +1,6 @@
-from grammar.SystemOfExpr import SystemOfExpr
-from grammar.CachedSymbolSubstitutor import CachedSymbolSubstitutor
-from grammar.FunctionSubstitutor import FunctionSubstitutor
+from .SystemOfExpr import SystemOfExpr
+from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
+from .FunctionSubstitutor import FunctionSubstitutor
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 from sympy.core.relational import Relational

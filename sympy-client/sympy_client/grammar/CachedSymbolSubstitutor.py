@@ -4,7 +4,7 @@ from .SympyParser import SympyParser
 from copy import deepcopy
 from sympy import *
 
-# The SubstitutionCache class is responsible for caching parsed values from the given environments symbols and variables fields.
+# The CachedSymbolSubstitutor class is responsible for caching parsed values from the given environments symbols and variables fields.
 class CachedSymbolSubstitutor:
     # Construct a SubstitutionCache which will look for variables and symbols in the given environment, and parse them with the given parser.
     def __init__(self, environment: ObsimatEnvironment, latex_parser: SympyParser):

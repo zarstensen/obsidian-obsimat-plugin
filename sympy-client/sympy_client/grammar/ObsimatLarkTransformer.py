@@ -1,5 +1,6 @@
 from .SystemOfExpr import SystemOfExpr
-from .SubstitutionCache import SubstitutionCache
+from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
+from .FunctionSubstitutor import FunctionSubstitutor
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 from sympy.core.relational import Relational
@@ -24,11 +25,10 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         ]
 
     # Constructs an ObsimatLarkTransformer.
-    # environment: The environment to use for variable substitution.
-    # symbol_getter: callback function for when the transformer needs to retreive the value of a variable, from its string name, during substitution.
-    def __init__(self, substitution_cache: SubstitutionCache):
+    def __init__(self, symbol_substitutor: CachedSymbolSubstitutor, function_substitutor: FunctionSubstitutor):
         super().__init__()
-        self._substitution_cache = substitution_cache
+        self._symbol_substitutor = symbol_substitutor
+        self._function_substitutor = function_substitutor
         
         # wrap all symbol rules and terminal handlers in a method which attempts to 
         # substitute the symbol for a variable defined in the given environment.
@@ -41,12 +41,21 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
     def _try_substitute(self, symbol_transform, tokens):
         symbol = symbol_transform(tokens)
         
-        substituted_value = self._substitution_cache.get_substitution(str(symbol)) or self._substitution_cache.get_substitution(f"\\{str(symbol)}")
+        substituted_value = self._symbol_substitutor.get_symbol_substitution(str(symbol)) or self._symbol_substitutor.get_symbol_substitution(f"\\{str(symbol)}")
         
         if substituted_value is not None:
             return substituted_value
         else:
             return symbol
+
+    def function_applied(self, tokens):
+        # try to substitute function
+        function = self._function_substitutor.get_function_substitution(str(tokens[0]), list(tokens[2]))
+        
+        if function is None:
+            return super().function_applied(tokens)
+        else:
+            return function
 
     def whitespace(self, _tokens):
         return Discard

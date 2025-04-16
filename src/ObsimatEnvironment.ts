@@ -13,6 +13,8 @@ export class ObsimatEnvironment {
     // these values should be substituted into any expression before evaluation.
     public variables: { [variable: string]: string } | undefined;
 
+    public functions: { [func: string]: { args: string[], expr: string } } | undefined;
+
     // the units which any expression in this environment should handle.
     public units_enabled: boolean | undefined;
     // the base_units list specifies a list of units which any expression result should convert its own units to.
@@ -21,7 +23,7 @@ export class ObsimatEnvironment {
     // the domain is a sympy expression, evaluating to the default solution domain of any equation solutions.
     public domain: string | undefined;
 
-    public static fromCodeBlock(code_block: string | undefined, variables: { [variable: string]: string }) {
+    public static fromCodeBlock(code_block: string | undefined, variables: { [variable: string]: string }, functions: { [func: string]: { args: string[], expr: string } }) {
         if(!code_block) {
             return new ObsimatEnvironment(undefined, variables);
         }
@@ -30,10 +32,10 @@ export class ObsimatEnvironment {
 
         // prioritize domain name over domain expression.
 
-
         return new ObsimatEnvironment(
             parsed_obsimat_block.symbols,
             variables,
+            functions,
             parsed_obsimat_block.units?.enabled,
             parsed_obsimat_block.units?.exclude,
             parsed_obsimat_block.domain?.domain
@@ -80,27 +82,37 @@ export class ObsimatEnvironment {
         }
 
         if(!closest_section) {
-            return new ObsimatEnvironment(undefined, this.parseVariables(editor.offsetToPos(0), position, editor));
+            return new ObsimatEnvironment(undefined, this.parseVariables(editor.offsetToPos(0), position, editor), this.parseFunctions(editor.offsetToPos(0), position, editor));
         }
 
         // now generate obsimat environment based on section contents.
 
         const obsimat_block = editor.getRange(editor.offsetToPos(closest_section.position.start.offset), editor.offsetToPos(closest_section.position.end.offset));
         const obsimat_block_content = obsimat_block.match(this.OBSIMAT_BLOCK_REGEX)?.[1];
+        const obsimat_functions = this.parseFunctions(editor.offsetToPos(closest_section.position.end.offset), position, editor);
         const obsimat_variables = this.parseVariables(editor.offsetToPos(closest_section.position.end.offset), position, editor);
 
-        return ObsimatEnvironment.fromCodeBlock(obsimat_block_content, obsimat_variables);
+        return ObsimatEnvironment.fromCodeBlock(obsimat_block_content, obsimat_variables, obsimat_functions);
     }
 
     // regex for extracting the contents of an obsimat code block.
     private static readonly OBSIMAT_BLOCK_REGEX = /^```obsimat\s*(?:\r\n|\r|\n)([\s\S]*?)```$/;
+    private static readonly OBSIMAT_VARIABLE_REGEX = /\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*/;
     // regex for finding variable definitions in markdown code.
-    private static readonly OBSIMAT_VARIABLE_DEF_REGEX = /\$\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*:=\s*(?<value>[^=$]*?)\s*\$/g;
-    private static readonly OBSIMAT_FUNCTION_DEF_REGEX = /\$\s*(?<name>\w)\((?<args>(?:[^=\s$]*?,?\s*))\)\s*:=\s*(?<body>[^=$]*?)\s*\$/g;
+    private static readonly OBSIMAT_VARIABLE_DEF_REGEX = new RegExp(String.raw`\$${this.OBSIMAT_VARIABLE_REGEX.source}:=\s*(?<value>[^=$]*?)\s*\$`, 'g');
+    private static readonly OBSIMAT_FUNCTION_DEF_REGEX = new RegExp(String.raw`\$${this.OBSIMAT_VARIABLE_REGEX.source}\((?<args>(?:[^=$]*?\s*))\)\s*:=\s*(?<expr>[^=$]*?)\s*\$`, 'g');
 
-    private constructor(symbols?: { [symbol: string]: string[] }, variables?: { [variable: string]: string }, units_enabled?: boolean, excluded_symbols?: string[], domain?: string) {
+    private constructor(
+        symbols?: { [symbol: string]: string[] },
+        variables?: { [variable: string]: string },
+        functions?: { [func: string]: { args: string[], expr: string } },
+        units_enabled?: boolean,
+        excluded_symbols?: string[],
+        domain?: string
+    ) {
         this.symbols = symbols;
         this.variables = variables;
+        this.functions = functions;
         this.units_enabled = units_enabled;
         this.excluded_symbols = excluded_symbols;
         this.domain = domain;
@@ -110,18 +122,60 @@ export class ObsimatEnvironment {
     // and parse them into a variables map.
     private static parseVariables(from: EditorPosition, to: EditorPosition, editor: Editor) {
         const variables: { [variable: string]: string } = {};
-
+        
         const search_range = editor.getRange(from, to);
         const variable_definitions = search_range.matchAll(this.OBSIMAT_VARIABLE_DEF_REGEX);
 
-        for(const variable_definition of variable_definitions) {
-            if((!variable_definition.groups?.symbol && !variable_definition.groups?.symbol_math_encapsulated) || !variable_definition.groups?.value) {
+        for(const var_def of variable_definitions) {
+
+            const var_name = var_def.groups?.symbol ?? var_def.groups?.symbol_math_encapsulated;
+
+            if(var_name == undefined) {
+                continue;
+            }
+            
+            const value = var_def.groups?.value;
+
+            if(value == undefined || value?.trim() === "") {
+                delete variables[var_name];
                 continue;
             }
 
-            variables[variable_definition.groups.symbol ?? variable_definition.groups.symbol_math_encapsulated ] = variable_definition.groups.value;
+            variables[var_name] = value;
         }
 
         return variables;
+    }
+
+    private static parseFunctions(from: EditorPosition, to: EditorPosition, editor: Editor) {
+        const functions: { [func: string]: { args: string[], expr: string } } = {};
+        
+        const search_range = editor.getRange(from, to);
+        const function_definitions = search_range.matchAll(this.OBSIMAT_FUNCTION_DEF_REGEX);
+
+        
+        for(const func_def of function_definitions) {
+            const func_name = func_def.groups?.symbol ?? func_def.groups?.symbol_math_encapsulated;
+            const func_args = func_def.groups?.args; 
+            
+            if(func_name == undefined || func_args == undefined) {
+                continue;
+            }
+            
+            const func_expr = func_def.groups?.expr;
+
+            if(func_expr == undefined || func_expr?.trim() === "") {
+                delete functions[func_name];
+                continue;
+            }
+
+
+            functions[func_name] = {
+                args: func_args.split(',').map(arg => arg.trim()),
+                expr: func_expr
+            };
+        }
+
+        return functions;
     }
 }

@@ -13,7 +13,7 @@ export class SourceCodeSpawner implements SympyClientSpawner{
 
     public spawnClient(plugin_dir: string, port: number): ChildProcessWithoutNullStreams {
         
-        return spawn(join(plugin_dir, this.venv, "scripts", this.python_exe), [join(plugin_dir, "sympy-client/src/SympyClient.py"), port.toString()]);
+        return spawn(join(plugin_dir, this.venv, "scripts", this.python_exe), [join(plugin_dir, "sympy-client/SympyClient.py"), port.toString()]);
     }   
 }
 

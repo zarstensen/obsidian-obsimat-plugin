@@ -1,10 +1,7 @@
 from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
-from sympy_client.modes.ConvertSympyMode import convert_sympy_handler
-from tests.MockResponse import MockResponse
-import asyncio
+from sympy_client.command_handlers.ConvertSympyHandler import *
 
 from sympy import *
-
 
 ## Tests the conver to sympy mode.
 class TestConvertSympy:
@@ -13,11 +10,8 @@ class TestConvertSympy:
     def test_convert_simple(self):
         a, b = symbols("a b")
         
-        response = MockResponse()
-        asyncio.run(convert_sympy_handler({"expression": "a + b", "environment": {}}, response, self.parser))
-        assert response.hasResult()
+        handler = ConvertSympyHandler(self.parser)
         
-        result = response.getResult()
-            
-        with evaluate(False):
-            assert result['result'] == a + b
+        result = handler.handle({"expression": "a + b", "environment": {}})
+
+        assert result.sympy_expr == a + b

@@ -1,14 +1,14 @@
 from sympy_client.ObsimatClient import ObsimatClient
 from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
-from sympy_client.modes.EvalMode import eval_handler
-from sympy_client.modes.EvalfMode import evalf_handler
-from sympy_client.modes.ExpandMode import expand_handler
-from sympy_client.modes.FactorMode import factor_handler
-from sympy_client.modes.ApartMode import apart_handler
-from sympy_client.modes.SolveMode import solve_handler, solve_formatter
-from sympy_client.modes.ConvertUnitsMode import convert_units_handler
-from sympy_client.modes.SymbolSetMode import symbol_set_handler, symbol_set_formatter
-from sympy_client.modes.ConvertSympyMode import convert_sympy_handler, convert_sympy_formatter
+from sympy_client.command_handlers.EvalHandler import EvalHandler
+from sympy_client.command_handlers.EvalfHandler import EvalfHandler
+from sympy_client.command_handlers.ExpandHandler import ExpandHandler
+from sympy_client.command_handlers.FactorHandler import FactorHandler
+from sympy_client.command_handlers.ApartHandler import ApartHandler
+from sympy_client.command_handlers.SolveHandler import SolveHandler
+from sympy_client.command_handlers.SymbolSetHandler import SymbolSetHandler
+from sympy_client.command_handlers.ConvertSympyHandler import ConvertSympyHandler
+from sympy_client.command_handlers.ConvertUnitsHandler import ConvertUnitsHandler
 
 import asyncio
 import sys
@@ -19,17 +19,19 @@ if len(sys.argv) < 2:
 
 port = int(sys.argv[1])
 
+latex_parser = ObsimatLatexParser()
 
-client = ObsimatClient(ObsimatLatexParser())
-client.register_mode("eval", eval_handler)
-client.register_mode("evalf", evalf_handler)
-client.register_mode("expand", expand_handler)
-client.register_mode("factor", factor_handler)
-client.register_mode("apart", apart_handler)
-client.register_mode("solve", solve_handler, solve_formatter)
-client.register_mode("symbolsets", symbol_set_handler, symbol_set_formatter)
-client.register_mode("convert-sympy", convert_sympy_handler, convert_sympy_formatter)
-client.register_mode("convert-units", convert_units_handler)
+client = ObsimatClient()
+
+client.register_handler("eval", EvalHandler(latex_parser))
+client.register_handler("evalf", EvalfHandler(latex_parser))
+client.register_handler("expand", ExpandHandler(latex_parser))
+client.register_handler("factor", FactorHandler(latex_parser))
+client.register_handler("apart", ApartHandler(latex_parser))
+client.register_handler("solve", SolveHandler(latex_parser))
+client.register_handler("symbolsets", SymbolSetHandler())
+client.register_handler("convert-sympy", ConvertSympyHandler(latex_parser))
+client.register_handler("convert-units", ConvertUnitsHandler(latex_parser))
 
 async def main():
     await client.connect(port)

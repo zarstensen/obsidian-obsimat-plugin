@@ -1,6 +1,6 @@
 from .SystemOfExpr import SystemOfExpr
 from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
-from .FunctionSubstitutor import FunctionSubstitutor
+from .FunctionStore import FunctionStore
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 from sympy.core.relational import Relational
@@ -25,10 +25,10 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         ]
 
     # Constructs an ObsimatLarkTransformer.
-    def __init__(self, symbol_substitutor: CachedSymbolSubstitutor, function_substitutor: FunctionSubstitutor):
+    def __init__(self, symbol_substitutor: CachedSymbolSubstitutor, function_store: FunctionStore):
         super().__init__()
         self._symbol_substitutor = symbol_substitutor
-        self._function_substitutor = function_substitutor
+        self._function_store = function_store
         
         # wrap all symbol rules and terminal handlers in a method which attempts to 
         # substitute the symbol for a variable defined in the given environment.
@@ -48,15 +48,24 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         else:
             return symbol
 
-    def function_applied(self, tokens):
-        # try to substitute function
-        function = self._function_substitutor.get_function_substitution(str(tokens[0]), list(tokens[2]))
+    def function_applied(self, tokens):        
+        function = tokens[0]
         
-        if function is None:
-            return super().function_applied(tokens)
+        if function in self._function_store:
+            return self._function_store.call_function(function, *tuple(tokens[2]))
         else:
-            return function
-
+            # TODO: this should probably return a sympy Function to ensure compatibility with TransformToSymPyExpr,
+            # but as of this change, it currently does not make use of sympy Functions anywhere else,
+            # so it should not really matter.
+            #
+            # If this actually returned a sympy function instead of the custom ObsimatEnvFunction,
+            # then everywhere else where an ObsimatEnvFunction is needed,
+            # needs to check if the symbol it has received has a function tied to it or smth.
+            #
+            # actually yeah, why not just have like a function database which just holds all the functions which are then looked up?
+            # that seemse much better than the current solution.
+            return super().function_applied(tokens)
+        
     def whitespace(self, _tokens):
         return Discard
 
@@ -72,20 +81,40 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             return tokens[1].doit().dot(tokens[3].doit(), hermitian=True, conjugate_convention="right")
 
     def gradient(self, tokens):
-        return self._expr_gradient(tokens[1], tokens[1].free_symbols)
+        expr = tokens[1]
+        
+        if expr in self._function_store:
+            symbols = self._function_store.get_function_args(expr)
+            expr = self._function_store.get_parsed_function_expr(expr)
+        else:
+            symbols = expr.free_symbols
+        
+        return self._expr_gradient(expr, symbols)
 
     def hessian(self, tokens):
+        
+        expr = tokens[1]
 
-        symbols = list(sorted(tokens[1].free_symbols, key=str))
+        if expr in self._function_store:
+            symbols = list(sorted(self._function_store.get_function_args(expr), key=str))
+            expr = self._function_store.get_parsed_function_expr(expr)
+        else:
+            symbols = list(sorted(tokens[1].free_symbols, key=str))
         
         return Matrix([
             [
-                diff(tokens[1], symbol_col, symbol_row, evaluate=False) for symbol_col in symbols
+                diff(expr, symbol_col, symbol_row, evaluate=False) for symbol_col in symbols
             ] for symbol_row in symbols
         ])
         
     def jacobian(self, tokens):
         matrix = tokens[1]
+        
+        if matrix in self._function_store:
+            symbols = self._function_store.get_function_args(matrix)
+            matrix = self._function_store.get_parsed_function_expr(matrix) 
+        else:
+            symbols = matrix.free_symbols
         
         if not self._obj_is_sympy_Matrix(matrix):
             matrix = Matrix([matrix])
@@ -99,7 +128,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         gradients = []
         
         for item in matrix:
-            gradients.append(self._expr_gradient(item, matrix.free_symbols))
+            gradients.append(self._expr_gradient(item, symbols))
         
         return Matrix.vstack(*gradients)
       
@@ -110,10 +139,19 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         return tokens[1].rref()[0]
 
     def quick_derivative(self, tokens):
-        if len(tokens[0].free_symbols) == 0:
+        
+        expr = tokens[0]
+        
+        if expr in self._function_store:
+            symbols = self._function_store.get_function_args(expr)
+            expr = self._function_store.get_parsed_function_expr(expr)
+        else:
+            symbols = expr.free_symbols
+        
+        if symbols == 0:
             return S(0)
         else:
-            return diff(tokens[0], sorted(tokens[0].free_symbols, key=str)[0], len(tokens[1]), evaluate=False)
+            return diff(expr, sorted(symbols, key=str)[0], len(tokens[1]), evaluate=False)
 
     def math_constant(self, tokens):
         match str(tokens[0]):

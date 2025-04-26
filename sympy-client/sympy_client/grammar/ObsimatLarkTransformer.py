@@ -3,10 +3,20 @@ from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
 from .FunctionStore import FunctionStore
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
+from sympy.core.operations import LatticeOp
 from sympy.core.relational import Relational
+from sympy.logic.boolalg import *
 from sympy import *
 from lark import Token, Discard
 
+class ChainedRelation(And):
+    
+    @classmethod
+    def _new_args_filter(cls, args):
+        args = BooleanFunction.binary_check_and_simplify(*args)
+        args = LatticeOp._new_args_filter(args, And)
+        return args
+    
 
 # The ObsimatLarkTransofmer class provides functions for transforming
 # rules defined in obsimat_grammar.lark into sympy expressions.
@@ -52,7 +62,7 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         function = tokens[0]
         
         if function in self._function_store:
-            return self._function_store.call_function(function, *tuple(tokens[2]))
+            return self._function_store[function].call(*tuple(tokens[2]))
         else:
             # TODO: this should probably return a sympy Function to ensure compatibility with TransformToSymPyExpr,
             # but as of this change, it currently does not make use of sympy Functions anywhere else,
@@ -84,10 +94,11 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         expr = tokens[1]
         
         if expr in self._function_store:
-            symbols = self._function_store.get_function_args(expr)
-            expr = self._function_store.get_parsed_function_expr(expr)
+            func = self._function_store[expr]
+            symbols = func.args
+            expr = func.parse_body()
         else:
-            symbols = expr.free_symbols
+            symbols = list(sorted(expr.free_symbols, key=str))
         
         return self._expr_gradient(expr, symbols)
 
@@ -96,8 +107,9 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         expr = tokens[1]
 
         if expr in self._function_store:
-            symbols = list(sorted(self._function_store.get_function_args(expr), key=str))
-            expr = self._function_store.get_parsed_function_expr(expr)
+            func = self._function_store[expr]
+            symbols = func.args
+            expr = func.parse_body()
         else:
             symbols = list(sorted(tokens[1].free_symbols, key=str))
         
@@ -111,10 +123,11 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         matrix = tokens[1]
         
         if matrix in self._function_store:
-            symbols = self._function_store.get_function_args(matrix)
-            matrix = self._function_store.get_parsed_function_expr(matrix) 
+            func = self._function_store[matrix]
+            symbols = func.args
+            matrix = func.parse_body() 
         else:
-            symbols = matrix.free_symbols
+            symbols = list(sorted(matrix.free_symbols, key=str))
         
         if not self._obj_is_sympy_Matrix(matrix):
             matrix = Matrix([matrix])
@@ -143,8 +156,9 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
         expr = tokens[0]
         
         if expr in self._function_store:
-            symbols = self._function_store.get_function_args(expr)
-            expr = self._function_store.get_parsed_function_expr(expr)
+            func = self._function_store[expr]
+            symbols = func.args
+            expr = func.parse_body()
         else:
             symbols = expr.free_symbols
         
@@ -209,14 +223,9 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
             relation = children[0]
             
             if isinstance(relation, Relational):
-                return SystemOfExpr(
-                    [
-                        (children[0], meta),
-                        (relation_type(children[0].rhs, children[2], evaluate=False), meta),
-                    ]
-                )
-            elif isinstance(relation, SystemOfExpr):
-                return relation.extend([ (relation_type(relation.get_expr(-1).rhs, children[2], evaluate=False), meta) ])
+                return ChainedRelation(relation, relation_type(relation.rhs, children[2], evaluate=False), evaluate=False)
+            elif isinstance(relation, ChainedRelation):
+                return ChainedRelation(*relation.args, relation_type(relation.args[-1].rhs, children[2], evaluate=False), evaluate=False)
             else:
                 raise ValueError("Chained relation must be between a sympy relation or a system of expressions, where the last expression is a relation.")
 
@@ -258,4 +267,4 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
     
     @staticmethod
     def _expr_gradient(expression: Expr, free_symbols):
-        return Matrix([ [ diff(expression, symbol, evaluate=False) for symbol in sorted(free_symbols, key=str)] ])
+        return Matrix([ [ diff(expression, symbol, evaluate=False) for symbol in free_symbols] ])

@@ -1,7 +1,9 @@
 from sympy.printing.str import StrPrinter
 from sympy import Equality
 from sympy.core.function import Function, DefinedFunction
+from sympy.core.relational import Relational
 from sympy import MatrixBase
+
 
 # The GeogebraPrinterClass converts a sympy expression to a geogebra parseble expression.
 #
@@ -21,8 +23,13 @@ class GeogebraPrinter(StrPrinter):
         
         return f"{func_name}({','.join((self.doprint(a) for a in expr.args))})"
     
-    def _print_Equality(self, expr: Equality):
-        return f"{expr.lhs} = {expr.rhs}"
+    def _print_Relational(self, expr: Relational):
+        if isinstance(expr, Equality):
+            op_str = '='
+        else: 
+            op_str = expr.rel_op
+        
+        return f"({self.doprint(expr.lhs)}) {op_str} ({self.doprint(expr.rhs)})"
     
     def _print_MatrixBase(self, expr: MatrixBase):
         # make all vectors be row vectors

@@ -12,10 +12,10 @@ class TestParse:
         
         result = self.parser.doparse(r"x = y < z")
     
-        assert isinstance(result, SystemOfExpr)
-        assert len(result) == 2
+        assert isinstance(result, And)
+        assert len(result.args) == 2
         
-        assert result.get_all_expr() == (Eq(x, y), Lt(y, z))
+        assert result.args == (Eq(x, y), Lt(y, z))
         
     
     def test_matrix(self):

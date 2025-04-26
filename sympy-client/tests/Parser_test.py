@@ -95,6 +95,11 @@ class TestParse:
         x1 = symbols("x_{1}")
         assert self.parser.doparse(r"b x_1") == x1 * b
         assert self.parser.doparse(r"x_1 b") == x1 * b
+        
+        f, x = symbols("f x")
+        
+        assert self.parser.doparse("f (x)") == f * x
+        assert self.parser.doparse("f(x)") == Function(f)(x)
     
     def test_partial_relations(self):
         x, y = symbols("x y")
@@ -198,11 +203,11 @@ i & 2 i
         assert result.doit() == Matrix([[2, 0], [0, 2]])
         
     def test_jacobian(self):
-        result = self.parser.doparse(r"\mathbf{J}\begin{bmatrix} x + y \\ x \\ y\end{bmatrix}")
+        result = self.parser.doparse(r"\mathbf{J}(\begin{bmatrix} x + y \\ x \\ y\end{bmatrix})")
         
         assert result.doit() == Matrix([[1, 1], [1, 0], [0, 1]])
         
     def test_rref(self):
-        result = self.parser.doparse(r"\mathrm{rref} \begin{bmatrix} 20 & 50 \\ 10 & 25\end{bmatrix}")
+        result = self.parser.doparse(r"\mathrm{rref}(\begin{bmatrix} 20 & 50 \\ 10 & 25\end{bmatrix})")
         
         assert result == Matrix([[1, Rational(5, 2)], [0, 0]])

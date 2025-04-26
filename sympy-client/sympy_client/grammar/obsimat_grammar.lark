@@ -60,7 +60,7 @@ whitespace: /\s+/
 
 // need to override the whole thing here, as the first part of the rule needed to be modified,
 // and fixing it with an extension would lead to an ambigiouity whenever this case was encountered. 
-%override adjacent_expressions: _expression_power whitespace _expression_mul
+%override adjacent_expressions.1: _expression_power whitespace _expression_mul
     | number _expression_mul
     | group_round_parentheses (group_round_parentheses | _one_letter_symbol)
     | _function _function

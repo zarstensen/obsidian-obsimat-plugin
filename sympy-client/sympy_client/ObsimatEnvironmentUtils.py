@@ -4,12 +4,15 @@ from . import UnitsUtils
 
 import sympy.physics.units as u
 from sympy.physics.units.quantities import Quantity 
-from sympy.physics.units.systems import SI
+from sympy.physics.units.unitsystem import UnitSystem
 from sympy.core.relational import Relational
 from sympy import *
 
 ## The ObsimatEnvironmentUtils provide various utility functions for a math expression present in an ObsimatEnvironment.
 class ObsimatEnvironmentUtils:
+    
+    # list of symbols which commonly are not interpreted as their equivalent unit.
+    DEFAULT_EXCLUDED_UNIT_SYMBOLS = ['g', 'L']
     
     @staticmethod
     def create_sympy_symbol(symbol: str, environment: ObsimatEnvironment):
@@ -30,8 +33,12 @@ class ObsimatEnvironmentUtils:
     # Also convert all non base units to base units where possible.
     @staticmethod
     def substitute_units(sympy_expr, environment: ObsimatEnvironment):
-        if 'units_enabled' not in environment or not environment['units_enabled']:
+        if 'units_system' not in environment:
             return sympy_expr
+        
+        unit_system_id_str = environment['units_system']
+        
+        unit_system = UnitSystem.get_unit_system(unit_system_id_str)
         
         # substitute units recursively for all system of equations.
         if isinstance(sympy_expr, SystemOfExpr):
@@ -44,16 +51,17 @@ class ObsimatEnvironmentUtils:
             rhs = ObsimatEnvironmentUtils.substitute_units(sympy_expr.rhs, environment)
             return sympy_expr.func(lhs, rhs)
         
-        excluded_symbols = []
-        
         if 'excluded_symbols' in environment:
+            excluded_symbols = []
             for symbol_str in environment['excluded_symbols']:
                 if 'symbols' in environment and symbol_str in environment['symbols']:
                     excluded_symbols.append(ObsimatEnvironmentUtils.create_sympy_symbol(symbol_str, environment))
                 else:
                     excluded_symbols.append(Symbol(symbol_str))
+        else:
+            excluded_symbols = ObsimatEnvironmentUtils.DEFAULT_EXCLUDED_UNIT_SYMBOLS
         
-        sympy_expr = UnitsUtils.substitute_units(sympy_expr, excluded_symbols)
-        sympy_expr = UnitsUtils.auto_convert(sympy_expr)
+        sympy_expr = UnitsUtils.substitute_units(sympy_expr, excluded_symbols, unit_system)
+        sympy_expr = UnitsUtils.auto_convert(sympy_expr, unit_system)
         
         return sympy_expr

@@ -11,7 +11,7 @@ class ConvertMessage(EvaluateMessage):
 class ConvertUnitsHandler(EvalHandlerBase):
     
     def handle(self, message: ConvertMessage) -> EvalResult:
-        message['environment']['units_enabled'] = True
+        message['environment']['units_system'] = "SI"
         return super().handle(message)
     
     def evaluate(self, sympy_expr: Expr, message: ConvertMessage):

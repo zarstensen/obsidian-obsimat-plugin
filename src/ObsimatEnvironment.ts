@@ -15,9 +15,11 @@ export class ObsimatEnvironment {
 
     public functions: { [func: string]: { args: string[], expr: string } } | undefined;
 
-    // the units which any expression in this environment should handle.
-    public units_enabled: boolean | undefined;
-    // the base_units list specifies a list of units which any expression result should convert its own units to.
+    // the unit system to use when converting between units.
+    // if left undefined, no unit conversion takes place.
+    public units_system: string | undefined;
+    // the excluded_symbols list specifies a list symbols which should not be converted to units.
+    // if left undefined, a default list of commonly excluded symbols will be used instead.
     public excluded_symbols: string[] | undefined;
     
     // the domain is a sympy expression, evaluating to the default solution domain of any equation solutions.
@@ -36,7 +38,7 @@ export class ObsimatEnvironment {
             parsed_obsimat_block.symbols,
             variables,
             functions,
-            parsed_obsimat_block.units?.enabled,
+            parsed_obsimat_block.units?.system,
             parsed_obsimat_block.units?.exclude,
             parsed_obsimat_block.domain?.domain
         );
@@ -106,14 +108,14 @@ export class ObsimatEnvironment {
         symbols?: { [symbol: string]: string[] },
         variables?: { [variable: string]: string },
         functions?: { [func: string]: { args: string[], expr: string } },
-        units_enabled?: boolean,
+        units_system?: string,
         excluded_symbols?: string[],
         domain?: string
     ) {
         this.symbols = symbols;
         this.variables = variables;
         this.functions = functions;
-        this.units_enabled = units_enabled;
+        this.units_system = units_system;
         this.excluded_symbols = excluded_symbols;
         this.domain = domain;
     }

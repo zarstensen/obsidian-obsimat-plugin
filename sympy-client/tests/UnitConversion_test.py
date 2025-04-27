@@ -13,27 +13,27 @@ class TestUnitConversion:
     
     def test_single_term_to_derived_unit(self):
         handler = EvalHandler(self.parser)
-        result = handler.handle({"expression": "kg * m / s^2", "environment": { "units_enabled": True }})
+        result = handler.handle({"expression": "kg * m / s^2", "environment": { "units_system": "SI" }})
         
         assert result.sympy_expr.rhs == units.newton
         
     def test_single_term_to_base_units(self):
         handler = EvalHandler(self.parser)
-        result = handler.handle({"expression": "J / m * s^2", "environment": { "units_enabled": True }})
+        result = handler.handle({"expression": "J / m * s^2", "environment": { "units_system": "SI" }})
         
         assert result.sympy_expr.rhs == units.kilogram * units.meter
     
     
     def test_multiple_terms(self):
         handler = EvalHandler(self.parser)
-        result = handler.handle({"expression": "J / m * s^2 + kg * m / s^2", "environment": { "units_enabled": True }})
+        result = handler.handle({"expression": "J / m * s^2 + kg * m / s^2", "environment": { "units_system": "SI" }})
         
         assert result.sympy_expr.rhs == units.kilogram * units.meter + units.newton
     
     def test_excluded_units(self):
         J = symbols("J")
         handler = EvalHandler(self.parser)
-        result = handler.handle({"expression": "J * kg * m / s^2", "environment": { "units_enabled": True, "excluded_symbols": ["J"] }})
+        result = handler.handle({"expression": "J * kg * m / s^2", "environment": { "units_system": "SI", "excluded_symbols": ["J"] }})
         
         assert result.sympy_expr.rhs == J * units.newton
       
@@ -45,7 +45,7 @@ class TestUnitConversion:
         
     def test_solve_conversion(self):
         handler = SolveHandler(self.parser)
-        result = handler.handle({"expression": "2 x = 50 kg", "environment": { "units_enabled": True }})
+        result = handler.handle({"expression": "2 x = 50 kg", "environment": { "units_system": "SI" }})
         
         assert result.solution == FiniteSet(25 * units.kilogram)
         
@@ -60,7 +60,16 @@ class TestUnitConversion:
                 3 N
                 \end{bmatrix}
             """,
-            "environment": {"units_enabled": True}
+            "environment": {"units_system": "SI"}
         })
         
         assert result.sympy_expr.rhs == Matrix([units.kilometer**2, 2 * units.second, 3000 * units.joule])
+        
+    def test_units_not_in_system(self):
+        A = symbols('A')
+        
+        handler = EvalHandler(self.parser)
+        result = handler.handle({"expression": "A", "environment": { "units_system": "MKS" }})
+        
+        assert result.sympy_expr == A
+        

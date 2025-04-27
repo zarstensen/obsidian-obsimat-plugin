@@ -7,9 +7,13 @@
 
 - [Usage](#usage)
   - [Evaluate](#evaluate)
+    - [Variants](#variants)
   - [Solve](#solve)
-  - [Variables](#variables)
+  - [Variables / Function Definitions](#variables--function-definitions)
   - [Obsimat Code Block](#obsimat-code-block)
+    - [Symbol Assumptions](#symbol-assumptions)
+    - [Units](#units)
+    - [Solution Domain](#solution-domain)
   - [Sympy Conversion](#sympy-conversion)
 - [Installing](#installing)
 - [License](#license)
@@ -57,17 +61,19 @@ To solve a system of equations, place each equation on a new line inside either 
 If an expression with no relation is solved, it is assumed it is set equal to 0.
 For example, `a^2 + b` would be interpreted as `a^2 + b = 0`.
 
-### Variables
+### Variables / Function Definitions
 
-Define variables inside LaTeX blocks with the `:=` operator.
-The left-hand side specifies the name of the variable, and the right-hand side its value.
-Whenever this variable is used after it has been defined, it will be replaced by its value.
+Define variables or functions inside LaTeX blocks with the `:=` operator.
+The left-hand side specifies the name of the variable / function and its parameters, and the right-hand side its value / body.
+Whenever it is used after it has been defined, it will be replaced by its defined expression.
 
 > [!IMPORTANT]
-> Only one variable can be defined per LaTeX block.
+> Only one definition can be present in a LaTeX block.
 >
 
-Variable persistence is based on the location they were defined inside the document, meaning a variable cannot be used in the note above its LaTeX block definition. Furthermore, all Obsimat code blocks remove all variable definitions above themselves.
+Definition persistence is based on the location they were defined inside the document, meaning f.ex. a variable cannot be used in the note above its LaTeX block definition. Furthermore, all Obsimat code blocks remove all definitions above themselves.
+
+To remove a definition, leave the right hand of the `:=` operator blank.
 
 > [!NOTE]
 > **Variable Definition Example**
@@ -84,6 +90,10 @@ Variable persistence is based on the location they were defined inside the docum
 > Evaluate an expression containing the above variables after they have been defined.
 >
 > `$x^2 + y$` evaluates to 198
+>
+> Undefine previously defined variable `x`
+>
+> `x :=`
 
 ### Obsimat Code Block
 
@@ -101,7 +111,7 @@ Each Obsimat code block functions as a complete reset, ignoring any previous var
 > y = [ "integer" ]
 >
 > [units]
-> enabled = true
+> system = "SI"
 > exclude = [ "g" ]
 >
 >
@@ -129,7 +139,9 @@ This is done by setting the symbol name as a key in the `symbols` table, equal t
 
 Unit conversion can be enabled and configured in the `units` table.
 
-The `enabled` key specifies whether symbols will be replaced with units and converted to other units during evaluation.
+The `system` key specifies which unit system to use, when converting between units.
+Possible values include `SI`, `MKS`, `MKSA` and `Natural system`.
+If left blank, no unit conversion will be done.
 
 The `exclude` key specifies a list of symbols, which should not be interpreted as units.
 An example of this being useful could be *g* which is often used as a symbol for earths gravitational acceleration, but will be interpreted as *grams* when units are enabled.

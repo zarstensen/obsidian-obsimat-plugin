@@ -93,9 +93,9 @@ class TestEvaluate:
         result = handler.handle({"expression": r"""
         a = b = (a - b)^2
         """, "environment": {}})
-        
+
         assert result.sympy_expr == (a - b)**2
-        
+
         result = handler.handle({"expression": r"""
         1 = 2 = 1
         """, "environment": {}})
@@ -112,11 +112,11 @@ class TestEvaluate:
         assert result.sympy_expr == 8
         assert result.expr_lines == (4, 4)
         
-        handler.handle({"expression": r"""
-            1 = 2 = 3 = 4 = 5 = 6 = 7 = 8
+        result = handler.handle({"expression": r"""
+            1 = 2 = 3 = 4 = 5 = 6 = 7 = 8 = 9
             """, "environment": {}})
 
-        assert result.sympy_expr == 8
+        assert result.sympy_expr == 9
         
     
     def test_variable_substitution(self):
@@ -274,4 +274,70 @@ class TestEvaluate:
         })
         assert result.sympy_expr.rhs == Matrix([[125]])
     
-    # TODO: add hessian test, jacobi tests and so on...
+    def test_hessian(self):
+        handler = EvalHandler(self.parser)
+        x, y = symbols('x y')
+
+        # Standard function
+        result = handler.handle({
+            "expression": r"\mathbf{H}(y x^5 + \sin(y))",
+            "environment": {}
+        })
+        assert result.sympy_expr.rhs == Matrix([
+                                                [20 * x**3 * y,     5 * x ** 4],
+                                                [5 * x ** 4,        - sin(y)]
+                                                ])
+
+        result = handler.handle({
+            "expression": r"\mathbf{H}(f)",
+            "environment": {
+                "functions": {
+                    "f": {
+                        "args": ["x", "y", "z"],
+                        "expr": r"\log(x) + e^y"
+                    }
+                }
+            }
+        })
+        
+        assert result.sympy_expr.rhs == Matrix([
+            [- 1 / x**2,    0,      0],
+            [0,             E**y,   0],
+            [0,             0,      0]
+        ])
+
+    
+    def test_jacobi(self):
+        handler = EvalHandler(self.parser)
+        x, y = symbols('x y')
+
+        # Standard function
+        result = handler.handle({
+            "expression": r"\mathbf{J}(\begin{bmatrix} x^2 \\ y \\ x * y \end{bmatrix})",
+            "environment": {}
+        })
+        assert result.sympy_expr.rhs == Matrix([
+            [2 * x, 0],
+            [0,     1],
+            [y,     x]
+        ])
+
+        result = handler.handle({
+            "expression": r"\mathbf{J}(f)",
+            "environment": {
+                "functions": {
+                    "f": {
+                        "args": ["x", "y", "z"],
+                        "expr": r"\begin{bmatrix}\log(x)\\ \sin(y) \\ \cos(x) * \sin(y) \end{bmatrix}"
+                    }
+                }
+            }
+        })
+        
+        assert result.sympy_expr.rhs == Matrix([
+            [1 / x,             0,              0],
+            [0,                 cos(y),         0],
+            [-sin(x) * sin(y),  cos(x) * cos(y),0]
+        ])
+    
+    # TODO: add gradient test (it is already implicitly tested in test_jacobi so not high priority)

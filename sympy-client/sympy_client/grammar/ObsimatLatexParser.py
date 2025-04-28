@@ -2,7 +2,7 @@ from sympy_client.ObsimatEnvironment import ObsimatEnvironment
 from .ObsimatLarkTransformer import ObsimatLarkTransformer
 from .SympyParser import SympyParser
 from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
-from .FunctionSubstitutor import FunctionSubstitutor
+from .FunctionStore import FunctionStore
 
 from sympy import *
 import sympy.parsing.latex.lark as sympy_lark
@@ -60,9 +60,9 @@ class ObsimatLatexParser(SympyParser):
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
     def doparse(self, latex_str: str, environment: ObsimatEnvironment = {}):
         symbol_substitutor = CachedSymbolSubstitutor(environment, self)
-        function_substitutor = FunctionSubstitutor(environment, self)
+        function_store = FunctionStore(environment, self)
         
-        transformer = ObsimatLarkTransformer(symbol_substitutor, function_substitutor)
+        transformer = ObsimatLarkTransformer(symbol_substitutor, function_store)
         parse_tree = self.parser.parse(latex_str)
         expr = transformer.transform(parse_tree)
         

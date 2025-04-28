@@ -1,7 +1,7 @@
-lark
-websockets
+lark~=1.2
+websockets~=15.0
 sympy@git+https://github.com/sympy/sympy.git#930b991
-regex
-pytest
-pyinstaller
-jsonpickle
+regex~=2024.11
+pytest~=8.3
+pyinstaller~=6.13
+jsonpickle~=4.0

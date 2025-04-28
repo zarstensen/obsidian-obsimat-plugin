@@ -14,7 +14,7 @@ class TestUnitConversion:
     def test_single_term_to_derived_unit(self):
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": "kg * m / s^2", "environment": { "units_system": "SI" }})
-        
+
         assert result.sympy_expr.rhs == units.newton
         
     def test_single_term_to_base_units(self):

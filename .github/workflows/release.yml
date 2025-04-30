@@ -124,5 +124,8 @@ jobs:
           draft: true
           prerelease: false
           generate_release_notes: true
-          files:
+          files: |
             ./rel-assets/*
+            main.js
+            manifest.json
+            styles.css

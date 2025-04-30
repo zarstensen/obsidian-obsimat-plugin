@@ -9,12 +9,40 @@ import { assert } from 'console';
 // The PythonEvalServer class manages a connection as well as message encoding and handling, with an SympyEvaluator script instance.
 // Also manages the python process itself.
 export class SympyEvaluator {
+    // Start the SympyEvaluator python process, and establish an connection to it.
+    // vault_dir: the directory of the vault, which thsi plugin is installed in.
+    // python_exec: the python executable to use to start the SympyEvaluator process.
+    public async initializeAsync(vault: Vault, plugin_dir: string, sympy_client_spawner: SympyClientSpawner): Promise<void> {
+        // Start by setting up the web socket server, so we can get a port to give to the python program.
+        const server_port = await getPort();
 
-    
+        this.ws_python_server = new WebSocketServer({ 
+            port: server_port
+        });
 
-    public initialize(vault: Vault, plugin_dir: string, sympy_client_spawner: SympyClientSpawner): Promise<void> {
-        this.initialized_promise = this.initializeAsync(vault, plugin_dir, sympy_client_spawner);
-        return this.initialized_promise;
+        const adapter = vault.adapter as FileSystemAdapter;
+
+        // now start the python process
+        this.python_process = sympy_client_spawner.spawnClient(join(adapter.getBasePath(), plugin_dir), server_port);
+        
+        // setup output to be logged in the developer console
+        this.python_process.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+
+        this.python_process.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+        });
+
+        this.python_process.on('close', (code) => {
+            console.log(`child process exited with code ${code}`);
+            // TODO: do something here
+        });
+
+        // wait for the process to establish an connection
+        this.ws_python = await new Promise(this.resolveConnection.bind(this));
+
+
     }
 
     public async shutdown(): Promise<void> {
@@ -34,7 +62,7 @@ export class SympyEvaluator {
     }
 
     // Send a message to the SympyEvaluator process.
-    public async send(mode: string, data: any): Promise<void> {
+    public async send(mode: string, data: unknown): Promise<void> {
         await this.initialized_promise;
         this.ws_python.send(mode + "|" + JSON.stringify(data));
     }
@@ -76,41 +104,5 @@ export class SympyEvaluator {
         this.ws_python_server.once('connection', (ws) => {
             resolve(ws);
         });
-    }
-
-    // Start the SympyEvaluator python process, and establish an connection to it.
-    // vault_dir: the directory of the vault, which thsi plugin is installed in.
-    // python_exec: the python executable to use to start the SympyEvaluator process.
-    private async initializeAsync(vault: Vault, plugin_dir: string, sympy_client_spawner: SympyClientSpawner): Promise<void> {
-        // Start by setting up the web socket server, so we can get a port to give to the python program.
-        const server_port = await getPort();
-
-        this.ws_python_server = new WebSocketServer({ 
-            port: server_port
-        });
-
-        const adapter = vault.adapter as FileSystemAdapter;
-
-        // now start the python process
-        this.python_process = sympy_client_spawner.spawnClient(join(adapter.getBasePath(), plugin_dir), server_port);
-        
-        // setup output to be logged in the developer console
-        this.python_process.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
-        });
-
-        this.python_process.stderr.on('data', (data) => {
-            console.error(`stderr: ${data}`);
-        });
-
-        this.python_process.on('close', (code) => {
-            console.log(`child process exited with code ${code}`);
-            // TODO: do something here
-        });
-
-        // wait for the process to establish an connection
-        this.ws_python = await new Promise(this.resolveConnection.bind(this));
-
-
     }
 }

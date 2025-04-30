@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-obsimat-plugin",
+	"name": "obsimat",
 	"version": "0.4.0",
-	"description": "Integrates the sympy python library into obsidian markdown files.",
+	"description": "Evaluate, solve and do much more within LaTeX blocks using Sympy.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

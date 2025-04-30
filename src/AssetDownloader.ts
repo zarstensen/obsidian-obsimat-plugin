@@ -15,8 +15,6 @@ export class AssetDownloader {
         
         const version_file = path.join(dir, AssetDownloader.LATEST_VERSION_FILE);
 
-        console.log(version_file);
-
         // first check if the file has even been created yet.
         if(!fs.existsSync(version_file)) {
             return false;
@@ -51,8 +49,6 @@ export class AssetDownloader {
         const download_url = AssetDownloader.ASSET_DOWNLOAD_URL
                                             .replaceAll("${VERSION}", this.required_version)
                                             .replaceAll("${PLATFORM}", platform_str);
-
-        console.log(download_url);
 
         // download the asset file
         const response = await requestUrl(download_url);

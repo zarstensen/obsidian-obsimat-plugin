@@ -126,3 +126,6 @@ jobs:
           generate_release_notes: true
           files:
             ./rel-assets/*
+            main.js
+            manifest.json
+            styles.css

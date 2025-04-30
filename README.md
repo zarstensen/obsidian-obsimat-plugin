@@ -9,7 +9,7 @@
   - [Evaluate](#evaluate)
     - [Variants](#variants)
   - [Solve](#solve)
-  - [Variables / Function Definitions](#variables--function-definitions)
+  - [Definitions](#definitions)
   - [Obsimat Code Block](#obsimat-code-block)
     - [Symbol Assumptions](#symbol-assumptions)
     - [Units](#units)
@@ -61,7 +61,7 @@ To solve a system of equations, place each equation on a new line inside either 
 If an expression with no relation is solved, it is assumed it is set equal to 0.
 For example, `a^2 + b` would be interpreted as `a^2 + b = 0`.
 
-### Variables / Function Definitions
+### Definitions
 
 Define variables or functions inside LaTeX blocks with the `:=` operator.
 The left-hand side specifies the name of the variable / function and its parameters, and the right-hand side its value / body.
@@ -94,6 +94,23 @@ To remove a definition, leave the right hand of the `:=` operator blank.
 > Undefine previously defined variable `x`
 >
 > `x :=`
+
+> [!NOTE]
+> **Function Definition Example**
+>
+> 
+> Define a function `f(x)` with the body `x^2`.
+>
+> `$f(x) := x^2$`
+>
+>
+> Evaluate an expression containing the above function after they have been defined.
+>
+> `$f(3) + f(4)$` evaluates to 25
+>
+> Undefine previously defined function `f`
+>
+> `f() :=`
 
 ### Obsimat Code Block
 

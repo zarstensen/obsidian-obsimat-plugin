@@ -43,6 +43,8 @@ jobs:
             rel_name: win
           - os_name: macos-latest
             rel_name: macos
+          - os_name: ubuntu-latest
+            rel_name: linux
 
     steps:
       - uses: actions/checkout@v4

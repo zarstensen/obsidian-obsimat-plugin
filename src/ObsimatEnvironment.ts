@@ -27,7 +27,7 @@ export class ObsimatEnvironment {
 
     public static fromCodeBlock(code_block: string | undefined, variables: { [variable: string]: string }, functions: { [func: string]: { args: string[], expr: string } }) {
         if(!code_block) {
-            return new ObsimatEnvironment(undefined, variables);
+            return new ObsimatEnvironment(undefined, variables, functions);
         }
 
         const parsed_obsimat_block = toml.parse(code_block);

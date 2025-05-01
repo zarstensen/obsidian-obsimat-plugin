@@ -90,6 +90,7 @@ export default class ObsiMatPlugin extends Plugin {
     }
 
     private async renderObsimatCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
+        await this.spawn_sympy_client_promise;
         // Add the standard code block background div,
         // to ensure a consistent look with other code blocks.
         const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg");

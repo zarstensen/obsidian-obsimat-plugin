@@ -20,10 +20,14 @@ export class SympyEvaluator {
             port: server_port
         });
 
-        const adapter = vault.adapter as FileSystemAdapter;
+        if(!(vault.adapter instanceof FileSystemAdapter)) {
+            throw new Error(`Expected FileSystemAdapter, got ${vault.adapter}`);
+        }
+
+        const file_system_adapter: FileSystemAdapter = vault.adapter;
 
         // now start the python process
-        this.python_process = sympy_client_spawner.spawnClient(join(adapter.getBasePath(), plugin_dir), server_port);
+        this.python_process = sympy_client_spawner.spawnClient(join(file_system_adapter.getBasePath(), plugin_dir), server_port);
         
         // setup output to be logged in the developer console
         this.python_process.stdout.on('data', (data) => {

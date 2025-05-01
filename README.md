@@ -179,6 +179,36 @@ Convert a LaTeX block to Sympy Python code with the `Convert LaTeX Expression To
 
 Download the plugin zip file from the [latest release](https://github.com/zarstensen/obsidian-obsimat-plugin/releases/latest), and extract it to your vault's plugin folder, commonly located at `.obsidian/plugins`, relative to your vault's path.
 
+On Linux you might need to give execute permissions to the SympyClient.exe
+
+First you need to find the path to SympyClient.exe
+It will probably look something like /.../.obsidian/plugins/obsimat/SympyClient
+
+To give permission you can try the following commands, they have only been tested on Arch Linux.
+
+(Optional)To verify that you do/don't have permission to execute the file run:
+`ls -l /path/to/SympyClient`
+Something like -rw-r--r-- ... means no execute permission
+
+To give access to execute run this command (It will give every user access to execute the SympyClient.exe)
+`chmod +x /path/to/SympyClient`
+
+(Optional)You can run the verify command again and if you see -rwxr-xr-x ... it was successful
+
+Full example output:
+```
+[{username}@archlinux]$ ls -l /.../.obsidian/plugins/obsimat/SympyClient
+-rw-r--r-- 1 {username} {username} 34078784 May 1 19:41 /.../.obsidian/plugins/obsimat/SympyClient
+[{username}@archlinux]$ chmod +x /.../.obsidian/plugins/obsimat/SympyClient
+[{username}@archlinux]$ ls -l /.../.obsidian/plugins/obsimat/SympyClient
+-rwxr-xr-x 1 {username} {username} 34078784 May 1 19:41 /{username}/.obsidian/plugins/obsimat/SympyClient
+```
+
+
+
+
+
+
 ## License
 
 See [LICENSE](LICENSE)

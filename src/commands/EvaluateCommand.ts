@@ -9,7 +9,7 @@ export class EvaluateCommand implements IObsimatCommand {
     readonly id: string;
 
     constructor(evaluate_mode: string) {
-        this.id = `${evaluate_mode}-latex-expression-command`;
+        this.id = `${evaluate_mode}-latex-expression`;
         this.evaluate_mode = evaluate_mode;
     }
     

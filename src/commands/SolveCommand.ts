@@ -7,7 +7,7 @@ import { SolveModeModal } from "src/SolveModeModal";
 import { formatLatex } from "src/FormatLatex";
 
 export class SolveCommand implements IObsimatCommand {
-    readonly id: string = 'solve-latex-expression-command';
+    readonly id: string = 'solve-latex-expression';
 
     async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
         // Extract the equation to solve

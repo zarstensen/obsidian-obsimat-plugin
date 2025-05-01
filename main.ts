@@ -65,13 +65,13 @@ export default class ObsiMatPlugin extends Plugin {
     // sets up the given map of commands as obsidian commands.
     // the provided values for each command will be set as the command description.
     addObsimatCommands(commands: Map<IObsimatCommand, string>) {
-        commands.forEach((description, command) => {
+        commands.forEach((description, cmd) => {
           this.addCommand({
-            id: command.id,
+            id: cmd.id,
             name: description,
             editorCallback: async (e, v) => { 
                 await this.spawn_sympy_client_promise;
-                command.functionCallback(this.sympy_evaluator, this.app, e, v as MarkdownView, {});
+                cmd.functionCallback(this.sympy_evaluator, this.app, e, v as MarkdownView, {});
             }
             });
         });
@@ -93,8 +93,7 @@ export default class ObsiMatPlugin extends Plugin {
         await this.spawn_sympy_client_promise;
         // Add the standard code block background div,
         // to ensure a consistent look with other code blocks.
-        const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg");
-        div.style.cssText = "overflow: auto;";
+        const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg obsimat-block-container-flair");
         // same goes with the code block flair
         const flair = div.createSpan("code-block-flair obsimat-block-flair");
         flair.innerText = "Obsimat";
@@ -117,7 +116,13 @@ export default class ObsiMatPlugin extends Plugin {
         // try to download binaries
         const assetDownloader = new AssetDownloader(this.manifest.version);
 
-        const asset_dir = path.join((this.app.vault.adapter as FileSystemAdapter).getBasePath(), plugin_dir);
+        if(!(this.app.vault.adapter instanceof FileSystemAdapter)) {
+            throw new Error(`Expected FileSystemAdapter, got ${this.app.vault.adapter}`);
+        }
+
+        const file_system_adapter: FileSystemAdapter = this.app.vault.adapter;
+
+        const asset_dir = path.join(file_system_adapter.getBasePath(), plugin_dir);
 
         try {
             if(!await assetDownloader.hasRequiredAssets(asset_dir)) {

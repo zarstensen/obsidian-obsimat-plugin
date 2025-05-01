@@ -5,7 +5,7 @@ import { EquationExtractor } from "src/EquationExtractor";
 import { ObsimatEnvironment } from "src/ObsimatEnvironment";
 
 export class SympyConvertCommand implements IObsimatCommand {
-    readonly id: string = 'convert-to-sympy-command';
+    readonly id: string = 'convert-to-sympy';
 
     async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
         let equation: { from: number, to: number, block_to: number, contents: string } | null = null;

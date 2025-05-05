@@ -16,6 +16,7 @@
     - [Solution Domain](#solution-domain)
   - [Sympy Conversion](#sympy-conversion)
 - [Installing](#installing)
+  - [Linux](#linux)
 - [License](#license)
 
 ## Usage
@@ -178,6 +179,29 @@ Convert a LaTeX block to Sympy Python code with the `Convert LaTeX Expression To
 ## Installing
 
 Download the plugin zip file from the [latest release](https://github.com/zarstensen/obsidian-obsimat-plugin/releases/latest), and extract it to your vault's plugin folder, commonly located at `.obsidian/plugins`, relative to your vault's path.
+
+### Linux
+
+If you receive an error upon plugin load on Linux, you might need to give execute permissions to the `SympyClient` file located in the plugin's installation directory.
+
+If this file is not present, please restart obsidian with the Obsimat plugin enabled. Obsimat should then download the file automatically.
+
+Perform the following commands inside the Obsimat installation directory, to give `SympyClient` the necessary permissions:
+
+- (Optional) Check execution permissions of `SympyClient`: 
+  
+  `ls -l SympyClient`
+  
+  Something like `-rw-r--r--...` means no execute permission.
+
+- Give execution permissions to `Sympyclient` (This will give every user access to execute `SympyClient`): 
+  
+  `chmod +x /path/to/SympyClient`
+
+- (Optional) Perform step 1 to check if permissions have changed.
+
+- Reload Obsidian with Obsimat enabled. 
+  No errors should pop up and the plugin should now work as expected
 
 ## License
 

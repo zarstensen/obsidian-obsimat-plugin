@@ -42,6 +42,9 @@ export class AssetDownloader {
             case "darwin":
                 platform_str = "macos";
                 break;
+            case "linux":
+                platform_str = "linux";
+                break;
             default:
                 throw new Error(`Unsupported platform "${platform()}"`);
         }

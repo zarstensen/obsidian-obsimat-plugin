@@ -4,8 +4,8 @@ from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from sympy_client.grammar.SympyParser import SympyParser
-from sympy_client.SympyUtils import sympy_expr_to_latex
 from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.ObsimatPrinter import obsimat_latex
 
 from copy import deepcopy
 from sympy import *
@@ -31,7 +31,7 @@ class EvalResult(CommandResult, ABC):
                 end_line = self.expr_lines[1]
             )
         
-        return CommandResult.result(sympy_expr_to_latex(self.sympy_expr), metadata=metadata)
+        return CommandResult.result(obsimat_latex(self.sympy_expr), metadata=metadata)
 
 class EvaluateMessage(TypedDict):
     expression: str

@@ -3,7 +3,7 @@ from sympy_client.ObsimatEnvironment import ObsimatEnvironment
 from sympy_client.ObsimatClient import ObsimatClient
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.grammar.SympyParser import SympyParser
-from sympy_client.SympyUtils import sympy_expr_to_latex
+from sympy_client.ObsimatPrinter import obsimat_latex
 from .CommandHandler import *
 
 from dataclasses import dataclass
@@ -29,7 +29,7 @@ class MultivariateResult(CommandResult):
         
         result = dict(
             equation_count=self.equation_count,
-            symbols=[ dict(sympy_symbol=str(s), latex_symbol=sympy_expr_to_latex(s)) for s in self.symbols ]
+            symbols=[ dict(sympy_symbol=str(s), latex_symbol=obsimat_latex(s)) for s in self.symbols ]
         )
         
         return CommandResult.result(result, status='multivariate_equation')
@@ -56,10 +56,10 @@ class SolveResult(CommandResult):
             symbols = tuple(self.symbols)
         
         if isinstance(solutions_set, FiniteSet) and len(solutions_set) <= SolveResult.MAX_RELATIONAL_FINITE_SOLUTIONS:
-            return CommandResult.result(sympy_expr_to_latex(solutions_set.as_relational(symbols)))
+            return CommandResult.result(obsimat_latex(solutions_set.as_relational(symbols)))
         else:
             return CommandResult.result(
-                f"{sympy_expr_to_latex(symbols)} \\in {sympy_expr_to_latex(solutions_set)}"
+                f"{obsimat_latex(symbols)} \\in {obsimat_latex(solutions_set)}"
             )
 
 

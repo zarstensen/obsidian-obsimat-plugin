@@ -73,3 +73,9 @@ class TestUnitConversion:
         
         assert result.sympy_expr == A
         
+    def test_simplification(self):
+        handler = EvalHandler(self.parser)
+        result = handler.handle({"expression": r"\sqrt{ s^2 }", "environment": { "units_system": "MKS" }})
+
+        assert result.sympy_expr.rhs == units.second
+        

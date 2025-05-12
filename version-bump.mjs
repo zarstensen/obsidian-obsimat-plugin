@@ -1,6 +1,10 @@
 import { readFileSync, writeFileSync } from "fs";
 
-const targetVersion = process.env.npm_package_version;
+const targetVersion = process.argv[2];
+if (!targetVersion) {
+    console.error("Error: Target version must be provided as a command line argument.");
+    process.exit(1);
+}
 
 // read minAppVersion from manifest.json and bump version to target version
 let manifest = JSON.parse(readFileSync("manifest.json", "utf8"));

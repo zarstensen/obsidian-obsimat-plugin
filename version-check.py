@@ -1,7 +1,7 @@
 import json
 import sys
 
-expected_version = sys.argv[0]
+expected_version = sys.argv[1]
 
 MANIFEST_FILE = "manifest.json"
 

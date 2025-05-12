@@ -1,6 +1,6 @@
 {
 	"name": "obsimat",
-	"version": "0.4.0",
+	"version": "0.5.1",
 	"description": "Evaluate, solve and do much more within LaTeX blocks using Sympy.",
 	"main": "main.js",
 	"scripts": {

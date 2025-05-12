@@ -23,7 +23,7 @@ jobs:
       
       - name: Check Version
         run: |
-          python version-check.py "${{github.ref_name}}""
+          python version-check.py "${{github.ref_name}}"
 
   sympy-client-build:
     runs-on: ${{ matrix.os.os_name }}

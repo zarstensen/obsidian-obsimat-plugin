@@ -114,6 +114,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          body: |
+            # Release ${{ github.ref_name}}
+            ## Usage
+
+            See [README](README.md) for usage.
           draft: true
           prerelease: false
           generate_release_notes: true

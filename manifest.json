@@ -1,7 +1,7 @@
 {
 	"id": "obsimat",
 	"name": "Obsimat",
-	"version": "0.4.0",
+	"version": "0.6.0",
 	"minAppVersion": "0.15.0",
 	"description": "Evaluate, solve and do much more within LaTeX blocks using Sympy.",
 	"author": "Zarstensen",

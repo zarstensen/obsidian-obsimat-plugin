@@ -12,6 +12,6 @@ if expected_version == manifest['version']:
     print("Versions Match!")
 else:
     print("Versions Do Not Match!")
-    print(f"Manifest Version:\t{manifest['version']}")
     print(f"Expected Version:\t{expected_version}")
+    print(f"Manifest Version:\t{manifest['version']}")
     sys.exit(-1)

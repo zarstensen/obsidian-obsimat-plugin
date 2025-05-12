@@ -4,38 +4,29 @@ on:
   push:
     tags:
       - "*"
-    branches:
-      - "*"
-
-  pull_request:
-    branches:
-      - main
 env:
   PLUGIN_NAME: obsidian-obsimat-plugin
 
 jobs:
-  test:
+  run-tests:
+    uses: ./.github/workflows/test.yml
+
+  version-match-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+    
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Install dependencies
+      
+      - name: Check Version
         run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
-
-      - name: Run tests
-        run: |
-          pytest --ignore=sympy
+          python version-check.py "${{github.ref_name}}"
 
   sympy-client-build:
     runs-on: ${{ matrix.os.os_name }}
-    if: startsWith(github.ref, 'refs/tags/')
     strategy:
       matrix:
         os:
@@ -84,7 +75,7 @@ jobs:
 
   plugin-build:
     runs-on: ubuntu-latest
-    needs: [ test, sympy-client-build ]
+    needs: [ run-tests, sympy-client-build, version-match-check ]
     if: startsWith(github.ref, 'refs/tags/')
 
     permissions:
@@ -123,6 +114,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          body: |
+            # Release ${{ github.ref_name}}
+            ## Usage
+
+            See [README](README.md) for usage.
           draft: true
           prerelease: false
           generate_release_notes: true

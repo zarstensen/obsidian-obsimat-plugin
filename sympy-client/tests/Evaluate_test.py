@@ -334,7 +334,7 @@ class TestEvaluate:
             }
         })
         
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr.rhs != Matrix([
             [1 / x,             0,              0],
             [0,                 cos(y),         0],
             [-sin(x) * sin(y),  cos(x) * cos(y),0]

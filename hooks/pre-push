@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 echo Activating Virtual Env
 
 if [ "$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then
@@ -11,6 +12,6 @@ source .venv/${BIN_DIR}/activate
 
 echo Running Tests
 
-pytest
+pytest -x
 
 echo Pre Push Completed

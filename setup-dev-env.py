@@ -17,12 +17,11 @@ subprocess.check_call([pip_executable, "install", "-r", "requirements.txt"])
 
 print("Creating hook symlinks")
 
-src = os.path.join(os.getcwd(), "hooks", "pre-push")
-dst = os.path.join(os.getcwd(), ".git", "hooks", "pre-push")
+hooks_dir = os.path.join(os.getcwd(), ".git", "hooks")
+pre_push_path = os.path.join(hooks_dir, "pre-push")
 
-if os.path.exists(dst):
-    os.remove(dst)
-
-os.symlink(src, dst)
+with open(pre_push_path, "w") as f:
+    f.write("#!/bin/sh\n")
+    f.write("env -i ./hooks/pre-push\n")
 
 print("Hooks are now setup!")

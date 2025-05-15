@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+echo Activating Virtual Env
+
+if [ "$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then
+    BIN_DIR="Scripts"
+else
+    BIN_DIR="bin"
+fi
+
+source .venv/${BIN_DIR}/activate
+
+echo Running Tests
+
+pytest -x
+
+echo Pre Push Completed

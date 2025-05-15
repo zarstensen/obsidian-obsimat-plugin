@@ -223,6 +223,10 @@ Obsimat should now use the python source files and the created virtual environme
 
 Any changes to the python source code requires reloading Obsidian to have any effect.
 
+> [!NOTE]
+> Make sure to add `push` as an entry to `git.commandsToLog` in vscode (user or workspace), if you want to see the output of the push hook if it fails.
+> 
+
 ## License
 
 See [LICENSE](LICENSE)

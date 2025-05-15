@@ -17,6 +17,7 @@
   - [Sympy Conversion](#sympy-conversion)
 - [Installing](#installing)
   - [Linux](#linux)
+- [Developing](#developing)
 - [License](#license)
 
 ## Usage
@@ -202,6 +203,25 @@ Perform the following commands inside the Obsimat installation directory, to giv
 
 - Reload Obsidian with Obsimat enabled. 
   No errors should pop up and the plugin should now work as expected
+
+## Developing
+
+This section describes how to set up a development environment for Obsimat.
+Make sure to have python and npm installed before continuing.
+
+Start of with running the `setup-dev-env` python script from the root directory.
+
+```sh
+> python setup-dev-env.py
+```
+
+This creates a virtual environment named `.venv` installed with all required dependencies. Furthermore, it sets up a git pre-push hook, which runs the entire test suite, before pushing.
+
+To use this development environment in Obsidian, go to the Obsimat settings in the vault this repo has been cloned to, and toggle the `Developer Mode` switch to on. Make sure to reload the vault after doing this.
+
+Obsimat should now use the python source files and the created virtual environment, instead of the auto installed `SympyClient` binary.
+
+Any changes to the python source code requires reloading Obsidian to have any effect.
 
 ## License
 

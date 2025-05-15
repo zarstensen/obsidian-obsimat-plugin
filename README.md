@@ -212,7 +212,7 @@ Make sure to have python and npm installed before continuing.
 Start of with running the `setup-dev-env` python script from the root directory.
 
 ```sh
-> python setup-dev-env.py
+python setup-dev-env.py
 ```
 
 This creates a virtual environment named `.venv` installed with all required dependencies. Furthermore, it sets up a git pre-push hook, which runs the entire test suite, before pushing.

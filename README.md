@@ -1,5 +1,9 @@
 # Obsimat
 
+![GitHub Release](https://img.shields.io/github/v/release/zarstensen/obsidian-obsimat-plugin?style=flat-square&color=blue&link=https%3A%2F%2Fgithub.com%2Fzarstensen%2Fobsidian-obsimat-plugin%2Freleases%2Flatest)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zarstensen/obsidian-obsimat-plugin/push.yml?style=flat-square&label=tests)
+
+
 **Obsimat** is an [Obsidian](https://obsidian.md/) plugin that enables the evaluation of LaTeX blocks with [Sympy](https://www.sympy.org).
 
 <!-- omit in toc -->

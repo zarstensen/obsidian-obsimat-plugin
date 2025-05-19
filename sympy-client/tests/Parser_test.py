@@ -5,7 +5,7 @@ from sympy import *
 
 class TestParse:
     parser = ObsimatLatexParser()
-    
+
     def test_relations(self):
         x, y, z = symbols("x y z")
         assert self.parser.doparse(r"x=y") == Eq(x, y)
@@ -92,7 +92,7 @@ class TestParse:
         assert self.parser.doparse(r"a^2 b") == a**2 * b
         
         #scripts
-        x1 = symbols("x_{1}")
+        x1 = symbols("x_1")
         assert self.parser.doparse(r"b x_1") == x1 * b
         assert self.parser.doparse(r"x_1 b") == x1 * b
         
@@ -178,8 +178,19 @@ i & 2 i
         
         assert result.doit() == Matrix([[5, - 5 * I], [5 * I, 5]])	
         
-        
     def test_symbols(self):
+        s_a = Symbol("variable")
+        s_b = Symbol("v")
+        s_c = Symbol("a_1")
+        s_d = Symbol(r"\mathrm{X}")
+        s_e = Symbol(r"\pmb{M}_{some label i;j}")
+        s_f = Symbol(r"\alpha_{very_{indexed_{variable}}}")
+        
+        result = self.parser.doparse(r"variable + v \cdot a_1 + \sqrt{\pmb{M}_{some label i;j}^{\alpha_{very_{indexed_{variable}}}}} + \mathrm{X}^{-1}")
+        
+        assert result == s_a + s_b * s_c + sqrt(s_e**s_f) + s_d**-1
+
+    def test_symbol_definitions(self):
         result = self.parser.doparse(r"x", { "symbols": { "x": [ "real" ] } })
         assert result == symbols("x", real=True)
         

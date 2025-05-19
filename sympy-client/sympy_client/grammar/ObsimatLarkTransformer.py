@@ -22,41 +22,11 @@ class ChainedRelation(And):
 # rules defined in obsimat_grammar.lark into sympy expressions.
 class ObsimatLarkTransformer(TransformToSymPyExpr):
 
-    SYMBOL_CREATION_METHODS = [
-        'SYMBOL',
-        'GREEK_SYMBOL_WITH_PRIMES',
-        'LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT',
-        'GREEK_SYMBOL_WITH_LATIN_SUBSCRIPT',
-        'LATIN_SYMBOL_WITH_GREEK_SUBSCRIPT',
-        'GREEK_SYMBOL_WITH_GREEK_SUBSCRIPT',
-        'multi_letter_symbol',
-        'symbol_prime',
-        'ext_multi_letter_symbol'
-        ]
-
     # Constructs an ObsimatLarkTransformer.
     def __init__(self, symbol_substitutor: CachedSymbolSubstitutor, function_store: FunctionStore):
         super().__init__()
         self._symbol_substitutor = symbol_substitutor
         self._function_store = function_store
-        
-        # wrap all symbol rules and terminal handlers in a method which attempts to 
-        # substitute the symbol for a variable defined in the given environment.
-        for symbol_method in self.SYMBOL_CREATION_METHODS:
-            symbol_transform = getattr(self, symbol_method)
-            setattr(self, symbol_method, lambda tokens, symbol_transform=symbol_transform: self._try_substitute(symbol_transform, tokens))
-    
-    # tries to substitute the symbol returned form the symbol_transform callable, with a variable defined in the environment.
-    # if there is no such variable, the symbol is returned as is.
-    def _try_substitute(self, symbol_transform, tokens):
-        symbol = symbol_transform(tokens)
-        
-        substituted_value = self._symbol_substitutor.get_symbol_substitution(str(symbol)) or self._symbol_substitutor.get_symbol_substitution(f"\\{str(symbol)}")
-        
-        if substituted_value is not None:
-            return substituted_value
-        else:
-            return symbol
 
     def function_applied(self, tokens):        
         function = tokens[0]
@@ -79,8 +49,14 @@ class ObsimatLarkTransformer(TransformToSymPyExpr):
     def whitespace(self, _tokens):
         return Discard
 
-    def ext_multi_letter_symbol(self, tokens):
-        return Symbol(tokens[0])
+    def symbol(self, tokens):
+        symbol =  Symbol(''.join(map(str, tokens)))
+        substituted_value = self._symbol_substitutor.get_symbol_substitution(str(symbol))
+        
+        if substituted_value:
+            return substituted_value
+        else:
+            return symbol
 
     def matrix_norm(self, tokens):
         with evaluate(True):

@@ -26,36 +26,21 @@ class ObsimatLatexParser(SympyParser):
                 os.path.dirname(__file__), "obsimat_grammar.lark"
             )
 
-        with TemporaryDirectory() as temp_dir:
-            for file in os.listdir(
-                os.path.join(os.path.dirname(sympy_lark.__file__), "grammar")
-            ):
-                if file.endswith(".lark"):
-                    shutil.copy(
-                        os.path.join(
-                            os.path.dirname(sympy_lark.__file__), "grammar", file
-                        ),
-                        temp_dir,
-                    )
-
-            with open(os.path.join(temp_dir, "latex.lark"), "a") as f:
-                with open(grammar_file, "r") as custom_grammar:
-                    f.write("\n" + custom_grammar.read())
-
-            # initialize a lark parser with the same settings as LarkLaTeXParser,
-            # but with propagating positions enabled.
-            self.parser = Lark.open(
-                os.path.join(temp_dir, "latex.lark"),
-                rel_to=temp_dir,
-                parser="earley",
-                start="latex_string",
-                lexer="auto",
-                ambiguity="explicit",
-                debug=True,
-                propagate_positions=True,
-                maybe_placeholders=False,
-                keep_all_tokens=True,
-            )
+        # initialize a lark parser with the same settings as LarkLaTeXParser,
+        # but with propagating positions enabled.
+        
+        self.parser = Lark.open(
+            grammar_file,
+            rel_to=os.path.dirname(grammar_file),
+            parser="earley",
+            start="latex_string",
+            lexer="auto",
+            ambiguity="explicit",
+            debug=True,
+            propagate_positions=True,
+            maybe_placeholders=False,
+            keep_all_tokens=True,
+        )
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
     def doparse(self, latex_str: str, environment: ObsimatEnvironment = {}):

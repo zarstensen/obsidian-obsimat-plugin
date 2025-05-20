@@ -6,6 +6,11 @@ from sympy import *
 class TestParse:
     parser = ObsimatLatexParser()
 
+    def test_basic(self):
+        a, b = symbols('a b')
+        result = self.parser.doparse(r'-a + b + \frac{a}{b} + {a}^{b} \cdot f (a b c)')
+        assert result == -a + b
+
     def test_relations(self):
         x, y, z = symbols("x y z")
         assert self.parser.doparse(r"x=y") == Eq(x, y)
@@ -207,6 +212,13 @@ i & 2 i
             })
         
         assert result == x + y + y
+    
+    def test_brace_units(self):
+        import sympy.physics.units as u
+        x, a, b = symbols('x a b')
+        result = self.parser.doparse(r"{km} + \sin{x} + \frac{a}{{J}} + b")
+        
+        assert result == u.km + sin(x) + a / u.joule + b
     
     def test_hessian(self):
         result = self.parser.doparse(r"\mathbf{H}(x^2 + y^2)")

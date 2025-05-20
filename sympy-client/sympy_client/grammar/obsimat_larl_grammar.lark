@@ -1,0 +1,223 @@
+// Based on sympy's original latex.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/latex.lark
+
+// ignore escaped whitespace in latex code
+%ignore /(?<!\\)\\ /
+
+%ignore /[ \t\n\r]+/
+
+%ignore "\\," | "\\thinspace" | "\\:" | "\\medspace" | "\\;" | "\\thickspace"
+%ignore "\\quad" | "\\qquad"
+%ignore "\\!" | "\\negthinspace" | "\\negmedspace" | "\\negthickspace"
+%ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
+%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\(" | "\\=" | "\\middle"
+
+%ignore "\\left" | "\\right"
+%ignore "\\limits" | "\\nolimits"
+%ignore "\\displaystyle"
+
+///////////////////// tokens ///////////////////////
+
+// basic binary operators
+ADD: "+"
+SUB: "-"
+MUL: "*"
+DIV: "/"
+
+// tokens with distinct left and right symbols
+L_BRACE: "{"
+R_BRACE: "}"
+L_BRACE_LITERAL: "\\{"
+R_BRACE_LITERAL: "\\}"
+L_BRACKET: "["
+R_BRACKET: "]"
+L_CEIL: "\\lceil"
+R_CEIL: "\\rceil"
+L_FLOOR: "\\lfloor"
+R_FLOOR: "\\rfloor"
+L_PAREN: "("
+R_PAREN: ")"
+
+// limit, integral, sum, and product symbols
+FUNC_LIM:  "\\lim"
+LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
+FUNC_INT:  "\\int" | "\\intop"
+FUNC_SUM:  "\\sum"
+FUNC_PROD: "\\prod"
+
+// common functions
+FUNC_EXP:  "\\exp"
+FUNC_LOG:  "\\log"
+FUNC_LN:   "\\ln"
+FUNC_LG:   "\\lg"
+FUNC_MIN: "\\min"
+FUNC_MAX: "\\max"
+
+// trigonometric functions
+FUNC_SIN:  "\\sin"
+FUNC_COS:  "\\cos"
+FUNC_TAN:  "\\tan"
+FUNC_CSC:  "\\csc"
+FUNC_SEC:  "\\sec"
+FUNC_COT:  "\\cot"
+
+// inverse trigonometric functions
+FUNC_ARCSIN: "\\arcsin"
+FUNC_ARCCOS: "\\arccos"
+FUNC_ARCTAN: "\\arctan"
+FUNC_ARCCSC: "\\arccsc"
+FUNC_ARCSEC: "\\arcsec"
+FUNC_ARCCOT: "\\arccot"
+
+// hyperbolic trigonometric functions
+FUNC_SINH: "\\sinh"
+FUNC_COSH: "\\cosh"
+FUNC_TANH: "\\tanh"
+FUNC_ARSINH: "\\arsinh"
+FUNC_ARCOSH: "\\arcosh"
+FUNC_ARTANH: "\\artanh"
+
+FUNC_SQRT: "\\sqrt"
+
+// miscellaneous symbols
+CMD_TIMES: "\\times"
+CMD_CDOT:  "\\cdot"
+CMD_DIV:   "\\div"
+CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac" | "\\nicefrac"
+CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
+CMD_OVERLINE: "\\overline"
+CMD_LANGLE: "\\langle"
+CMD_RANGLE: "\\rangle"
+
+CMD_MATH: /\\math\w+/
+CMD_BOLD_FORMAT: "\\pmb"
+
+CMD_FORMAT: CMD_MATH | CMD_BOLD_FORMAT
+
+CMD_INFTY: "\\infty"
+
+BANG: "!"
+BAR: "|"
+CARET: "^"
+COLON: ":"
+UNDERSCORE: "_"
+
+// relational symbols
+EQUAL: "="
+NOT_EQUAL: "\\neq" | "\\ne"
+LT: "<"
+LTE: "\\leq" | "\\le" | "\\leqslant"
+GT: ">"
+GTE: "\\geq" | "\\ge" | "\\geqslant"
+
+DIV_SYMBOL: CMD_DIV | DIV
+MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
+
+%import .greek_symbols.GREEK_SYMBOL
+
+UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
+DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
+
+// disallow "d" as a variable name because we want to parse "d" as a differential symbol.
+SYMBOL: /[a-zA-Z]'*/
+MULTI_LETTER_SYMBOL: /[a-zA-Z]{2,}'*/
+GREEK_SYMBOL_WITH_PRIMES: GREEK_SYMBOL PRIMES*
+
+%import common.DIGIT -> DIGIT
+
+CMD_PRIME: "\\prime"
+CMD_ASTERISK: "\\ast"
+
+PRIMES: "'"+
+STARS: "*"+
+PRIMES_VIA_CMD: CMD_PRIME+
+STARS_VIA_CMD: CMD_ASTERISK+
+
+CMD_IMAGINARY_UNIT: "\\imaginaryunit"
+
+CMD_BEGIN: "\\begin"
+CMD_END: "\\end"
+
+// matrices
+IGNORE_L: /[ \t\n\r]*/ L_BRACE* /[ \t\n\r]*/
+IGNORE_R: /[ \t\n\r]*/ R_BRACE* /[ \t\n\r]*/
+ARRAY_MATRIX_BEGIN: L_BRACE "array" R_BRACE L_BRACE /[^}]*/ R_BRACE
+ARRAY_MATRIX_END: L_BRACE "array" R_BRACE
+AMSMATH_MATRIX: L_BRACE "matrix" R_BRACE
+AMSMATH_PMATRIX: L_BRACE "pmatrix" R_BRACE
+AMSMATH_BMATRIX: L_BRACE "bmatrix" R_BRACE
+// Without the (L|R)_PARENs and (L|R)_BRACKETs, a matrix defined using
+// \begin{array}...\end{array} or \begin{matrix}...\end{matrix} must
+// not qualify as a complete matrix expression; this is done so that
+// if we have \begin{array}...\end{array} or \begin{matrix}...\end{matrix}
+// between BAR pairs, then they should be interpreted as determinants as
+// opposed to sympy.Abs (absolute value) applied to a matrix.
+CMD_BEGIN_AMSPMATRIX_AMSBMATRIX: CMD_BEGIN (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
+CMD_BEGIN_ARRAY_AMSMATRIX: (L_PAREN | L_BRACKET) IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
+CMD_MATRIX_BEGIN: CMD_BEGIN_AMSPMATRIX_AMSBMATRIX | CMD_BEGIN_ARRAY_AMSMATRIX
+CMD_END_AMSPMATRIX_AMSBMATRIX: CMD_END (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
+CMD_END_ARRAY_AMSMATRIX: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? (R_PAREN | R_BRACKET)
+CMD_MATRIX_END: CMD_END_AMSPMATRIX_AMSBMATRIX | CMD_END_ARRAY_AMSMATRIX
+MATRIX_COL_DELIM: "&"
+MATRIX_ROW_DELIM: "\\\\"
+FUNC_MATRIX_TRACE: "\\trace"
+FUNC_MATRIX_ADJUGATE: "\\adjugate"
+
+// determinants
+AMSMATH_VMATRIX: L_BRACE "vmatrix" R_BRACE
+CMD_DETERMINANT_BEGIN_SIMPLE: CMD_BEGIN AMSMATH_VMATRIX
+CMD_DETERMINANT_BEGIN_VARIANT: BAR IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
+CMD_DETERMINANT_BEGIN: CMD_DETERMINANT_BEGIN_SIMPLE | CMD_DETERMINANT_BEGIN_VARIANT
+CMD_DETERMINANT_END_SIMPLE: CMD_END AMSMATH_VMATRIX
+CMD_DETERMINANT_END_VARIANT: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? BAR
+CMD_DETERMINANT_END: CMD_DETERMINANT_END_SIMPLE | CMD_DETERMINANT_END_VARIANT
+FUNC_DETERMINANT: "\\det"
+
+//////////////////// grammar //////////////////////
+
+WHITESPACE: /\s+/
+
+latex_string: expression
+
+// an expression is a sum of terms
+expression: term? ((ADD|SUB) term)*
+
+// singular symbols are also seen as multiplications, as these are just implicitly 1 * SYMBOL
+// a term is a series of products of factors
+// a term is a product of factors
+// how can this be a mandatory whitespace thing?
+term: factor ((MUL_SYMBOL|DIV_SYMBOL|WHITESPACE) factor)*
+
+// a factor is either a constant, a symbol, an exponentiation (again a function), a function (frac is seen as a function in this case), or an expression surrounded by parenthesees (also a function).
+factor: SYMBOL // this should be a multi letter symbol. but again this needs to be placed in to two separate things i guess.
+    | function
+    | undefined_function
+
+// there should be a factor rule which matches factors which can be passed as arguments to functions, without surrounding them with braces.
+// then the other one should be all the other ones, which require them to be surrounded by braces. (like matrices, multi letter symbols, functions (except for frac for some reason. there are probably other ones as well))
+
+function: parenthesees_expression
+    | exponentiation
+    | frac
+
+// easy fix here for mandatory non whitespace?
+UNDEFINED_FUNC_START: SYMBOL L_PAREN
+
+undefined_function: SYMBOL L_PAREN expression R_PAREN
+
+// ok so functions should be split up into the following categories:
+// exponentiable:
+//    almost all are, except for the exponentiation function, alternatively it should be non_exponentiable if lark allows an and operation between rules.
+//      even more alternatively, perhaps exponentiation should not be considered a function?
+// passable (this should probably be named differently):
+//    This funtion can (even if its arguments are passed without braces) be passed to other functions without surrounding it with braces.
+// empty arg taking (definetly a different name):
+//    This function can take passable functions as an argument not surrounded with braces (sqrt is not part of this).
+
+// again this is also technically a function? but it cannot use the template, it should use the wierd arg terminal though
+exponentiation: L_BRACE expression R_BRACE CARET L_BRACE expression R_BRACE
+
+// this is just an expression surrounded by parenthesees?
+parenthesees_expression: L_PAREN expression R_PAREN
+
+frac: "\\frac" L_BRACE expression R_BRACE L_BRACE expression R_BRACE
+

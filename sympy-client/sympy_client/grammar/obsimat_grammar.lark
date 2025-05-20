@@ -195,6 +195,7 @@ _indexed_symbol: _non_indexed_symbol UNDERSCORE _brace_surrounded_text PRIMES?
     | _non_indexed_symbol UNDERSCORE (DIGIT | _one_letter_symbol | _formatted_multi_letter_symbol) PRIMES?
 
 symbol: _indexed_symbol | _non_indexed_symbol
+brace_surrounded_symbol: L_BRACE _non_indexed_symbol R_BRACE
 
 // TODO: change this so e+xxx syntax is also supported
 number: /\d+(\.\d*)?/ | CMD_IMAGINARY_UNIT
@@ -230,14 +231,18 @@ adjacent_expressions: (_one_letter_symbol | number) _expression_mul
     | _function _function
     | fraction _expression_mul
 
-_expression_func: _expression_core
-    | group_round_parentheses
+_non_brace_surrounded_expression: group_round_parentheses
     | fraction
     | binomial
     | _function
     | _integral// | derivative
     | limit
     | matrix
+
+_expression_func: _expression_core | _non_brace_surrounded_expression
+
+
+expression_func_args: L_BRACE _expression R_BRACE | _non_brace_surrounded_expression
 
 _expression_power: _expression_func | superscript | matrix_prime | symbol_prime
 
@@ -297,10 +302,10 @@ fraction: _basic_fraction
 
 _basic_fraction: CMD_FRAC (DIGIT | _one_letter_symbol)~2
 
-_simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
-    | CMD_FRAC group_curly_parentheses (DIGIT | _one_letter_symbol)
+_simple_fraction: CMD_FRAC DIGIT expression_func_args
+    | CMD_FRAC expression_func_args (DIGIT | _one_letter_symbol)
 
-_general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
+_general_fraction: CMD_FRAC expression_func_args expression_func_args
 
 binomial: _basic_binomial
     | _simple_binomial
@@ -343,60 +348,61 @@ _function: function_applied
     | trace
     | adjugate
 
-exponential: FUNC_EXP _expression_func
+exponential: FUNC_EXP expression_func_args
 
-log: FUNC_LOG _expression_func
-    | FUNC_LN _expression_func
-    | FUNC_LG _expression_func
-    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression_func
-    | FUNC_LOG UNDERSCORE group_curly_parentheses _expression_func
+log: FUNC_LOG expression_func_args
+    | FUNC_LN expression_func_args
+    | FUNC_LG expression_func_args
+    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) expression_func_args
+    | FUNC_LOG UNDERSCORE group_curly_parentheses expression_func_args
 
-square_root: FUNC_SQRT group_curly_parentheses
-    | FUNC_SQRT group_square_brackets group_curly_parentheses
+square_root: FUNC_SQRT expression_func_args
+    | FUNC_SQRT group_square_brackets expression_func_args
 
-factorial: _expression_func BANG
+factorial: expression_func_args BANG
 
+// TODO: what should this be?
 conjugate: CMD_OVERLINE group_curly_parentheses
     | CMD_OVERLINE DIGIT
 
 _trigonometric_function: sin | cos | tan | csc | sec | cot
 
-sin: FUNC_SIN _expression_func
-cos: FUNC_COS _expression_func
-tan: FUNC_TAN _expression_func
-csc: FUNC_CSC _expression_func
-sec: FUNC_SEC _expression_func
-cot: FUNC_COT _expression_func
+sin: FUNC_SIN expression_func_args
+cos: FUNC_COS expression_func_args
+tan: FUNC_TAN expression_func_args
+csc: FUNC_CSC expression_func_args
+sec: FUNC_SEC expression_func_args
+cot: FUNC_COT expression_func_args
 
 _trigonometric_function_power: sin_power | cos_power | tan_power | csc_power | sec_power | cot_power
 
-sin_power: FUNC_SIN CARET _expression_core _expression
-cos_power: FUNC_COS CARET _expression_core _expression_func
-tan_power: FUNC_TAN CARET _expression_core _expression_func
-csc_power: FUNC_CSC CARET _expression_core _expression_func
-sec_power: FUNC_SEC CARET _expression_core _expression_func
-cot_power: FUNC_COT CARET _expression_core _expression_func
+sin_power: FUNC_SIN CARET _expression_core expression_func_args
+cos_power: FUNC_COS CARET _expression_core expression_func_args
+tan_power: FUNC_TAN CARET _expression_core expression_func_args
+csc_power: FUNC_CSC CARET _expression_core expression_func_args
+sec_power: FUNC_SEC CARET _expression_core expression_func_args
+cot_power: FUNC_COT CARET _expression_core expression_func_args
 
 _hyperbolic_trigonometric_function: sinh | cosh | tanh
 
-sinh: FUNC_SINH _expression_func
-cosh: FUNC_COSH _expression_func
-tanh: FUNC_TANH _expression_func
+sinh: FUNC_SINH expression_func_args
+cosh: FUNC_COSH expression_func_args
+tanh: FUNC_TANH expression_func_args
 
 _inverse_trigonometric_function: arcsin | arccos | arctan | arccsc | arcsec | arccot
 
-arcsin: FUNC_ARCSIN _expression_func
-arccos: FUNC_ARCCOS _expression_func
-arctan: FUNC_ARCTAN _expression_func
-arccsc: FUNC_ARCCSC _expression_func
-arcsec: FUNC_ARCSEC _expression_func
-arccot: FUNC_ARCCOT _expression_func
+arcsin: FUNC_ARCSIN expression_func_args
+arccos: FUNC_ARCCOS expression_func_args
+arctan: FUNC_ARCTAN expression_func_args
+arccsc: FUNC_ARCCSC expression_func_args
+arcsec: FUNC_ARCSEC expression_func_args
+arccot: FUNC_ARCCOT expression_func_args
 
 _inverse_hyperbolic_trigonometric_function: asinh | acosh | atanh
 
-asinh: FUNC_ARSINH _expression_func
-acosh: FUNC_ARCOSH _expression_func
-atanh: FUNC_ARTANH _expression_func
+asinh: FUNC_ARSINH expression_func_args
+acosh: FUNC_ARCOSH expression_func_args
+atanh: FUNC_ARTANH expression_func_args
 
 abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR
@@ -406,9 +412,9 @@ matrix: CMD_MATRIX_BEGIN matrix_body CMD_MATRIX_END
 matrix_body: matrix_row (MATRIX_ROW_DELIM matrix_row)* (MATRIX_ROW_DELIM)?
 matrix_row: _expression (MATRIX_COL_DELIM _expression)*
 determinant: (CMD_DETERMINANT_BEGIN matrix_body CMD_DETERMINANT_END)
-    | FUNC_DETERMINANT _expression_func
-trace: FUNC_MATRIX_TRACE _expression_func
-adjugate: FUNC_MATRIX_ADJUGATE _expression_func
+    | FUNC_DETERMINANT expression_func_args
+trace: FUNC_MATRIX_TRACE expression_func_args
+adjugate: FUNC_MATRIX_ADJUGATE expression_func_args
 
 // ================================== NEW STUFF ===========================================
 

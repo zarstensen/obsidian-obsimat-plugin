@@ -118,11 +118,23 @@ UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
 DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
 
 // disallow "d" as a variable name because we want to parse "d" as a differential symbol.
-SYMBOL: /[a-zA-Z]'*/
-MULTI_LETTER_SYMBOL: /[a-zA-Z]{2,}'*/
-GREEK_SYMBOL_WITH_PRIMES: GREEK_SYMBOL PRIMES*
+// should this just be \w?
+LATIN_SYMBOL: /[a-zA-Z]/
+LATIN_SYMBOL_WITH_PRIMTES: LATIN_SYMBOL PRIMES
+MULTI_LETTER_LATIN_SYMBOL: /[a-zA-Z]{2,}'*/
+GREEK_SYMBOL_WITH_PRIMES: GREEK_SYMBOL PRIMES
+
+SINGLE_LETTER_SYMBOL: LATIN_SYMBOL | GREEK_SYMBOL
+
+MULTI_LETTER_SYMBOL: LATIN_SYMBOL_WITH_PRIMTES | GREEK_SYMBOL_WITH_PRIMES | MULTI_LETTER_LATIN_SYMBOL
+
+symbol: SINGLE_LETTER_SYMBOL
+    | MULTI_LETTER_SYMBOL
+    | L_BRACE symbol R_BRACE -> unit
 
 %import common.DIGIT -> DIGIT
+
+NUMBER: DIGIT DIGIT+
 
 CMD_PRIME: "\\prime"
 CMD_ASTERISK: "\\ast"
@@ -174,8 +186,6 @@ FUNC_DETERMINANT: "\\det"
 
 //////////////////// grammar //////////////////////
 
-WHITESPACE: /\s+/
-
 latex_string: expression
 
 // an expression is a sum of terms
@@ -185,24 +195,20 @@ expression: term? ((ADD|SUB) term)*
 // a term is a series of products of factors
 // a term is a product of factors
 // how can this be a mandatory whitespace thing?
-term: factor ((MUL_SYMBOL|DIV_SYMBOL|WHITESPACE) factor)*
+// AS
+term: factor ((MUL_SYMBOL|DIV_SYMBOL)? factor)*
 
 // a factor is either a constant, a symbol, an exponentiation (again a function), a function (frac is seen as a function in this case), or an expression surrounded by parenthesees (also a function).
-factor: SYMBOL // this should be a multi letter symbol. but again this needs to be placed in to two separate things i guess.
+// MD
+factor: exponentiation // this should be a multi letter symbol. but again this needs to be placed in to two separate things i guess.
     | function
     | undefined_function
+    | symbol
+    | number
 
 // there should be a factor rule which matches factors which can be passed as arguments to functions, without surrounding them with braces.
 // then the other one should be all the other ones, which require them to be surrounded by braces. (like matrices, multi letter symbols, functions (except for frac for some reason. there are probably other ones as well))
 
-function: parenthesees_expression
-    | exponentiation
-    | frac
-
-// easy fix here for mandatory non whitespace?
-UNDEFINED_FUNC_START: SYMBOL L_PAREN
-
-undefined_function: SYMBOL L_PAREN expression R_PAREN
 
 // ok so functions should be split up into the following categories:
 // exponentiable:
@@ -214,10 +220,29 @@ undefined_function: SYMBOL L_PAREN expression R_PAREN
 //    This function can take passable functions as an argument not surrounded with braces (sqrt is not part of this).
 
 // again this is also technically a function? but it cannot use the template, it should use the wierd arg terminal though
-exponentiation: L_BRACE expression R_BRACE CARET L_BRACE expression R_BRACE
+// E
+exponentiation: (L_BRACE expression R_BRACE | symbol | number | function) CARET function_parameter
 
 // this is just an expression surrounded by parenthesees?
+// P
 parenthesees_expression: L_PAREN expression R_PAREN
 
-frac: "\\frac" L_BRACE expression R_BRACE L_BRACE expression R_BRACE
+// ======== End OF PEMDAS setup ========
+
+digit: DIGIT
+number: digit | NUMBER
+
+function: parenthesees_expression
+    | frac
+
+function_first_parameter: function_parameter | frac // fraction can be passed without braces as the first parameter for some reason, EXCEPT to the fraction function itself.
+function_parameter: L_BRACE expression R_BRACE | SINGLE_LETTER_SYMBOL | digit
+
+// easy fix here for mandatory non whitespace?
+UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL L_PAREN | MULTI_LETTER_SYMBOL L_PAREN
+
+undefined_function: UNDEFINED_FUNC_START expression R_PAREN
+
+
+frac: "\\frac" function_parameter~2
 

@@ -8,7 +8,7 @@ class TestParse:
 
     def test_basic(self):
         a, b = symbols('a b')
-        result = self.parser.doparse(r'-a + b + \frac{a}{b} + {a}^{b} \cdot f (a b c)')
+        result = self.parser.doparse(r'-a + b + \frac{{a}}{b} + {a}^{b} \cdot f(a 25^2 symbol^{yaysymbol}) - \frac{50 - 70}5^{-99} - \frac{{km}}{{h}}')
         assert result == -a + b
 
     def test_relations(self):

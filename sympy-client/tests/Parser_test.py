@@ -7,9 +7,18 @@ class TestParse:
     parser = ObsimatLatexParser()
 
     def test_basic(self):
-        a, b = symbols('a b')
-        result = self.parser.doparse(r'-a i + b \pi + e + \frac{{a}}{b} + {a}^{b} \cdot f(a 25^2 symbol^{yaysymbol}) - \frac{50 - 70}5^{-99} - \frac{{km}}{{h}} \over \sin x + \sqrt[5]{x}')
-        assert result == -a + b
+        a, b, c = symbols('a b c')
+        # result = self.parser.doparse(r'-a i + b \pi + e + \frac{{a}}{b} + {a}^{b} \cdot f(a 25^2 symbol^{yaysymbol}) - \frac{50 - 70}5^{-99} - \frac{{km}}{{h}} \over \sin x + \sqrt[5]{x}')
+        result = self.parser.doparse(r'-a i \cdot (5 + 7)^c + b')
+        assert result == -a * I * (5 + 7) ** c + b
+
+    def test_trig_funcs(self):
+        x, y, abc = symbols('x y abc')
+        assert self.parser.doparse(r'\sin x') == sin(x)
+        assert self.parser.doparse(r'\sin^y x') == sin(x)**y
+        assert simplify(self.parser.doparse(r'\frac{\sin(abc)}{\cos {abc}}')) == tan(abc)
+        assert self.parser.doparse(r'\arctan{abc}') == atan(abc)
+        assert self.parser.doparse(r'\arcosh y') == acosh(y)
 
     def test_relations(self):
         x, y, z = symbols("x y z")

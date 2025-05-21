@@ -14,17 +14,20 @@ expression: term? ((ADD|SUB) term)*
 // a term is a product of factors
 // how can this be a mandatory whitespace thing?
 // AS
-term: factor ((OPERATOR_MUL|OPERATOR_DIV)? factor)*
+term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (ADD|SUB)? implicit_multiplication)*
+?implicit_multiplication: _factor+
 
-// a factor is either a constant, a symbol, an exponentiation (again a function), a function (frac is seen as a function in this case), or an expression surrounded by parenthesees (also a function).
+// a _factor is either a constant, a symbol, an exponentiation (again a function), a function (frac is seen as a function in this case), or an expression surrounded by parenthesees (also a function).
 // MD
-factor: exponentiation // this should be a multi letter symbol. but again this needs to be placed in to two separate things i guess.
-    | function
-    | undefined_function
-    | symbol
-    | number
+_factor: exponentiation // this should be a multi letter symbol. but again this needs to be placed in to two separate things i guess.
+    | _base_factor
 
-// there should be a factor rule which matches factors which can be passed as arguments to functions, without surrounding them with braces.
+_base_factor: _function
+    | undefined_function
+    | _number
+    | symbol
+
+// there should be a _factor rule which matches _factors which can be passed as arguments to functions, without surrounding them with braces.
 // then the other one should be all the other ones, which require them to be surrounded by braces. (like matrices, multi letter symbols, functions (except for frac for some reason. there are probably other ones as well))
 
 
@@ -39,39 +42,43 @@ factor: exponentiation // this should be a multi letter symbol. but again this n
 
 // again this is also technically a function? but it cannot use the template, it should use the wierd arg terminal though
 // E
-exponentiation: (L_BRACE expression R_BRACE | symbol | number | function) CARET function_parameter
+exponentiation: (braces_expression | _base_factor) CARET _function_parameter
 
 // this is just an expression surrounded by parenthesees?
 // P
 parenthesees_expression: L_PAREN expression R_PAREN
+braces_expression: L_BRACE expression R_BRACE
 
 // ======== End OF PEMDAS setup ========
 
-constant: CONST_PI | CONST_EULER | CONST_IMAGINARY | CONST_INFINITY
-// it may be a bit counter intuitive, but here pi (and other constants) are essentially seen as a "digit".
-digit: DIGIT | constant
-number: digit | NUMBER
+_constant: CONST_PI | CONST_EULER | CONST_IMAGINARY | CONST_INFINITY
+// it may be a bit counter intuitive, but here pi (and other constants) are essentially seen as a "_digit".
+_numeric_digit: DIGIT
+_numeric_number: NUMBER
 
-function: parenthesees_expression
+_digit: _numeric_digit | _constant
+_number: _numeric_number | _digit
+
+_function: parenthesees_expression
     | trig_function
     | sqrt
     | frac
     | binom
 
-function_first_parameter: function_parameter | frac // fraction can be passed without braces as the first parameter for some reason, EXCEPT to the fraction function itself.
-function_parameter: L_BRACE expression R_BRACE | SINGLE_LETTER_SYMBOL | digit
+_function_first_parameter: _function_parameter | frac // fraction can be passed without braces as the first parameter for some reason, EXCEPT to the fraction function itself.
+_function_parameter: braces_expression | parenthesees_expression | SINGLE_LETTER_SYMBOL | _digit
 
 undefined_function: UNDEFINED_FUNC_START expression R_PAREN
 
 // functions
 
-_func_template{func_name}: func_name function_parameter | func_name CARET function_first_parameter function_parameter
+_func_template{func_name}: func_name _function_parameter | func_name CARET _function_first_parameter _function_parameter
 
 // core functions
 
-frac: FUNC_FRAC function_parameter~2
-binom: FUNC_BINOM function_parameter~2
-sqrt: FUNC_SQRT (L_BRACKET expression R_BRACKET)? function_first_parameter
+frac: FUNC_FRAC _function_parameter~2
+binom: FUNC_BINOM _function_parameter~2
+sqrt: FUNC_SQRT (L_BRACKET expression R_BRACKET)? _function_first_parameter
 inner_product: CMD_LANGLE expression CMD_INNER_PRODUCT_SEPARATOR expression CMD_RANGLE
 
 // trigonometric functions
@@ -205,6 +212,7 @@ CMD_FORMAT: CMD_MATH | CMD_BOLD_FORMAT
 
 BANG: "!"
 BAR: "|"
+DOT: "."
 CARET: "^"
 COLON: ":"
 COMMA: ","
@@ -243,7 +251,7 @@ symbol: SINGLE_LETTER_SYMBOL
 
 %import common.DIGIT -> DIGIT
 
-NUMBER: DIGIT DIGIT+
+NUMBER: DIGIT DIGIT+ | DIGIT* DOT DIGIT+
 
 CMD_PRIME: "\\prime"
 CMD_ASTERISK: "\\ast"

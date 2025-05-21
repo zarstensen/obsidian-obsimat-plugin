@@ -1,5 +1,5 @@
 from sympy_client.ObsimatEnvironment import ObsimatEnvironment
-from .ObsimatLarkTransformer import ObsimatLarkTransformer
+from .transformers.ObsimatLarkTransformer import ObsimatLarkTransformer
 from .SympyParser import SympyParser
 from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
 from .FunctionStore import FunctionStore
@@ -33,7 +33,7 @@ class ObsimatLatexParser(SympyParser):
             grammar_file,
             rel_to=os.path.dirname(grammar_file),
             parser="lalr",
-            start="latex_string",
+            start="expression",
             lexer="auto",
             debug=True,
             propagate_positions=True,

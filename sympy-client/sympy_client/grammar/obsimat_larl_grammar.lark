@@ -1,5 +1,105 @@
 // Based on sympy's original latex.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/latex.lark
 
+
+
+//////////////////// grammar //////////////////////
+
+latex_string: expression
+
+// an expression is a sum of terms
+expression: term? ((ADD|SUB) term)*
+
+// singular symbols are also seen as multiplications, as these are just implicitly 1 * SYMBOL
+// a term is a series of products of factors
+// a term is a product of factors
+// how can this be a mandatory whitespace thing?
+// AS
+term: factor ((OPERATOR_MUL|OPERATOR_DIV)? factor)*
+
+// a factor is either a constant, a symbol, an exponentiation (again a function), a function (frac is seen as a function in this case), or an expression surrounded by parenthesees (also a function).
+// MD
+factor: exponentiation // this should be a multi letter symbol. but again this needs to be placed in to two separate things i guess.
+    | function
+    | undefined_function
+    | symbol
+    | number
+
+// there should be a factor rule which matches factors which can be passed as arguments to functions, without surrounding them with braces.
+// then the other one should be all the other ones, which require them to be surrounded by braces. (like matrices, multi letter symbols, functions (except for frac for some reason. there are probably other ones as well))
+
+
+// ok so functions should be split up into the following categories:
+// exponentiable:
+//    almost all are, except for the exponentiation function, alternatively it should be non_exponentiable if lark allows an and operation between rules.
+//      even more alternatively, perhaps exponentiation should not be considered a function?
+// passable (this should probably be named differently):
+//    This funtion can (even if its arguments are passed without braces) be passed to other functions without surrounding it with braces.
+// empty arg taking (definetly a different name):
+//    This function can take passable functions as an argument not surrounded with braces (sqrt is not part of this).
+
+// again this is also technically a function? but it cannot use the template, it should use the wierd arg terminal though
+// E
+exponentiation: (L_BRACE expression R_BRACE | symbol | number | function) CARET function_parameter
+
+// this is just an expression surrounded by parenthesees?
+// P
+parenthesees_expression: L_PAREN expression R_PAREN
+
+// ======== End OF PEMDAS setup ========
+
+constant: CONST_PI | CONST_EULER | CONST_IMAGINARY | CONST_INFINITY
+// it may be a bit counter intuitive, but here pi (and other constants) are essentially seen as a "digit".
+digit: DIGIT | constant
+number: digit | NUMBER
+
+function: parenthesees_expression
+    | trig_function
+    | sqrt
+    | frac
+    | binom
+
+function_first_parameter: function_parameter | frac // fraction can be passed without braces as the first parameter for some reason, EXCEPT to the fraction function itself.
+function_parameter: L_BRACE expression R_BRACE | SINGLE_LETTER_SYMBOL | digit
+
+undefined_function: UNDEFINED_FUNC_START expression R_PAREN
+
+// functions
+
+_func_template{func_name}: func_name function_parameter | func_name CARET function_first_parameter function_parameter
+
+// core functions
+
+frac: FUNC_FRAC function_parameter~2
+binom: FUNC_BINOM function_parameter~2
+sqrt: FUNC_SQRT (L_BRACKET expression R_BRACKET)? function_first_parameter
+inner_product: CMD_LANGLE expression CMD_INNER_PRODUCT_SEPARATOR expression CMD_RANGLE
+
+// trigonometric functions
+
+trig_function: _func_template{FUNC_SIN}
+    | _func_template{FUNC_COS}
+    | _func_template{FUNC_TAN}
+    | _func_template{FUNC_CSC}
+    | _func_template{FUNC_SEC}
+    | _func_template{FUNC_COT}
+    | _func_template{FUNC_ARCSIN}
+    | _func_template{FUNC_ARCCOS}
+    | _func_template{FUNC_ARCTAN}
+    | _func_template{FUNC_ARCCSC}
+    | _func_template{FUNC_ARCSEC}
+    | _func_template{FUNC_ARCCOT}
+    | _func_template{FUNC_SINH}
+    | _func_template{FUNC_COSH}
+    | _func_template{FUNC_TANH}
+    | _func_template{FUNC_ARSINH}
+    | _func_template{FUNC_ARCOSH}
+    | _func_template{FUNC_ARTANH}
+
+
+// ================ Terminals ================
+
+UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL L_PAREN | MULTI_LETTER_SYMBOL L_PAREN
+
 // ignore escaped whitespace in latex code
 %ignore /(?<!\\)\\ /
 
@@ -21,7 +121,15 @@
 ADD: "+"
 SUB: "-"
 MUL: "*"
-DIV: "/"
+DIV: "/" | "\\over"
+
+// non basic operators
+CMD_TIMES: "\\times"
+CMD_CDOT:  "\\cdot"
+CMD_DIV:   "\\div"
+CMD_LANGLE: "\\langle"
+CMD_RANGLE: "\\rangle"
+CMD_INNER_PRODUCT_SEPARATOR: BAR | COMMA
 
 // tokens with distinct left and right symbols
 L_BRACE: "{"
@@ -38,11 +146,11 @@ L_PAREN: "("
 R_PAREN: ")"
 
 // limit, integral, sum, and product symbols
-FUNC_LIM:  "\\lim"
-LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
-FUNC_INT:  "\\int" | "\\intop"
+FUNC_LIMIT:  "\\lim"
+LIM_APPROACH_SYMBOL: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
+FUNC_INTEGRAL:  "\\int" | "\\intop"
 FUNC_SUM:  "\\sum"
-FUNC_PROD: "\\prod"
+FUNC_PRODUCT: "\\prod"
 
 // common functions
 FUNC_EXP:  "\\exp"
@@ -51,6 +159,12 @@ FUNC_LN:   "\\ln"
 FUNC_LG:   "\\lg"
 FUNC_MIN: "\\min"
 FUNC_MAX: "\\max"
+
+// special functions
+
+FUNC_FRAC:  /\\[dtcs]?frac/ | "\\nicefrac"
+FUNC_BINOM: /\\[dt]?binom/
+FUNC_OVERLINE: "\\overline"
 
 // trigonometric functions
 FUNC_SIN:  "\\sin"
@@ -78,27 +192,22 @@ FUNC_ARTANH: "\\artanh"
 
 FUNC_SQRT: "\\sqrt"
 
-// miscellaneous symbols
-CMD_TIMES: "\\times"
-CMD_CDOT:  "\\cdot"
-CMD_DIV:   "\\div"
-CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac" | "\\nicefrac"
-CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
-CMD_OVERLINE: "\\overline"
-CMD_LANGLE: "\\langle"
-CMD_RANGLE: "\\rangle"
+// mathematical constants
+CONST_PI: "\\pi"
+CONST_EULER: "e"
+CONST_IMAGINARY: "i"
+CONST_INFINITY: "\\infty"
 
 CMD_MATH: /\\math\w+/
 CMD_BOLD_FORMAT: "\\pmb"
 
 CMD_FORMAT: CMD_MATH | CMD_BOLD_FORMAT
 
-CMD_INFTY: "\\infty"
-
 BANG: "!"
 BAR: "|"
 CARET: "^"
 COLON: ":"
+COMMA: ","
 UNDERSCORE: "_"
 
 // relational symbols
@@ -109,8 +218,8 @@ LTE: "\\leq" | "\\le" | "\\leqslant"
 GT: ">"
 GTE: "\\geq" | "\\ge" | "\\geqslant"
 
-DIV_SYMBOL: CMD_DIV | DIV
-MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
+OPERATOR_DIV: CMD_DIV | DIV
+OPERATOR_MUL: MUL | CMD_TIMES | CMD_CDOT
 
 %import .greek_symbols.GREEK_SYMBOL
 
@@ -183,66 +292,3 @@ CMD_DETERMINANT_END_SIMPLE: CMD_END AMSMATH_VMATRIX
 CMD_DETERMINANT_END_VARIANT: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? BAR
 CMD_DETERMINANT_END: CMD_DETERMINANT_END_SIMPLE | CMD_DETERMINANT_END_VARIANT
 FUNC_DETERMINANT: "\\det"
-
-//////////////////// grammar //////////////////////
-
-latex_string: expression
-
-// an expression is a sum of terms
-expression: term? ((ADD|SUB) term)*
-
-// singular symbols are also seen as multiplications, as these are just implicitly 1 * SYMBOL
-// a term is a series of products of factors
-// a term is a product of factors
-// how can this be a mandatory whitespace thing?
-// AS
-term: factor ((MUL_SYMBOL|DIV_SYMBOL)? factor)*
-
-// a factor is either a constant, a symbol, an exponentiation (again a function), a function (frac is seen as a function in this case), or an expression surrounded by parenthesees (also a function).
-// MD
-factor: exponentiation // this should be a multi letter symbol. but again this needs to be placed in to two separate things i guess.
-    | function
-    | undefined_function
-    | symbol
-    | number
-
-// there should be a factor rule which matches factors which can be passed as arguments to functions, without surrounding them with braces.
-// then the other one should be all the other ones, which require them to be surrounded by braces. (like matrices, multi letter symbols, functions (except for frac for some reason. there are probably other ones as well))
-
-
-// ok so functions should be split up into the following categories:
-// exponentiable:
-//    almost all are, except for the exponentiation function, alternatively it should be non_exponentiable if lark allows an and operation between rules.
-//      even more alternatively, perhaps exponentiation should not be considered a function?
-// passable (this should probably be named differently):
-//    This funtion can (even if its arguments are passed without braces) be passed to other functions without surrounding it with braces.
-// empty arg taking (definetly a different name):
-//    This function can take passable functions as an argument not surrounded with braces (sqrt is not part of this).
-
-// again this is also technically a function? but it cannot use the template, it should use the wierd arg terminal though
-// E
-exponentiation: (L_BRACE expression R_BRACE | symbol | number | function) CARET function_parameter
-
-// this is just an expression surrounded by parenthesees?
-// P
-parenthesees_expression: L_PAREN expression R_PAREN
-
-// ======== End OF PEMDAS setup ========
-
-digit: DIGIT
-number: digit | NUMBER
-
-function: parenthesees_expression
-    | frac
-
-function_first_parameter: function_parameter | frac // fraction can be passed without braces as the first parameter for some reason, EXCEPT to the fraction function itself.
-function_parameter: L_BRACE expression R_BRACE | SINGLE_LETTER_SYMBOL | digit
-
-// easy fix here for mandatory non whitespace?
-UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL L_PAREN | MULTI_LETTER_SYMBOL L_PAREN
-
-undefined_function: UNDEFINED_FUNC_START expression R_PAREN
-
-
-frac: "\\frac" function_parameter~2
-

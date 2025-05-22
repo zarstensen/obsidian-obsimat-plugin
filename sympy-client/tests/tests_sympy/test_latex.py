@@ -27,7 +27,7 @@ antlr4 = import_module("antlr4")
 # disable tests if antlr4-python3-runtime is not present
 disabled = antlr4 is None
 
-theta = Symbol('theta')
+theta = Symbol('\\theta')
 f = Function('f')
 
 

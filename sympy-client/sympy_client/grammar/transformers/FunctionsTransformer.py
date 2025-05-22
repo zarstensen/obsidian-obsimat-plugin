@@ -1,24 +1,97 @@
-from lark import Token, Transformer
+from lark import Token, Transformer, Discard
 from sympy import *
 import sympy
+import sympy.parsing.latex.lark.transformer
 
 class FunctionsTransformer(Transformer):
+    
+    def MULTIARG_FUNC_ARG_DELIMITER(self,_):
+        return Discard
+    
     def trig_function(self, tokens):
-        func_name = tokens[0]
-        # remove the slash before the name
-        func_name = func_name.replace('\\', '').replace('arc', 'a').replace('ar', 'a')
-        
-        # find func name in sympy module
-        func = getattr(sympy, func_name)
+        exponent = 1
+        arg = None
         
         if len(tokens) == 4:
             assert tokens[1].type == 'CARET'
-            # TODO: handle if exponent is -1, then it should be the inverse of the function
-            return func(tokens[3])**tokens[2]
-        elif len(tokens) == 2:
-            return func(tokens[1])
+            exponent = tokens[2]
+            arg = tokens[3]
         else:
-            raise RuntimeError("Unexpected amount of tokens received")
+            arg = tokens[1]
+        
+        func_name = str(tokens[0])
+        
+        is_hyperbolic = func_name.endswith('h')
+        is_inverse = func_name.startswith('\\a')
+        
+        name_length = 4 if is_hyperbolic else 3
+        func_name = func_name[-name_length:]
+        
+        if exponent == -1:
+            exponent = 1
+            is_inverse = not is_inverse
+        
+        # construct func name from information.
+            
+        if is_inverse:
+            func_name = 'a' + func_name
+            
+        # find func name in sympy module
+        trig_func = getattr(sympy, func_name)
+        
+        return trig_func(arg)**exponent
         
     def frac(self, tokens):
         return tokens[1] * tokens[2]**-1
+    
+    def binom(self, tokens):
+        return binomial(tokens[1], tokens[2])
+    
+    def sqrt(self, tokens):
+        assert len(tokens) == 2 or len(tokens) == 3
+        
+        if len(tokens) == 2:
+            return sqrt(tokens[1])
+        elif len(tokens) == 3:
+            return root(tokens[2], tokens[1])
+
+    def log_implicit_base(self, tokens):
+        exponent = 1
+        arg = None
+        
+        if len(tokens) == 4:
+            exponent = tokens[2]
+            arg = tokens[3]
+            
+        log_type = tokens[0].type
+            
+        if log_type == 'FUNC_LOG' or log_type == 'FUNC_LN':
+            return log(arg)**exponent
+        elif tokens[0].type == 'FUNC_LG':
+            return log(arg, 10)**exponent
+
+    def log_explicit_base(self, tokens):
+        base = tokens[2]
+        
+        exponent = 1
+        arg = None
+        
+        if len(tokens) == 6:
+            exponent = tokens[4]
+            arg = tokens[5]
+        else:
+            arg = tokens[3]
+            
+        return log(arg, base)**exponent
+    
+    def exponential(self, tokens):
+        exponent = 1
+        arg = None
+        
+        if len(tokens) == 4:
+            exponent = tokens[2]
+            arg = tokens[3]
+        
+        return exp(arg)**exponent
+        
+        

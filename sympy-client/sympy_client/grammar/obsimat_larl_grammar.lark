@@ -1,103 +1,93 @@
-// Based on sympy's original latex.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/latex.lark
+// Terminals are largely based on sympy's original latex.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/latex.lark
+// grammar has been written from the ground up to support the faster lalr parser instead of earley.
 
-
-
-//////////////////// grammar //////////////////////
+// ======== Core structure ========
 
 latex_string: expression
 
 // an expression is a sum of terms
 expression: term? ((ADD|SUB) term)*
 
-// singular symbols are also seen as multiplications, as these are just implicitly 1 * SYMBOL
-// a term is a series of products of factors
-// a term is a product of factors
-// how can this be a mandatory whitespace thing?
-// AS
+// a term is a series of products of factors separated by product operators.
 term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (ADD|SUB)? implicit_multiplication)*
+// factors with no operator between them are implicitly multiplied together.
 ?implicit_multiplication: _factor+
 
-// a _factor is either a constant, a symbol, an exponentiation (again a function), a function (frac is seen as a function in this case), or an expression surrounded by parenthesees (also a function).
-// MD
-_factor: exponentiation // this should be a multi letter symbol. but again this needs to be placed in to two separate things i guess.
+// a factor is either a number, a constant, a symbol, or a function.
+// here exponentiation, fractions, binomials are loosly seen as functions.
+_factor: exponentiation
     | _base_factor
 
-_base_factor: _function
-    | undefined_function
+// _base_factor groups all factors which can be the base value of an exponentiation.
+_base_factor: parenthesees_expression
+    | _function
+    | _symbol_like
     | _number
-    | symbol
 
-// there should be a _factor rule which matches _factors which can be passed as arguments to functions, without surrounding them with braces.
-// then the other one should be all the other ones, which require them to be surrounded by braces. (like matrices, multi letter symbols, functions (except for frac for some reason. there are probably other ones as well))
+// groups a base factor and an exponent factor to be evaluated in an exponentation.
+exponentiation: (braces_expression | _base_factor) CARET _function_special_arg
 
+// various rules for grouping expressions surrounded by delimiters.
+parenthesees_expression: L_PAREN expression R_PAREN -> delimited_expression
+braces_expression: L_BRACE expression R_BRACE -> delimited_expression
+brackets_expression: L_BRACKET expression R_BRACKET -> delimited_expression
 
-// ok so functions should be split up into the following categories:
-// exponentiable:
-//    almost all are, except for the exponentiation function, alternatively it should be non_exponentiable if lark allows an and operation between rules.
-//      even more alternatively, perhaps exponentiation should not be considered a function?
-// passable (this should probably be named differently):
-//    This funtion can (even if its arguments are passed without braces) be passed to other functions without surrounding it with braces.
-// empty arg taking (definetly a different name):
-//    This function can take passable functions as an argument not surrounded with braces (sqrt is not part of this).
+// ======== Symbols ========
 
-// again this is also technically a function? but it cannot use the template, it should use the wierd arg terminal though
-// E
-exponentiation: (braces_expression | _base_factor) CARET _function_parameter
+symbol: indexed_symbol | _non_indexed_symbol
 
-// this is just an expression surrounded by parenthesees?
-// P
-parenthesees_expression: L_PAREN expression R_PAREN
-braces_expression: L_BRACE expression R_BRACE
+single_letter_symbol: SINGLE_LETTER_SYMBOL -> symbol
 
-// ======== End OF PEMDAS setup ========
+// a formatted symbol is any symbol surrounded with a latex command which changes it visually.
+// this could for example be \mathit
+formatted_symbol: (CMD_MATH|CMD_BOLD_FORMAT) brace_surrounded_text PRIMES?
+_non_indexed_symbol: SINGLE_LETTER_SYMBOL | MULTI_LETTER_SYMBOL | formatted_symbol
 
-single_letter_symbol: SINGLE_LETTER_SYMBOL
-multi_letter_symbol: MULTI_LETTER_SYMBOL
-
-
-_non_indexed_symbol: single_letter_symbol | multi_letter_symbol
-
-unit: L_BRACE _non_indexed_symbol R_BRACE
-
-_non_indexed_unit_symbol: _non_indexed_symbol | unit
-
-// TODO: check if _non_indexed_symbol accepts primes.
 indexed_symbol: _non_indexed_symbol UNDERSCORE (SINGLE_LETTER_SYMBOL | _digit | brace_surrounded_text) PRIMES?
 
-// symbols: DO THE SUBSTITUTION HERE
-symbol: _non_indexed_unit_symbol | indexed_symbol
+// all the rules here should return the NAME (as in a str) of the symbol to be created
+// the symbol rule is responsible for eactually creating the symbol and optionally substituting its value.
 
-brace_surrounded_text: L_BRACE /[^}]+/ (brace_surrounded_text /[^}]+/)?  R_BRACE
+// this rule optionally tries to create a unit, instead of a symbol, if bunits are used.
+// otherwise this is the same as the symbol rule.
+unit: L_BRACE _non_indexed_symbol R_BRACE
+
+_symbol_like: symbol | unit
+
+// ======== Numbers ========
+
+// groups any value which evaluates to a number.
+_number: _numeric_number | _digit
+// groups any value which evaluates to a number, and can be passed as an argument, without surrounding it with braces.
+// it may be a bit counter intuitive, but here pi (and other constants) are essentially seen as a "_digit".
+_digit: _numeric_digit | _constant
 
 _constant: CONST_PI | CONST_EULER | CONST_IMAGINARY | CONST_INFINITY
-// it may be a bit counter intuitive, but here pi (and other constants) are essentially seen as a "_digit".
-_numeric_digit: DIGIT
-_numeric_number: NUMBER
 
-_digit: _numeric_digit | _constant
-_number: _numeric_number | _digit
+_numeric_digit: NUMERIC_DIGIT
+_numeric_number: NUMERIC_NUMBER
 
-_function: parenthesees_expression
+// ======== Functions ========
+
+undefined_function: UNDEFINED_FUNC_START expression R_PAREN
+
+_function: undefined_function
     | trig_function
+    | _log
     | sqrt
     | frac
     | binom
 
-_function_first_parameter: _function_parameter | frac // fraction can be passed without braces as the first parameter for some reason, EXCEPT to the fraction function itself.
-_function_parameter: braces_expression | parenthesees_expression | SINGLE_LETTER_SYMBOL | _digit
+// this rule matches a singular argument to a function.
+// if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
+_function_arg: braces_expression | parenthesees_expression | single_letter_symbol | _digit // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
 
-undefined_function: UNDEFINED_FUNC_START expression R_PAREN
+// matches a special kind of argument, defined by the fact that fractions and binomials can be passed without surrounding them with braces.
+_function_special_arg: _function_arg | frac | binom 
 
-// functions
+// standard 1 arg functions
 
-_func_template{func_name}: func_name _function_parameter | func_name CARET _function_first_parameter _function_parameter
-
-// core functions
-
-frac: FUNC_FRAC _function_parameter~2
-binom: FUNC_BINOM _function_parameter~2
-sqrt: FUNC_SQRT (L_BRACKET expression R_BRACKET)? _function_first_parameter
-inner_product: CMD_LANGLE expression CMD_INNER_PRODUCT_SEPARATOR expression CMD_RANGLE
+_func_template{func_name}: func_name (CARET _function_special_arg)? _function_arg
 
 // trigonometric functions
 
@@ -120,10 +110,47 @@ trig_function: _func_template{FUNC_SIN}
     | _func_template{FUNC_ARCOSH}
     | _func_template{FUNC_ARTANH}
 
+_log: log_implicit_base
+    | log_explicit_base
+
+log_implicit_base: _func_template{FUNC_LOG}
+    | _func_template{FUNC_LN}
+    | _func_template{FUNC_LG}
+ 
+log_explicit_base: FUNC_LOG UNDERSCORE _function_special_arg (CARET _function_special_arg)? _function_arg
+
+exponential: _func_template{FUNC_EXP}
+
+sqrt: FUNC_SQRT brackets_expression? (braces_expression|single_letter_symbol|_digit)
+inner_product: CMD_LANGLE expression CMD_INNER_PRODUCT_SEPARATOR expression CMD_RANGLE
+
+// TODO: wait for matrix implementation.
+// determinant: _func_template{FUNC_DETERMINANT}
+// trace: _func_template{FUNC_MATRIX_TRACE}
+// adjungate: _func_template{FUNC_MATRIX_ADJUGATE}
+
+// match a single argument in a list of arguments latex style (that is \command{arg1}{arg2}...{argN})
+_multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
+// terminal signifying the end of a single argument in a latex style argument list.
+// due to lalr's limited lookahead, a custom post lexer needs to insert this token when parsing.
+// this also requires a bit more setup in the grammar for this to work, which is specified in the following comment.
+//
+// this token should be placed between _multiarg_func_arg rules when specifying the list of arguments.
+// additionally, there must be a terminal before the first _multiarg_func_arg rule, which follows the following naming convention:
+// MULTIARG_FUNC_[num_args][terminal_name]
+// num_args: number of arguments this function takes. This must be number of MULTIARG_FUNC_ARG_DELIMITER occurenses + 1
+// terminal_name: this is ignored by the postlexer and can be used to name the terminal appropiately.
+%declare MULTIARG_FUNC_ARG_DELIMITER
+
+// core functions
+frac: MULTIARG_FUNC_2_FRAC _multiarg_func_arg MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
+binom: MULTIARG_FUNC_2_BINOM _multiarg_func_arg MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
+
+// ======== Miscellaneous rules ========
+
+brace_surrounded_text: L_BRACE /[^{}]+/ (brace_surrounded_text /[^{}]+/?)?  R_BRACE
 
 // ================ Terminals ================
-
-UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL L_PAREN | MULTI_LETTER_SYMBOL L_PAREN
 
 // ignore escaped whitespace in latex code
 %ignore /(?<!\\)\\ /
@@ -140,15 +167,13 @@ UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL L_PAREN | MULTI_LETTER_SYMBOL L_PAREN
 %ignore "\\limits" | "\\nolimits"
 %ignore "\\displaystyle"
 
-///////////////////// tokens ///////////////////////
-
 // basic binary operators
 ADD: "+"
 SUB: "-"
 MUL: "*"
 DIV: "/" | "\\over"
 
-// non basic operators
+// basic common operators
 CMD_TIMES: "\\times"
 CMD_CDOT:  "\\cdot"
 CMD_DIV:   "\\div"
@@ -185,10 +210,11 @@ FUNC_LG:   "\\lg"
 FUNC_MIN: "\\min"
 FUNC_MAX: "\\max"
 
-// special functions
+// multiarg functions
 
-FUNC_FRAC:  /\\[dtcs]?frac/ | "\\nicefrac"
-FUNC_BINOM: /\\[dt]?binom/
+MULTIARG_FUNC_2_FRAC: /\\[dtcs]?frac/ | "\\nicefrac"
+MULTIARG_FUNC_2_BINOM: /\\[dt]?binom/
+
 FUNC_OVERLINE: "\\overline"
 
 // trigonometric functions
@@ -216,6 +242,8 @@ FUNC_ARCOSH: "\\arcosh"
 FUNC_ARTANH: "\\artanh"
 
 FUNC_SQRT: "\\sqrt"
+
+UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL L_PAREN | MULTI_LETTER_SYMBOL L_PAREN
 
 // mathematical constants
 CONST_PI: "\\pi"
@@ -252,7 +280,6 @@ OPERATOR_MUL: MUL | CMD_TIMES | CMD_CDOT
 UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
 DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
 
-// disallow "d" as a variable name because we want to parse "d" as a differential symbol.
 // should this just be \w?
 LATIN_SYMBOL: /[a-zA-Z]/
 LATIN_SYMBOL_WITH_PRIMTES: LATIN_SYMBOL PRIMES
@@ -263,9 +290,9 @@ SINGLE_LETTER_SYMBOL: LATIN_SYMBOL | GREEK_SYMBOL
 
 MULTI_LETTER_SYMBOL: LATIN_SYMBOL_WITH_PRIMTES | GREEK_SYMBOL_WITH_PRIMES | MULTI_LETTER_LATIN_SYMBOL
 
-%import common.DIGIT -> DIGIT
+%import common.DIGIT -> NUMERIC_DIGIT
 
-NUMBER: DIGIT DIGIT+ | DIGIT* DOT DIGIT+
+NUMERIC_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* DOT NUMERIC_DIGIT+
 
 CMD_PRIME: "\\prime"
 CMD_ASTERISK: "\\ast"

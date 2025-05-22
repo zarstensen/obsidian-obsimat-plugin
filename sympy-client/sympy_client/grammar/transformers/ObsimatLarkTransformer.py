@@ -92,23 +92,42 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         
         return base ** exponent
     
-    def parenthesees_expression(self, tokens):
-        return tokens[1]
-    
-    def braces_expression(self, tokens):
+    def delimited_expression(self, tokens):
         return tokens[1]
     
     def symbol(self, tokens):
         return Symbol(''.join(map(str,tokens)))
     
-    def SINGLE_LETTER_SYMBOL(self, tokens):
-        return Symbol(str(tokens[0]))
+    def indexed_symbol(self, tokens):
+        assert len(tokens) == 3 or len(tokens) == 4
+        
+        indexed_text = str(tokens[2])
+        
+        if not indexed_text.startswith('{') or not indexed_text.endswith('}'):
+            indexed_text = f"{{{indexed_text}}}"
+        
+        if len(tokens) == 3:
+            return f"{tokens[0]}_{indexed_text}"
+        if len(tokens) == 4:
+            return f"{tokens[0]}_{indexed_text}{tokens[3]}"
+    
+    def formatted_symbol(self, tokens):
+        assert len(tokens) == 2 or len(tokens) == 3
+        
+        if len(tokens) == 2:
+            return f"{tokens[0]}{tokens[1]}"
+        elif len(tokens) == 3:
+            return f"{tokens[0]}{tokens[1]}{tokens[2]}"
+            
+    
+    def brace_surrounded_text(self, tokens):        
+        return ''.join(map(str, tokens))
     
     # TODO: how does sympy do it?
-    def DIGIT(self, tokens):
+    def NUMERIC_DIGIT(self, tokens):
         return Integer(tokens[0])
     
-    def NUMBER(self, tokens):
+    def NUMERIC_NUMBER(self, tokens):
         
         number_str = str(tokens)
         

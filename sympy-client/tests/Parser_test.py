@@ -20,6 +20,11 @@ class TestParse:
         assert self.parser.doparse(r'\arctan{abc}') == atan(abc)
         assert self.parser.doparse(r'\arcosh y') == acosh(y)
 
+    def test_common_funcs(self):
+        
+        self.parser.doparse(r'\log_\frac12^\frac34x')
+        
+
     def test_relations(self):
         x, y, z = symbols("x y z")
         assert self.parser.doparse(r"x=y") == Eq(x, y)
@@ -195,7 +200,7 @@ i & 2 i
     def test_symbols(self):
         s_a = Symbol("variable")
         s_b = Symbol("v")
-        s_c = Symbol("a_1")
+        s_c = Symbol("a_{1}")
         s_d = Symbol(r"\mathrm{X}")
         s_e = Symbol(r"\pmb{M}_{some label i;j}")
         s_f = Symbol(r"\alpha_{very_{indexed_{variable}}}")

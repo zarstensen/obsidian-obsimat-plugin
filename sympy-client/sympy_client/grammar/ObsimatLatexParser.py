@@ -6,11 +6,64 @@ from .FunctionStore import FunctionStore
 
 from sympy import *
 import sympy.parsing.latex.lark as sympy_lark
-from lark import Tree, Lark
+from lark import Tree, Lark, Token
+from lark.lark import PostLex
 import os
 from tempfile import TemporaryDirectory
 import shutil
+import re
 
+class MultiargFuncDelimiter(PostLex):
+    FUNC_PREFIX = 'MULTIARG_FUNC_'
+    
+    L_ARG_BRACES = 'L_BRACE'
+    R_ARG_BRACES = 'R_BRACE'
+    
+    ARG_DELIMITER = 'MULTIARG_FUNC_ARG_DELIMITER'
+    
+    def process(self, stream):
+        for token in stream:
+            # time for special handling
+            if token.type.startswith(self.FUNC_PREFIX):
+                yield token
+                yield from self._handle_multiarg_func(token, stream)    
+            else:
+                yield token
+
+    def _handle_multiarg_func(self, func_token, stream):
+        # we are now inside a special multiarg function call, time to get how may arguments there are
+        match = re.match(f'{self.FUNC_PREFIX}(\\d+)\\w*', func_token.type)
+        arg_count = int(match.group(1)) if match else None
+        
+        delim_token = Token(self.ARG_DELIMITER, '')
+        
+        for token in stream:
+            yield token
+
+            if arg_count <= 1:
+                break
+            
+            if token.type == self.L_ARG_BRACES:
+                yield from self._handle_brace_surrounded_arg(stream)    
+
+            yield delim_token
+            
+            arg_count -= 1
+
+    def _handle_brace_surrounded_arg(self, stream):
+        depth = 1
+        
+        for token in stream:
+            yield token
+            
+            if token.type == self.L_ARG_BRACES:
+                depth += 1
+            elif token.type == self.R_ARG_BRACES:
+                depth -= 1
+            
+            if depth <= 0:
+                break
+            
 
 ## The ObsimatLatexParser is responsible for parsing a latex string in the context of an ObsimatEnvironment.
 ## It also extends many functionalities of the sympy LarkLaTeXParser,
@@ -34,11 +87,12 @@ class ObsimatLatexParser(SympyParser):
             rel_to=os.path.dirname(grammar_file),
             parser="lalr",
             start="expression",
-            lexer="auto",
+            lexer="contextual",
             debug=True,
             propagate_positions=True,
             maybe_placeholders=False,
             keep_all_tokens=True,
+            postlex=MultiargFuncDelimiter()
         )
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.

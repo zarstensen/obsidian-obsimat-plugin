@@ -80,7 +80,6 @@ _function: _delimited_function
     | binom
 
 _named_function: undefined_function | trig_function | _log | exponential | _filter_functions
-_delimited_function: abs | norm | inner_product | floor | ceil
 
 // this rule matches a singular argument to a function.
 // if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
@@ -137,15 +136,14 @@ min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
 max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
 
 // delimited functions
+_delimited_function: abs | norm | inner_product | floor | ceil | factorial
 _inner_product_separator: L_BAR | COMMA
-// in the transformer, look for CMD_ANGLE, if we are in an angle scope, ignore all BAR delimiters i guess?
-// still want the recursive solution, otherwise |{|x| |y|}| is not possible.
 inner_product: CMD_LANGLE expression _inner_product_separator expression CMD_RANGLE
 abs: L_BAR expression R_BAR
 norm: L_DOUBLE_BAR expression R_DOUBLE_BAR
 floor: L_FLOOR expression R_FLOOR
 ceil: L_CEIL expression R_CEIL
-
+factorial: _named_function_arg BANG
 sqrt: FUNC_SQRT brackets_expression? (braces_expression|single_letter_symbol|_digit)
 conjugate: FUNC_CONJUGATE (braces_expression|single_letter_symbol|_digit)
 

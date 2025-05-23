@@ -101,6 +101,9 @@ class FunctionsTransformer(Transformer):
         
         return exp(arg)**exponent
 
+    def factorial(self, tokens):
+        return factorial(tokens[0])
+
     def abs(self, tokens):
         return Abs(tokens[1])
     

@@ -35,6 +35,7 @@ export class EvaluateCommand implements IObsimatCommand {
 
         message.expression = equation.contents;
         message.environment = ObsimatEnvironment.fromMarkdownView(app, view);
+        ObsimatEnvironment.fromMarkdownView(app, view).bracket_units
 
         // send it to python and wait for response.
         await evaluator.send(this.evaluate_mode, message);

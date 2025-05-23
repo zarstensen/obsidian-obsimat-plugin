@@ -74,20 +74,21 @@ undefined_function: UNDEFINED_FUNC_START expression R_PAREN
 
 _function: _delimited_function
     | _named_function
+    | integral
     | sqrt
     | conjugate
     | frac
     | binom
 
-_named_function: undefined_function | trig_function | _log | exponential | _filter_functions
+_named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions
 
 // this rule matches a singular argument to a function.
 // if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
-_function_arg_base: braces_expression | parenthesees_expression | _named_function | _delimited_function  // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
+_function_arg_base: braces_expression | parenthesees_expression | _named_function | _delimited_function | frac | binom // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
 _named_function_arg: _function_arg_base | symbol | _number
 
 // matches a special kind of argument, defined by the fact that fractions and binomials can be passed without surrounding them with braces.
-_function_special_arg: _function_arg_base | frac | binom | single_letter_symbol | _digit
+_function_special_arg: _function_arg_base | single_letter_symbol | _digit
 
 
 // named functions
@@ -125,6 +126,11 @@ log_implicit_base: _func_template{FUNC_LOG}
 log_explicit_base: FUNC_LOG UNDERSCORE _function_special_arg (CARET _function_special_arg)? _named_function_arg
 
 exponential: _func_template{FUNC_EXP}
+
+sign: L_BRACE (ADD|SUB) R_BRACE -> delimited_expression
+    | ADD
+    | SUB
+limit: FUNC_LIMIT UNDERSCORE L_BRACE symbol LIM_APPROACH_SYMBOL _base_factor (CARET sign)? R_BRACE _named_function_arg
 
 // filter functions
 
@@ -168,6 +174,10 @@ _multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
 // core functions
 frac: MULTIARG_FUNC_2_FRAC _multiarg_func_arg MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
 binom: MULTIARG_FUNC_2_BINOM _multiarg_func_arg MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
+
+// DIFFERENTIAL_SYMBOl should be outputted by the post lexer.
+// it should probably be restructured a bit before this though.
+integral: FUNC_INTEGRAL expression DIFFERENTIAL_SYMBOL symbol
 
 // ======== Miscellaneous rules ========
 

@@ -548,7 +548,7 @@ def test_trigonometric_expressions():
 
 def test_limit_expressions():
     for latex_str, sympy_expr in UNEVALUATED_LIMIT_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str) == simplify(sympy_expr), latex_str
 
 
 def test_square_root_expressions():

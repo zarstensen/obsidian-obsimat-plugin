@@ -104,6 +104,24 @@ class FunctionsTransformer(Transformer):
     def factorial(self, tokens):
         return factorial(tokens[0])
 
+    def limit(self, tokens):
+        symbol = tokens[3]
+        approach_value = tokens[5]
+        
+        direction = '+-'
+        expression = None
+        
+        if len(tokens) == 10:
+            direction = tokens[7].value
+            expression = tokens[9]
+        else:
+            expression = tokens[7]
+            
+        return limit(expression, symbol, approach_value, direction)
+        
+    def sign(self, tokens):
+        return tokens[0]
+
     def abs(self, tokens):
         return Abs(tokens[1])
     

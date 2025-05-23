@@ -84,6 +84,7 @@ _function: _delimited_function
     | frac
     | binom
     | factorial
+    | differential
 
 _named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions
 
@@ -190,6 +191,9 @@ _multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
 frac: MULTIARG_FUNC_2_FRAC _multiarg_func_arg MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
 binom: MULTIARG_FUNC_2_BINOM _multiarg_func_arg MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
 
+differential: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL expression R_BRACE L_BRACE (DIFFERENTIAL_SYMBOL symbol)+ R_BRACE
+    |   CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE (DIFFERENTIAL_SYMBOL symbol)+ R_BRACE _factor_no_unit
+
 // DIFFERENTIAL_SYMBOl should be outputted by the post lexer.
 // it should probably be restructured a bit before this though.
 integral: FUNC_INTEGRAL expression DIFFERENTIAL_SYMBOL symbol
@@ -267,7 +271,8 @@ FUNC_CONJUGATE: CMD_OVERLINE | CMD_BAR
 
 // multiarg functions
 
-MULTIARG_FUNC_2_FRAC: /\\[dtcs]?frac/ | "\\nicefrac"
+CMD_FRAC: /\\[dtcs]?frac/ | "\\nicefrac"
+MULTIARG_FUNC_2_FRAC: CMD_FRAC
 MULTIARG_FUNC_2_BINOM: /\\[dt]?binom/
 
 FUNC_OVERLINE: "\\overline"
@@ -333,8 +338,14 @@ OPERATOR_MUL: MUL | CMD_TIMES | CMD_CDOT
 
 %import .greek_symbols.GREEK_SYMBOL
 
+DELTA_DIFFERENTIAL_SYMBOL: "\\delta"
 UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
 DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
+
+%import common.WS -> _WS
+
+FUNC_DIFFERENTIAL: CMD_FRAC _WS? L_BRACE _WS? DIFFERENTIAL_SYMBOL
+FUNC_DIFFERENTIAL_SEPARATOR: R_BRACE _WS? L_BRACE _WS? DIFFERENTIAL_SYMBOL
 
 // should this just be \w?
 LATIN_SYMBOL: /[a-zA-Z]/

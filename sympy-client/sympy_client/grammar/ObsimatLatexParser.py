@@ -29,7 +29,7 @@ class MultiargFuncDelimiter(PostLex):
     }
     
     def process(self, stream: Iterator[Token]) -> Iterator[Token]:
-        yield from self._handle_delim(self._handle_multiarg(stream))
+        yield from self._handle_delim(stream)
 
     # TODO: make this recursive, it should consider ALL LR delims, and if it encounters
     def _handle_delim(self, stream: Iterator[Token], curr_delim: str = None) -> Iterator[Token]:

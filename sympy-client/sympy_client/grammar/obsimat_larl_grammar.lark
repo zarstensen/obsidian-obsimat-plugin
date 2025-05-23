@@ -15,15 +15,18 @@ term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (ADD|SUB)? implicit_m
 
 // a factor is either a number, a constant, a symbol, or a function.
 // here exponentiation, fractions, binomials are loosly seen as functions.
-_factor: exponentiation
+_factor: _factor_no_unit
+    | unit
+ 
+ _factor_no_unit: exponentiation
     | _base_factor
 
 // _base_factor groups all factors which can be the base value of an exponentiation.
 _base_factor: parenthesees_expression
     | braces_expression
     | _function
-    | _symbol_like
     | _number
+    | symbol
 
 // groups a base factor and an exponent factor to be evaluated in an exponentation.
 exponentiation: _base_factor CARET _function_special_arg
@@ -42,9 +45,9 @@ single_letter_symbol: SINGLE_LETTER_SYMBOL -> symbol
 // a formatted symbol is any symbol surrounded with a latex command which changes it visually.
 // this could for example be \mathit
 formatted_symbol: (CMD_MATH|CMD_BOLD_FORMAT) brace_surrounded_text PRIMES?
-_non_indexed_symbol: SINGLE_LETTER_SYMBOL | MULTI_LETTER_SYMBOL | formatted_symbol
+_non_indexed_symbol: single_letter_symbol | MULTI_LETTER_SYMBOL | formatted_symbol
 
-indexed_symbol: _non_indexed_symbol UNDERSCORE (SINGLE_LETTER_SYMBOL | _digit | brace_surrounded_text) PRIMES?
+indexed_symbol: _non_indexed_symbol UNDERSCORE (single_letter_symbol | _digit | brace_surrounded_text) PRIMES?
 
 // all the rules here should return the NAME (as in a str) of the symbol to be created
 // the symbol rule is responsible for eactually creating the symbol and optionally substituting its value.
@@ -74,26 +77,27 @@ undefined_function: UNDEFINED_FUNC_START expression R_PAREN
 
 _function: _delimited_function
     | _named_function
+    | _series_function
     | integral
     | sqrt
     | conjugate
     | frac
     | binom
+    | factorial
 
 _named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions
 
 // this rule matches a singular argument to a function.
 // if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
-_function_arg_base: braces_expression | parenthesees_expression | _named_function | _delimited_function | frac | binom // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
-_named_function_arg: _function_arg_base | symbol | _number
+ // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
 
 // matches a special kind of argument, defined by the fact that fractions and binomials can be passed without surrounding them with braces.
-_function_special_arg: _function_arg_base | single_letter_symbol | _digit
+_function_special_arg: braces_expression | parenthesees_expression | _named_function | _delimited_function | frac | binom | single_letter_symbol | _digit
 
 
 // named functions
 
-_func_template{func_name}: func_name (CARET _function_special_arg)? _named_function_arg
+_func_template{func_name}: func_name (CARET _function_special_arg)? _factor_no_unit
 
 // trigonometric functions
 
@@ -123,14 +127,26 @@ log_implicit_base: _func_template{FUNC_LOG}
     | _func_template{FUNC_LN}
     | _func_template{FUNC_LG}
  
-log_explicit_base: FUNC_LOG UNDERSCORE _function_special_arg (CARET _function_special_arg)? _named_function_arg
+ // TODO: both orderings should be allowed, where caret is also to the left of the log.
+log_explicit_base: FUNC_LOG UNDERSCORE _function_special_arg (CARET _function_special_arg)? _factor_no_unit
+    | FUNC_LOG CARET _function_special_arg UNDERSCORE _function_special_arg _factor_no_unit
 
 exponential: _func_template{FUNC_EXP}
+
+factorial: _factor_no_unit BANG
 
 sign: L_BRACE (ADD|SUB) R_BRACE -> delimited_expression
     | ADD
     | SUB
-limit: FUNC_LIMIT UNDERSCORE L_BRACE symbol LIM_APPROACH_SYMBOL _base_factor (CARET sign)? R_BRACE _named_function_arg
+limit: FUNC_LIMIT UNDERSCORE L_BRACE symbol LIM_APPROACH_SYMBOL _base_factor (CARET sign)? R_BRACE _factor_no_unit
+
+_series_template{series_name}: series_name CARET _function_special_arg UNDERSCORE L_BRACE symbol EQUAL expression R_BRACE _factor_no_unit
+    | series_name UNDERSCORE L_BRACE symbol EQUAL expression R_BRACE  CARET _function_special_arg _factor_no_unit
+
+_series_function: sum | product
+
+sum: _series_template{FUNC_SUM}
+product: _series_template{FUNC_PRODUCT}
 
 // filter functions
 
@@ -142,14 +158,13 @@ min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
 max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
 
 // delimited functions
-_delimited_function: abs | norm | inner_product | floor | ceil | factorial
+_delimited_function: abs | norm | inner_product | floor | ceil
 _inner_product_separator: L_BAR | COMMA
 inner_product: CMD_LANGLE expression _inner_product_separator expression CMD_RANGLE
 abs: L_BAR expression R_BAR
 norm: L_DOUBLE_BAR expression R_DOUBLE_BAR
 floor: L_FLOOR expression R_FLOOR
 ceil: L_CEIL expression R_CEIL
-factorial: _named_function_arg BANG
 sqrt: FUNC_SQRT brackets_expression? (braces_expression|single_letter_symbol|_digit)
 conjugate: FUNC_CONJUGATE (braces_expression|single_letter_symbol|_digit)
 

@@ -146,6 +146,7 @@ class ObsimatLatexParser(SympyParser):
             start="expression",
             lexer="contextual",
             debug=True,
+            cache=True,
             propagate_positions=True,
             maybe_placeholders=False,
             keep_all_tokens=True,

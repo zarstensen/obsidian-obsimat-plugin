@@ -76,16 +76,21 @@ class FunctionsTransformer(Transformer):
             return log(arg, 10)**exponent
 
     def log_explicit_base(self, tokens):
-        base = tokens[2]
-        
         exponent = 1
-        arg = None
         
         if len(tokens) == 6:
-            exponent = tokens[4]
+            # we have an exponent, time to figure out where it is
+            if tokens[1].type == 'CARET':
+                exponent = tokens[2]
+                base = tokens[4]
+            elif tokens[1].type == 'UNDERSCORE':
+                exponent = tokens[4]
+                base = tokens[2]
+                
             arg = tokens[5]
         else:
             arg = tokens[3]
+            base = tokens[2]
             
         return log(arg, base)**exponent
     
@@ -118,7 +123,40 @@ class FunctionsTransformer(Transformer):
             expression = tokens[7]
             
         return limit(expression, symbol, approach_value, direction)
+    
+    def sum(self, tokens):
+        expression = tokens[9]
         
+        if tokens[1].type == 'CARET':
+            end_iter = tokens[2]
+            start_iter = tokens[7]
+            iter_symbol = tokens[5]
+        elif tokens[1].type == 'UNDERSCORE':
+            end_iter = tokens[8]
+            start_iter = tokens[5]
+            iter_symbol = tokens[3]
+        else:
+            raise RuntimeError(f"Unexpected token {tokens[1]}")
+        
+        return Sum(expression, (iter_symbol, start_iter, end_iter))
+    
+    def product(self, tokens):
+        
+        expression = tokens[9]
+        
+        if tokens[1].type == 'CARET':
+            end_iter = tokens[2]
+            start_iter = tokens[7]
+            iter_symbol = tokens[5]
+        elif tokens[1].type == 'UNDERSCORE':
+            end_iter = tokens[8]
+            start_iter = tokens[5]
+            iter_symbol = tokens[3]
+        else:
+            raise RuntimeError(f"Unexpected token {tokens[1]}")
+        
+        return Product(expression, (iter_symbol, start_iter, end_iter))
+    
     def sign(self, tokens):
         return tokens[0]
 

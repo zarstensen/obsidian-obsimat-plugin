@@ -20,12 +20,13 @@ _factor: exponentiation
 
 // _base_factor groups all factors which can be the base value of an exponentiation.
 _base_factor: parenthesees_expression
+    | braces_expression
     | _function
     | _symbol_like
     | _number
 
 // groups a base factor and an exponent factor to be evaluated in an exponentation.
-exponentiation: (braces_expression | _base_factor) CARET _function_special_arg
+exponentiation: _base_factor CARET _function_special_arg
 
 // various rules for grouping expressions surrounded by delimiters.
 parenthesees_expression: L_PAREN expression R_PAREN -> delimited_expression
@@ -71,23 +72,28 @@ _numeric_number: NUMERIC_NUMBER
 
 undefined_function: UNDEFINED_FUNC_START expression R_PAREN
 
-_function: undefined_function
-    | trig_function
-    | _log
+_function: _delimited_function
+    | _named_function
     | sqrt
+    | conjugate
     | frac
     | binom
 
+_named_function: undefined_function | trig_function | _log | exponential | _filter_functions
+_delimited_function: abs | norm | inner_product | floor | ceil
+
 // this rule matches a singular argument to a function.
 // if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
-_function_arg: braces_expression | parenthesees_expression | single_letter_symbol | _digit // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
+_function_arg_base: braces_expression | parenthesees_expression | _named_function | _delimited_function  // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
+_named_function_arg: _function_arg_base | symbol | _number
 
 // matches a special kind of argument, defined by the fact that fractions and binomials can be passed without surrounding them with braces.
-_function_special_arg: _function_arg | frac | binom 
+_function_special_arg: _function_arg_base | frac | binom | single_letter_symbol | _digit
 
-// standard 1 arg functions
 
-_func_template{func_name}: func_name (CARET _function_special_arg)? _function_arg
+// named functions
+
+_func_template{func_name}: func_name (CARET _function_special_arg)? _named_function_arg
 
 // trigonometric functions
 
@@ -117,12 +123,31 @@ log_implicit_base: _func_template{FUNC_LOG}
     | _func_template{FUNC_LN}
     | _func_template{FUNC_LG}
  
-log_explicit_base: FUNC_LOG UNDERSCORE _function_special_arg (CARET _function_special_arg)? _function_arg
+log_explicit_base: FUNC_LOG UNDERSCORE _function_special_arg (CARET _function_special_arg)? _named_function_arg
 
 exponential: _func_template{FUNC_EXP}
 
+// filter functions
+
+_filter_functions: min | max
+
+list_of_expressions: expression (COMMA expression)*
+
+min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
+max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
+
+// delimited functions
+_inner_product_separator: L_BAR | COMMA
+// in the transformer, look for CMD_ANGLE, if we are in an angle scope, ignore all BAR delimiters i guess?
+// still want the recursive solution, otherwise |{|x| |y|}| is not possible.
+inner_product: CMD_LANGLE expression _inner_product_separator expression CMD_RANGLE
+abs: L_BAR expression R_BAR
+norm: L_DOUBLE_BAR expression R_DOUBLE_BAR
+floor: L_FLOOR expression R_FLOOR
+ceil: L_CEIL expression R_CEIL
+
 sqrt: FUNC_SQRT brackets_expression? (braces_expression|single_letter_symbol|_digit)
-inner_product: CMD_LANGLE expression CMD_INNER_PRODUCT_SEPARATOR expression CMD_RANGLE
+conjugate: FUNC_CONJUGATE (braces_expression|single_letter_symbol|_digit)
 
 // TODO: wait for matrix implementation.
 // determinant: _func_template{FUNC_DETERMINANT}
@@ -177,8 +202,10 @@ DIV: "/" | "\\over"
 CMD_TIMES: "\\times"
 CMD_CDOT:  "\\cdot"
 CMD_DIV:   "\\div"
-CMD_LANGLE: "\\langle"
-CMD_RANGLE: "\\rangle"
+CMD_BAR: "\\bar"
+CMD_OVERLINE: "\\overline"
+CMD_LANGLE: "\\langle" | "<"
+CMD_RANGLE: "\\rangle" | ">"
 CMD_INNER_PRODUCT_SEPARATOR: BAR | COMMA
 
 // tokens with distinct left and right symbols
@@ -194,6 +221,10 @@ L_FLOOR: "\\lfloor"
 R_FLOOR: "\\rfloor"
 L_PAREN: "("
 R_PAREN: ")"
+L_BAR: BAR
+%declare R_BAR
+L_DOUBLE_BAR: DOUBLE_BAR
+%declare R_DOUBLE_BAR
 
 // limit, integral, sum, and product symbols
 FUNC_LIMIT:  "\\lim"
@@ -209,6 +240,7 @@ FUNC_LN:   "\\ln"
 FUNC_LG:   "\\lg"
 FUNC_MIN: "\\min"
 FUNC_MAX: "\\max"
+FUNC_CONJUGATE: CMD_OVERLINE | CMD_BAR
 
 // multiarg functions
 
@@ -257,7 +289,8 @@ CMD_BOLD_FORMAT: "\\pmb"
 CMD_FORMAT: CMD_MATH | CMD_BOLD_FORMAT
 
 BANG: "!"
-BAR: "|"
+BAR: "|" | "\\mid"
+DOUBLE_BAR: "||" | /\\mid\s*\\mid/ | "\\Vert"
 DOT: "."
 CARET: "^"
 COLON: ":"

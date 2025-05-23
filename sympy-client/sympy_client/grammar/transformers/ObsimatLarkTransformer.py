@@ -135,7 +135,8 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
             return Float(number_str)
         return Integer(number_str)
         
-    
+    def unit(self, tokens):
+        return self.symbol(tokens[1])
     
     SIGN_DICT = {
         'ADD': S.One,

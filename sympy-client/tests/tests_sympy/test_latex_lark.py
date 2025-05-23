@@ -28,6 +28,8 @@ from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _fa
 
 from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
 
+xy = Symbol('xy')
+
 lark = import_module("lark")
 
 # disable tests if lark is not present
@@ -268,7 +270,7 @@ TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\sin(\theta)", sin(theta)),
     (r"\sin^{-1} a", asin(a)),
     (r"\sin a \cos b", _Mul(sin(a), cos(b))),
-    (r"\sin{\cos \theta}", sin(cos(theta))),
+    (r"\sin \cos \theta", sin(cos(theta))),
     (r"\sin(\cos \theta)", sin(cos(theta))),
     (r"(\csc x)(\sec y)", csc(x) * sec(y)),
     (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1)))
@@ -340,17 +342,17 @@ APPLIED_FUNCTION_EXPRESSION_PAIRS = [
 COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"|x|", Abs(x)),
     (r"||x||", Abs(Abs(x))),
-    (r"|x||y|", Abs(x) * Abs(y)),
-    (r"||x||y||", Abs(Abs(x) * Abs(y))),
+    (r"|x| |y|", Abs(x) * Abs(y)),
+    (r"|{|x| |y|}|", Abs(Abs(x) * Abs(y))),
     (r"\lfloor x \rfloor", floor(x)),
     (r"\lceil x \rceil", ceiling(x)),
     (r"\exp x", exp(x)),
     (r"\exp(x)", exp(x)),
     (r"\lg x", log(x, 10)),
     (r"\ln x", log(x)),
-    (r"\ln xy", log(x * y)),
+    (r"\ln xy", log(xy)),
     (r"\log x", log(x)),
-    (r"\log xy", log(x * y)),
+    (r"\log xy", log(xy)),
     (r"\log_{2} x", log(x, 2)),
     (r"\log_{a} x", log(x, a)),
     (r"\log_{11} x", log(x, 11)),
@@ -362,9 +364,9 @@ COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{x + y}", conjugate(x + y)),
     (r"\overline{x} + \overline{y}", conjugate(x) + conjugate(y)),
     (r"\min(a, b)", Min(a, b)),
-    (r"\min(a, b, c - d, xy)", Min(a, b, c - d, x * y)),
+    (r"\min(a, b, c - d, xy)", Min(a, b, c - d, xy)),
     (r"\max(a, b)", Max(a, b)),
-    (r"\max(a, b, c - d, xy)", Max(a, b, c - d, x * y)),
+    (r"\max(a, b, c - d, xy)", Max(a, b, c - d, xy)),
 ]
 
 SPACING_RELATED_EXPRESSION_PAIRS = [

@@ -54,6 +54,9 @@ class FunctionsTransformer(Transformer):
             return sqrt(tokens[1])
         elif len(tokens) == 3:
             return root(tokens[2], tokens[1])
+        
+    def conjugate(self, tokens):
+        return conjugate(tokens[1])
 
     def log_implicit_base(self, tokens):
         exponent = 1
@@ -62,6 +65,8 @@ class FunctionsTransformer(Transformer):
         if len(tokens) == 4:
             exponent = tokens[2]
             arg = tokens[3]
+        else:
+            arg = tokens[1]
             
         log_type = tokens[0].type
             
@@ -91,7 +96,30 @@ class FunctionsTransformer(Transformer):
         if len(tokens) == 4:
             exponent = tokens[2]
             arg = tokens[3]
+        else:
+            arg = tokens[1]
         
         return exp(arg)**exponent
-        
+
+    def abs(self, tokens):
+        return Abs(tokens[1])
+    
+    def norm(self, tokens):
+        # only if scalar maybe?
+        return Abs(tokens[1])
+    
+    def floor(self, tokens):
+        return floor(tokens[1])
+    
+    def ceil(self, tokens):
+        return ceiling(tokens[1])
+    
+    def max(self, tokens):
+        return Max(*tokens[2])
+    
+    def min(self, tokens):
+        return Min(*tokens[2])
+    
+    def list_of_expressions(self, tokens):
+        return list(filter(lambda x: not isinstance(x, Token) or x.type != 'COMMA', tokens))
         

@@ -8,15 +8,12 @@ from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
 from .FunctionStore import FunctionStore
 
 from sympy import *
-import sympy.parsing.latex.lark as sympy_lark
 from lark import Tree, Lark, Token
 from lark.lark import PostLex
 from lark.lexer import TerminalDef
 import os
-from tempfile import TemporaryDirectory
-import shutil
 import re
-
+re.Pattern
 class LexerScope:
     def __init__(self, 
                     scope_pairs: list[tuple[re.Pattern, re.Pattern|Callable[[re.Match[str]], re.Pattern]]] = [],
@@ -34,7 +31,7 @@ class LexerScope:
                     break
                 
                 for replace_token in self.replace_tokens[t.type]:
-                    if re.match(replace_token.pattern, t.value):
+                    if re.fullmatch(replace_token.pattern.to_regexp(), t.value):
                         yield Token(str(replace_token), t.value)
                         break
                 else:
@@ -102,13 +99,13 @@ class ScopePostLexer(PostLex):
             
             # check if we are ourselves at an end terminal
             # if we are, go out of the scope.
-            if scope_end_terminal is not None and re.match(scope_end_terminal, token.type):
+            if scope_end_terminal is not None and re.fullmatch(scope_end_terminal, token.type):
                 break
             
             # check if the token starts a scope
             for new_scope in self.scopes:
                 for scope_pair in new_scope.scope_pairs:
-                    match = re.match(scope_pair[0], token.type)
+                    match = re.fullmatch(scope_pair[0], token.type)
                     # WE BEGINNING A NEW SCOPE BABY
                     if match:
                         end_terminal = scope_pair[1] if isinstance(scope_pair[1], str) else scope_pair[1](match)

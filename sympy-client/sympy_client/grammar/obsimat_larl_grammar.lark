@@ -200,11 +200,11 @@ frac: _FUNC_FRAC _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULT
 binom: _FUNC_BINOM _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULTIARG_EOS
 
 diff_symbol_exponent: symbol [_CARET function_special_arg]
-_diff_symbol_arg_list: (_DIFFERENTIAL_SYMBOL diff_symbol_exponent)+
+diff_symbol_arg_list: (_DIFFERENTIAL_SYMBOL diff_symbol_exponent)+
 
 // need to have a post lex which recognises _FUNC_DERIVATIVE and then replaces any single letter symbol which matches _DIFFERENTIAL_SYMBOL with _DIFFERENTIAL_SYMBOL
-derivative: _FUNC_DERIVATIVE expression _R_BRACE _L_BRACE _diff_symbol_arg_list _R_BRACE -> derivative_func_first
-    |   _FUNC_DERIVATIVE _R_BRACE _L_BRACE _diff_symbol_arg_list _R_BRACE _factor_no_unit -> derivative_symbols_first
+derivative: _FUNC_DERIVATIVE expression _R_BRACE _L_BRACE diff_symbol_arg_list _R_BRACE -> derivative_func_first
+    |   _FUNC_DERIVATIVE _R_BRACE _L_BRACE diff_symbol_arg_list _R_BRACE _factor_no_unit -> derivative_symbols_first
 
 // DIFFERENTIAL_SYMBOl should be outputted by the post lexer.
 // it should probably be restructured a bit before this though.

@@ -1,5 +1,6 @@
 from collections import deque
-from typing import Iterator
+from dataclasses import dataclass
+from typing import Callable, Generator, Iterator
 from sympy_client.ObsimatEnvironment import ObsimatEnvironment
 from .transformers.ObsimatLarkTransformer import ObsimatLarkTransformer
 from .SympyParser import SympyParser
@@ -10,117 +11,113 @@ from sympy import *
 import sympy.parsing.latex.lark as sympy_lark
 from lark import Tree, Lark, Token
 from lark.lark import PostLex
+from lark.lexer import TerminalDef
 import os
 from tempfile import TemporaryDirectory
 import shutil
 import re
 
-class MultiargFuncDelimiter(PostLex):
-    FUNC_PREFIX = 'MULTIARG_FUNC_'
+class LexerScope:
+    def __init__(self, 
+                    scope_pairs: list[tuple[re.Pattern, re.Pattern|Callable[[re.Match[str]], re.Pattern]]] = [],
+                    replace_tokens: dict[str, str|list[TerminalDef]] = {}
+                ):
+        self.scope_pairs = scope_pairs
+        self.replace_tokens = replace_tokens
     
-    L_ARG_BRACES = '_L_BRACE'
-    R_ARG_BRACES = '_R_BRACE'
-    
-    ARG_DELIMITER = '_MULTIARG_FUNC_ARG_DELIMITER'
-    
-    SAME_LR_DELIMS = { 'BAR', 'DOUBLE_BAR' }
-    LR_DELIMS_IGNORE = {
-        'ANGLE': {'BAR'} # ignore bar, if inside ANGLE scope currently.
-    }
-    
-    def process(self, stream: Iterator[Token]) -> Iterator[Token]:
-        yield from self._handle_delim(self._handle_multiarg(stream))
-
-    # TODO: make this recursive, it should consider ALL LR delims, and if it encounters
-    def _handle_delim(self, stream: Iterator[Token], curr_delim: str = None) -> Iterator[Token]:
-        for token in stream:
-            yield token
-            token_type = token.type
-            
-            # need to check if this is a same delim, or just a standard delim.
-            if token_type.startswith('_L_'):
-                delim_type = token_type[3:]
+    def token_handler(self, token_stream: Iterator[Token]) -> Iterator[Token]:
+        for t in token_stream:
+            # try to replace the token
+            if t.type in self.replace_tokens:
+                if isinstance(self.replace_tokens[t.type], str):
+                    yield Token(self.replace_tokens[t.type], t.value)
+                    break
                 
-                
-                if delim_type in self.SAME_LR_DELIMS:
-                    
-                    if delim_type in self.LR_DELIMS_IGNORE.get(delim_type, {}):
-                        continue
-                    
-                    yield from self._handle_same_delim(stream, delim_type)
-                else:
-                    yield from self._handle_delim(stream, delim_type)
-                
-            # ok we have hit the end of this scope, go up one level.
-            elif token_type.startswith('_R_') and token_type[3:] == curr_delim:
-                break
-                
-    def _handle_same_delim(self, stream: Iterator[Token], curr_delim: str) -> Iterator[Token]:
-        for token in stream:
-            token_type: str = token.type
-            
-            if token_type.startswith('_L_'):
-                delim_type = token_type[3:]
-                if delim_type in self.SAME_LR_DELIMS:
-                    # check if it is already in the stack, if so convert it to an R_ version.
-                    if curr_delim == delim_type:
-                        yield Token(f"_R_{delim_type}", token.value)
+                for replace_token in self.replace_tokens[t.type]:
+                    if re.match(replace_token.pattern, t.value):
+                        yield Token(str(replace_token), t.value)
                         break
-                    else:
-                        yield token
-                        yield from self._handle_same_delim(stream, delim_type)
                 else:
-                    yield token
-                    yield from self._handle_delim(stream, delim_type)
-            elif token_type == curr_delim:
-                yield Token(f"_R_{curr_delim}", token.value)
-                break
+                # no tokens could replace it anyways, so just return the original one.
+                    yield t
             else:
-                yield token
+                yield t
 
-    def _handle_multiarg(self, stream):
-        for token in stream:
-            # time for special handling
-            if token.type.startswith(self.FUNC_PREFIX):
-                yield token
-                yield from self._handle_multiarg_func(token, stream)    
-            else:
-                yield token
+class MultiArgScope(LexerScope):
+    def __init__(self, arg_count: int, scope_pairs = [], replace_tokens = {}):
+        super().__init__(scope_pairs, replace_tokens)
+        self.arg_count = arg_count
+    
+    def token_handler(self, token_stream: Iterator[Token]) -> Iterator[Token]:
+        for _ in range(1, self.arg_count):
+            yield next(super().token_handler(token_stream))
+            yield Token("_MULTIARG_DELIMITER", "")
+        yield next(super().token_handler(token_stream))
+        yield Token("_MULTIARG_EOS", "")
 
-    def _handle_multiarg_func(self, func_token, stream):
-        # we are now inside a special multiarg function call, time to get how may arguments there are
-        match = re.match(f'{self.FUNC_PREFIX}(\\d+).*', func_token.type)
-        arg_count = int(match.group(1)) if match else None
+class ScopePostLexer(PostLex):
+    def __init__(self):
+        self.parser = None
+    
+    def initialize_scopes(self, parser: Lark):
+        self.scopes = [
+            LexerScope(
+                scope_pairs=[
+                    ("_L_BAR", "_R_BAR"),
+                    ("_L_DOUBLE_BAR", "_R_DOUBLE_BAR")
+                    ],
+                replace_tokens={
+                    "_L_BAR": "_R_BAR",
+                    "_L_DOUBLE_BAR": "_R_DOUBLE_BAR"
+                }
+            ),
+            MultiArgScope(
+                arg_count=2,
+                scope_pairs=[
+                    ("_FUNC_FRAC", "_MULTIARG_EOS"),
+                    ("_FUNC_BINOM", "_MULTIARG_EOS")
+                ]
+            ),
+            LexerScope(
+                scope_pairs=[
+                    ("_FUNC_DERIVATIVE", "_R_BRACE"),
+                    ("_FUNC_INT", "_DIFFERENTIAL_SYMBOL")
+                    ],
+                replace_tokens={
+                    "SINGLE_LETTER_SYMBOL": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
+                    "FORMATTED_SYMBOLS": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ]
+                }
+            ),
+            LexerScope(
+                scope_pairs=[("_?L_(.*)", lambda match : f"_?R_{match.groups()[0]}")]
+            )
+        ]
         
-        delim_token = Token(self.ARG_DELIMITER, '')
-        
-        for token in stream:
+    def process(self, stream: Iterator[Token]) -> Iterator[Token]:
+        yield from self.process_scope(stream, LexerScope(), None)
+            
+    def process_scope(self, stream, scope: LexerScope, scope_end_terminal: str | None):
+        for token in scope.token_handler(stream):
             yield token
-
-            if arg_count <= 1:
+            
+            # check if we are ourselves at an end terminal
+            # if we are, go out of the scope.
+            if scope_end_terminal is not None and re.match(scope_end_terminal, token.type):
                 break
             
-            if token.type == self.L_ARG_BRACES:
-                yield from self._handle_brace_surrounded_arg(stream)    
-
-            yield delim_token
-            
-            arg_count -= 1
-
-    def _handle_brace_surrounded_arg(self, stream):
-        depth = 1
-        
-        for token in stream:
-            yield token
-            
-            if token.type == self.L_ARG_BRACES:
-                depth += 1
-            elif token.type == self.R_ARG_BRACES:
-                depth -= 1
-            
-            if depth <= 0:
+            # check if the token starts a scope
+            for new_scope in self.scopes:
+                for scope_pair in new_scope.scope_pairs:
+                    match = re.match(scope_pair[0], token.type)
+                    # WE BEGINNING A NEW SCOPE BABY
+                    if match:
+                        end_terminal = scope_pair[1] if isinstance(scope_pair[1], str) else scope_pair[1](match)
+                        yield from self.process_scope(stream, new_scope, end_terminal)
+                        break # do not consider other scopes
+                # do not continue if the inner loop was broken out of.
+                else:
+                    continue
                 break
-            
 
 ## The ObsimatLatexParser is responsible for parsing a latex string in the context of an ObsimatEnvironment.
 ## It also extends many functionalities of the sympy LarkLaTeXParser,
@@ -139,6 +136,8 @@ class ObsimatLatexParser(SympyParser):
         # initialize a lark parser with the same settings as LarkLaTeXParser,
         # but with propagating positions enabled.
         
+        post_lexer = ScopePostLexer()
+        
         self.parser = Lark.open(
             grammar_file,
             rel_to=os.path.dirname(grammar_file),
@@ -149,8 +148,10 @@ class ObsimatLatexParser(SympyParser):
             cache=True,
             propagate_positions=True,
             maybe_placeholders=True,
-            postlex=MultiargFuncDelimiter()
+            postlex=post_lexer
         )
+        
+        post_lexer.initialize_scopes(self.parser)
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
     def doparse(self, latex_str: str, environment: ObsimatEnvironment = {}):

@@ -260,6 +260,8 @@ INTEGRAL_EXPRESSION_PAIRS = [
 DERIVATIVE_EXPRESSION_PAIRS = [
     (r"\frac{d}{dx} x", Derivative(x, x)),
     (r"\frac{d}{dt} x", Derivative(x, t)),
+    (r"\frac{d}{dx^2} x^3", Derivative(x**3, (x, 2))),
+    (r"\frac{d x y}{dx d y}", Derivative(x*y, (x, 1), (y, 1))),
     (r"\frac{d}{dx} ( \tan x )", Derivative(tan(x), x)),
     (r"\frac{d f(x)}{dx}", Derivative(f(x), x)),
     (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x))
@@ -340,6 +342,7 @@ APPLIED_FUNCTION_EXPRESSION_PAIRS = [
 ]
 
 COMMON_FUNCTION_EXPRESSION_PAIRS = [
+    (r"|{x}|", Abs(x)),
     (r"|x|", Abs(x)),
     (r"||x||", Abs(Abs(x))),
     (r"|x| |y|", Abs(x) * Abs(y)),
@@ -531,11 +534,11 @@ def test_integral_expressions():
 
 
 def test_derivative_expressions():
-    expected_failures = {3, 4}
+    expected_failures = {5, 6}
     for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str) == simplify(sympy_expr), latex_str
 
 
 def test_trigonometric_expressions():

@@ -84,7 +84,7 @@ _function: _delimited_function
     | frac
     | binom
     | factorial
-    | differential
+    | derivative
 
 _named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions
 
@@ -192,14 +192,19 @@ _multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
 // MULTIARG_FUNC_[num_args][terminal_name]
 // num_args: number of arguments this function takes. This must be number of MULTIARG_FUNC_ARG_DELIMITER occurenses + 1
 // terminal_name: this is ignored by the postlexer and can be used to name the terminal appropiately.
-%declare _MULTIARG_FUNC_ARG_DELIMITER
+%declare _MULTIARG_DELIMITER
+%declare _MULTIARG_EOS
 
 // core functions
-frac: MULTIARG_FUNC_2_FRAC _multiarg_func_arg _MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
-binom: MULTIARG_FUNC_2_BINOM _multiarg_func_arg _MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
+frac: _FUNC_FRAC _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULTIARG_EOS
+binom: _FUNC_BINOM _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULTIARG_EOS
 
-differential: _CMD_FRAC _L_BRACE _DIFFERENTIAL_SYMBOL expression _R_BRACE _L_BRACE (_DIFFERENTIAL_SYMBOL symbol)+ _R_BRACE
-    |   _CMD_FRAC _L_BRACE _DIFFERENTIAL_SYMBOL _R_BRACE _L_BRACE (_DIFFERENTIAL_SYMBOL symbol)+ _R_BRACE _factor_no_unit
+diff_symbol_exponent: symbol [_CARET function_special_arg]
+_diff_symbol_arg_list: (_DIFFERENTIAL_SYMBOL diff_symbol_exponent)+
+
+// need to have a post lex which recognises _FUNC_DERIVATIVE and then replaces any single letter symbol which matches _DIFFERENTIAL_SYMBOL with _DIFFERENTIAL_SYMBOL
+derivative: _FUNC_DERIVATIVE expression _R_BRACE _L_BRACE _diff_symbol_arg_list _R_BRACE -> derivative_func_first
+    |   _FUNC_DERIVATIVE _R_BRACE _L_BRACE _diff_symbol_arg_list _R_BRACE _factor_no_unit -> derivative_symbols_first
 
 // DIFFERENTIAL_SYMBOl should be outputted by the post lexer.
 // it should probably be restructured a bit before this though.
@@ -278,9 +283,10 @@ _FUNC_CONJUGATE: _CMD_OVERLINE | _CMD_BAR
 
 // multiarg functions
 
-_CMD_FRAC: /\\[dtcs]?frac/ | "\\nicefrac"
-MULTIARG_FUNC_2_FRAC: _CMD_FRAC
-MULTIARG_FUNC_2_BINOM: /\\[dt]?binom/
+_FUNC_FRAC: /\\[dtcs]?frac/ | "\\nicefrac"
+_FUNC_BINOM: /\\[dt]?binom/
+
+_FUNC_DERIVATIVE: _FUNC_FRAC _WS? _L_BRACE _WS? _DIFFERENTIAL_SYMBOL
 
 _FUNC_OVERLINE: "\\overline"
 
@@ -347,7 +353,7 @@ OPERATOR_MUL: MUL | _CMD_TIMES | _CMD_CDOT
 
 _DELTA_DIFFERENTIAL_SYMBOL: "\\delta"
 _UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
-_DIFFERENTIAL_SYMBOL: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _DELTA_DIFFERENTIAL_SYMBOL
+_DIFFERENTIAL_SYMBOL.2: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _DELTA_DIFFERENTIAL_SYMBOL
 
 %import common.WS -> _WS
 

@@ -35,10 +35,10 @@ class FunctionsTransformer(Transformer):
         
         return trig_func(arg)**exponent
         
-    def frac(self, _, numerator: Expr, denominator: Expr):
+    def frac(self, numerator: Expr, denominator: Expr):
         return numerator * denominator**-1
     
-    def binom(self, _, n: Expr, k: Expr):
+    def binom(self, n: Expr, k: Expr):
         return binomial(n, k)
     
     def sqrt(self, degree: Expr | None, arg: Expr):
@@ -115,6 +115,12 @@ class FunctionsTransformer(Transformer):
     
     def min(self, args: Iterator[Expr]):
         return Min(*args)
+    
+    def diff_symbol_exponent(self, symbol, exponent: Expr | None):
+        return (symbol, 1 if exponent is None else exponent)
+    
+    def derivative_symbols_first(self, symbols: Iterator[tuple[Expr, Expr]], expr: Expr):
+        return diff(expr, *symbols)
     
     @v_args(inline=False)
     def list_of_expressions(self, tokens: Iterator[Expr]):

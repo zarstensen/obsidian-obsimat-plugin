@@ -73,7 +73,7 @@ _numeric_number: NUMERIC_NUMBER
 
 // ======== Functions ========
 
-undefined_function: UNDEFINED_FUNC_START expression _R_PAREN
+undefined_function: UNDEFINED_FUNC_START list_of_expressions _R_PAREN
 
 _function: _delimited_function
     | _named_function
@@ -318,7 +318,8 @@ FUNC_ARTANH: "\\artanh"
 
 _FUNC_SQRT: "\\sqrt"
 
-UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL _L_PAREN | MULTI_LETTER_SYMBOL _L_PAREN
+// TODO: use a bit more elaborate regex here, so more complex strings are allowed in the index.
+UNDEFINED_FUNC_START: (SINGLE_LETTER_SYMBOL|MULTI_LETTER_SYMBOL) (_WS? _UNDERSCORE _WS? _L_BRACE /\s*[^{}]+\s*/ _R_BRACE)? _L_PAREN
 
 // mathematical constants
 CONST_PI: "\\pi"

@@ -340,7 +340,7 @@ APPLIED_FUNCTION_EXPRESSION_PAIRS = [
     (r"f'_1(x)", Function("f_{1}'")(x)),
     (r"f_{1}''(x+y)", Function("f_{1}''")(x + y)),
     (r"h_{\theta}(x_0, x_1)",
-     Function('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}')))
+     Function('h_{\\theta}')(Symbol('x_{0}'), Symbol('x_{1}')))
 ]
 
 COMMON_FUNCTION_EXPRESSION_PAIRS = [
@@ -574,15 +574,13 @@ def test_product_expressions():
     for latex_str, sympy_expr in UNEVALUATED_PRODUCT_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
-@XFAIL
 def test_applied_function_expressions():
-    expected_failures = {0, 3, 4}  # 0 is ambiguous, and the others require not-yet-added features
+    expected_failures = {3, 4}  # 0 is ambiguous, and the others require not-yet-added features
     # not sure why 1, and 2 are failing
     for i, (latex_str, sympy_expr) in enumerate(APPLIED_FUNCTION_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        assert parse_latex_lark(latex_str) == simplify(sympy_expr), latex_str
 
 
 def test_common_function_expressions():

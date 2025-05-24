@@ -128,6 +128,17 @@ class FunctionsTransformer(Transformer):
     def derivative_func_first(self, expr: Expr, symbols: Iterator[tuple[Expr, Expr]]):
         return self.derivative_symbols_first(symbols, expr)
     
+    def integral_no_bounds(self, expr: Expr | None, symbol: Expr):
+        expr = 1 if expr is None else expr
+        return integrate(expr, symbol)
+    
+    def integral_lower_bound_first(self, lower_bound: Expr, upper_bound: Expr, expr: Expr | None, symbol: Expr):
+        expr = 1 if expr is None else expr
+        return integrate(expr, (symbol, lower_bound, upper_bound))
+    
+    def integral_upper_bound_first(self, upper_bound: Expr, lower_bound: Expr, expr: Expr | None, symbol: Expr):
+        return self.integral_lower_bound_first(lower_bound, upper_bound, expr, symbol)
+    
     @v_args(inline=False)
     def list_of_expressions(self, tokens: Iterator[Expr]):
         return list(filter(lambda x: not isinstance(x, Token) or x.type != 'COMMA', tokens))

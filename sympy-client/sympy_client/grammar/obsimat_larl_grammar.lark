@@ -208,7 +208,9 @@ derivative: _FUNC_DERIVATIVE expression _R_BRACE _L_BRACE diff_symbol_arg_list _
 
 // DIFFERENTIAL_SYMBOl should be outputted by the post lexer.
 // it should probably be restructured a bit before this though.
-integral: _FUNC_INTEGRAL expression _DIFFERENTIAL_SYMBOL symbol
+integral: _FUNC_INTEGRAL [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_no_bounds
+    | _FUNC_INTEGRAL _UNDERSCORE function_special_arg _CARET function_special_arg [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_lower_bound_first
+    | _FUNC_INTEGRAL _CARET function_special_arg _UNDERSCORE function_special_arg [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_upper_bound_first
 
 // ======== Miscellaneous rules ========
 

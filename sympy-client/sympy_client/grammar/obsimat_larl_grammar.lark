@@ -29,12 +29,12 @@ _base_factor: parenthesees_expression
     | symbol
 
 // groups a base factor and an exponent factor to be evaluated in an exponentation.
-exponentiation: _base_factor CARET _function_special_arg
+exponentiation: _base_factor _CARET function_special_arg
 
 // various rules for grouping expressions surrounded by delimiters.
-parenthesees_expression: L_PAREN expression R_PAREN -> delimited_expression
-braces_expression: L_BRACE expression R_BRACE -> delimited_expression
-brackets_expression: L_BRACKET expression R_BRACKET -> delimited_expression
+?parenthesees_expression: _L_PAREN expression _R_PAREN
+?braces_expression: _L_BRACE expression _R_BRACE
+?brackets_expression: _L_BRACKET expression _R_BRACKET
 
 // ======== Symbols ========
 
@@ -44,17 +44,17 @@ single_letter_symbol: SINGLE_LETTER_SYMBOL -> symbol
 
 // a formatted symbol is any symbol surrounded with a latex command which changes it visually.
 // this could for example be \mathit
-formatted_symbol: (CMD_MATH|CMD_BOLD_FORMAT) brace_surrounded_text PRIMES?
+formatted_symbol: (CMD_MATH|CMD_BOLD_FORMAT) brace_surrounded_text [PRIMES]
 _non_indexed_symbol: single_letter_symbol | MULTI_LETTER_SYMBOL | formatted_symbol
 
-indexed_symbol: _non_indexed_symbol UNDERSCORE (single_letter_symbol | _digit | brace_surrounded_text) PRIMES?
+indexed_symbol: _non_indexed_symbol _UNDERSCORE (single_letter_symbol | _digit | brace_surrounded_text) [PRIMES]
 
 // all the rules here should return the NAME (as in a str) of the symbol to be created
 // the symbol rule is responsible for eactually creating the symbol and optionally substituting its value.
 
 // this rule optionally tries to create a unit, instead of a symbol, if bunits are used.
 // otherwise this is the same as the symbol rule.
-unit: L_BRACE _non_indexed_symbol R_BRACE
+unit: _L_BRACE _non_indexed_symbol _R_BRACE
 
 _symbol_like: symbol | unit
 
@@ -73,7 +73,7 @@ _numeric_number: NUMERIC_NUMBER
 
 // ======== Functions ========
 
-undefined_function: UNDEFINED_FUNC_START expression R_PAREN
+undefined_function: UNDEFINED_FUNC_START expression _R_PAREN
 
 _function: _delimited_function
     | _named_function
@@ -93,12 +93,12 @@ _named_function: undefined_function | trig_function | _log | exponential | limit
  // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
 
 // matches a special kind of argument, defined by the fact that fractions and binomials can be passed without surrounding them with braces.
-_function_special_arg: braces_expression | parenthesees_expression | _named_function | _delimited_function | frac | binom | single_letter_symbol | _digit
+?function_special_arg: braces_expression | parenthesees_expression | _named_function | _delimited_function | frac | binom | single_letter_symbol | _digit
 
 
 // named functions
 
-_func_template{func_name}: func_name (CARET _function_special_arg)? _factor_no_unit
+_func_template{func_name}: func_name [_CARET function_special_arg] _factor_no_unit
 
 // trigonometric functions
 
@@ -129,45 +129,52 @@ log_implicit_base: _func_template{FUNC_LOG}
     | _func_template{FUNC_LG}
  
  // TODO: both orderings should be allowed, where caret is also to the left of the log.
-log_explicit_base: FUNC_LOG UNDERSCORE _function_special_arg (CARET _function_special_arg)? _factor_no_unit
-    | FUNC_LOG CARET _function_special_arg UNDERSCORE _function_special_arg _factor_no_unit
+log_explicit_base: FUNC_LOG _UNDERSCORE function_special_arg [_CARET function_special_arg] _factor_no_unit
+    | FUNC_LOG _CARET function_special_arg _UNDERSCORE function_special_arg _factor_no_unit -> log_explicit_base_exponent_first
 
-exponential: _func_template{FUNC_EXP}
+exponential: _func_template{_FUNC_EXP}
 
-factorial: _factor_no_unit BANG
+factorial: _factor_no_unit _BANG
 
-sign: L_BRACE (ADD|SUB) R_BRACE -> delimited_expression
+sign: _L_BRACE (ADD|SUB) _R_BRACE
     | ADD
     | SUB
-limit: FUNC_LIMIT UNDERSCORE L_BRACE symbol LIM_APPROACH_SYMBOL _base_factor (CARET sign)? R_BRACE _factor_no_unit
 
-_series_template{series_name}: series_name CARET _function_special_arg UNDERSCORE L_BRACE symbol EQUAL expression R_BRACE _factor_no_unit
-    | series_name UNDERSCORE L_BRACE symbol EQUAL expression R_BRACE  CARET _function_special_arg _factor_no_unit
+limit: _FUNC_LIMIT _UNDERSCORE _L_BRACE symbol _LIM_APPROACH_SYMBOL _base_factor [_CARET sign] _R_BRACE _factor_no_unit
+
+_SERIES_ASSIGN_OPERATOR: EQUAL
+
+_series_template_start_iter_first{series_name}: series_name _UNDERSCORE _L_BRACE symbol _SERIES_ASSIGN_OPERATOR expression _R_BRACE _CARET function_special_arg _factor_no_unit
+_series_template_end_iter_first{series_name}: series_name _CARET function_special_arg _UNDERSCORE _L_BRACE symbol _SERIES_ASSIGN_OPERATOR expression _R_BRACE _factor_no_unit
 
 _series_function: sum | product
 
-sum: _series_template{FUNC_SUM}
-product: _series_template{FUNC_PRODUCT}
+sum: _series_template_start_iter_first{_FUNC_SUM} -> sum_start_iter_first
+    | _series_template_end_iter_first{_FUNC_SUM} -> sum_end_iter_first
 
+
+product: _series_template_start_iter_first{_FUNC_PRODUCT} -> product_start_iter_first
+    | _series_template_end_iter_first{_FUNC_PRODUCT} -> product_end_iter_first
+    
 // filter functions
 
 _filter_functions: min | max
 
-list_of_expressions: expression (COMMA expression)*
+list_of_expressions: expression (_COMMA expression)*
 
-min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
-max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
+min: _FUNC_MIN _L_PAREN list_of_expressions _R_PAREN
+max: _FUNC_MAX _L_PAREN list_of_expressions _R_PAREN
 
 // delimited functions
 _delimited_function: abs | norm | inner_product | floor | ceil
-_inner_product_separator: L_BAR | COMMA
-inner_product: CMD_LANGLE expression _inner_product_separator expression CMD_RANGLE
-abs: L_BAR expression R_BAR
-norm: L_DOUBLE_BAR expression R_DOUBLE_BAR
-floor: L_FLOOR expression R_FLOOR
-ceil: L_CEIL expression R_CEIL
-sqrt: FUNC_SQRT brackets_expression? (braces_expression|single_letter_symbol|_digit)
-conjugate: FUNC_CONJUGATE (braces_expression|single_letter_symbol|_digit)
+_inner_product_separator: _L_BAR | _COMMA
+inner_product: _CMD_LANGLE expression _inner_product_separator expression _CMD_RANGLE
+abs: _L_BAR expression _R_BAR
+norm: _L_DOUBLE_BAR expression _R_DOUBLE_BAR
+floor: _L_FLOOR expression _R_FLOOR
+ceil: _L_CEIL expression _R_CEIL
+sqrt: _FUNC_SQRT [brackets_expression] (braces_expression|single_letter_symbol|_digit)
+conjugate: _FUNC_CONJUGATE (braces_expression|single_letter_symbol|_digit)
 
 // TODO: wait for matrix implementation.
 // determinant: _func_template{FUNC_DETERMINANT}
@@ -185,22 +192,22 @@ _multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
 // MULTIARG_FUNC_[num_args][terminal_name]
 // num_args: number of arguments this function takes. This must be number of MULTIARG_FUNC_ARG_DELIMITER occurenses + 1
 // terminal_name: this is ignored by the postlexer and can be used to name the terminal appropiately.
-%declare MULTIARG_FUNC_ARG_DELIMITER
+%declare _MULTIARG_FUNC_ARG_DELIMITER
 
 // core functions
-frac: MULTIARG_FUNC_2_FRAC _multiarg_func_arg MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
-binom: MULTIARG_FUNC_2_BINOM _multiarg_func_arg MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
+frac: MULTIARG_FUNC_2_FRAC _multiarg_func_arg _MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
+binom: MULTIARG_FUNC_2_BINOM _multiarg_func_arg _MULTIARG_FUNC_ARG_DELIMITER _multiarg_func_arg
 
-differential: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL expression R_BRACE L_BRACE (DIFFERENTIAL_SYMBOL symbol)+ R_BRACE
-    |   CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE (DIFFERENTIAL_SYMBOL symbol)+ R_BRACE _factor_no_unit
+differential: _CMD_FRAC _L_BRACE _DIFFERENTIAL_SYMBOL expression _R_BRACE _L_BRACE (_DIFFERENTIAL_SYMBOL symbol)+ _R_BRACE
+    |   _CMD_FRAC _L_BRACE _DIFFERENTIAL_SYMBOL _R_BRACE _L_BRACE (_DIFFERENTIAL_SYMBOL symbol)+ _R_BRACE _factor_no_unit
 
 // DIFFERENTIAL_SYMBOl should be outputted by the post lexer.
 // it should probably be restructured a bit before this though.
-integral: FUNC_INTEGRAL expression DIFFERENTIAL_SYMBOL symbol
+integral: _FUNC_INTEGRAL expression _DIFFERENTIAL_SYMBOL symbol
 
 // ======== Miscellaneous rules ========
 
-brace_surrounded_text: L_BRACE /[^{}]+/ (brace_surrounded_text /[^{}]+/?)?  R_BRACE
+!brace_surrounded_text: _L_BRACE /[^{}]+/ (brace_surrounded_text /[^{}]+/?)?  _R_BRACE
 
 // ================ Terminals ================
 
@@ -226,56 +233,56 @@ MUL: "*"
 DIV: "/" | "\\over"
 
 // basic common operators
-CMD_TIMES: "\\times"
-CMD_CDOT:  "\\cdot"
-CMD_DIV:   "\\div"
-CMD_BAR: "\\bar"
-CMD_OVERLINE: "\\overline"
-CMD_LANGLE: "\\langle" | "<"
-CMD_RANGLE: "\\rangle" | ">"
-CMD_INNER_PRODUCT_SEPARATOR: BAR | COMMA
+_CMD_TIMES: "\\times"
+_CMD_CDOT:  "\\cdot"
+_CMD_DIV:   "\\div"
+_CMD_BAR: "\\bar"
+_CMD_OVERLINE: "\\overline"
+_CMD_LANGLE: "\\langle" | "<"
+_CMD_RANGLE: "\\rangle" | ">"
+_CMD_INNER_PRODUCT_SEPARATOR: _BAR | _COMMA
 
 // tokens with distinct left and right symbols
-L_BRACE: "{"
-R_BRACE: "}"
+_L_BRACE: "{"
+_R_BRACE: "}"
 L_BRACE_LITERAL: "\\{"
 R_BRACE_LITERAL: "\\}"
-L_BRACKET: "["
-R_BRACKET: "]"
-L_CEIL: "\\lceil"
-R_CEIL: "\\rceil"
-L_FLOOR: "\\lfloor"
-R_FLOOR: "\\rfloor"
-L_PAREN: "("
-R_PAREN: ")"
-L_BAR: BAR
-%declare R_BAR
-L_DOUBLE_BAR: DOUBLE_BAR
-%declare R_DOUBLE_BAR
+_L_BRACKET: "["
+_R_BRACKET: "]"
+_L_CEIL: "\\lceil"
+_R_CEIL: "\\rceil"
+_L_FLOOR: "\\lfloor"
+_R_FLOOR: "\\rfloor"
+_L_PAREN: "("
+_R_PAREN: ")"
+_L_BAR: _BAR
+%declare _R_BAR
+_L_DOUBLE_BAR: _DOUBLE_BAR
+%declare _R_DOUBLE_BAR
 
 // limit, integral, sum, and product symbols
-FUNC_LIMIT:  "\\lim"
-LIM_APPROACH_SYMBOL: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
-FUNC_INTEGRAL:  "\\int" | "\\intop"
-FUNC_SUM:  "\\sum"
-FUNC_PRODUCT: "\\prod"
+_FUNC_LIMIT:  "\\lim"
+_LIM_APPROACH_SYMBOL: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
+_FUNC_INTEGRAL:  "\\int" | "\\intop"
+_FUNC_SUM:  "\\sum"
+_FUNC_PRODUCT: "\\prod"
 
 // common functions
-FUNC_EXP:  "\\exp"
+_FUNC_EXP:  "\\exp"
 FUNC_LOG:  "\\log"
 FUNC_LN:   "\\ln"
 FUNC_LG:   "\\lg"
-FUNC_MIN: "\\min"
-FUNC_MAX: "\\max"
-FUNC_CONJUGATE: CMD_OVERLINE | CMD_BAR
+_FUNC_MIN: "\\min"
+_FUNC_MAX: "\\max"
+_FUNC_CONJUGATE: _CMD_OVERLINE | _CMD_BAR
 
 // multiarg functions
 
-CMD_FRAC: /\\[dtcs]?frac/ | "\\nicefrac"
-MULTIARG_FUNC_2_FRAC: CMD_FRAC
+_CMD_FRAC: /\\[dtcs]?frac/ | "\\nicefrac"
+MULTIARG_FUNC_2_FRAC: _CMD_FRAC
 MULTIARG_FUNC_2_BINOM: /\\[dt]?binom/
 
-FUNC_OVERLINE: "\\overline"
+_FUNC_OVERLINE: "\\overline"
 
 // trigonometric functions
 FUNC_SIN:  "\\sin"
@@ -301,9 +308,9 @@ FUNC_ARSINH: "\\arsinh"
 FUNC_ARCOSH: "\\arcosh"
 FUNC_ARTANH: "\\artanh"
 
-FUNC_SQRT: "\\sqrt"
+_FUNC_SQRT: "\\sqrt"
 
-UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL L_PAREN | MULTI_LETTER_SYMBOL L_PAREN
+UNDEFINED_FUNC_START: SINGLE_LETTER_SYMBOL _L_PAREN | MULTI_LETTER_SYMBOL _L_PAREN
 
 // mathematical constants
 CONST_PI: "\\pi"
@@ -316,14 +323,14 @@ CMD_BOLD_FORMAT: "\\pmb"
 
 CMD_FORMAT: CMD_MATH | CMD_BOLD_FORMAT
 
-BANG: "!"
-BAR: "|" | "\\mid"
-DOUBLE_BAR: "||" | /\\mid\s*\\mid/ | "\\Vert"
-DOT: "."
-CARET: "^"
-COLON: ":"
-COMMA: ","
-UNDERSCORE: "_"
+_BANG: "!"
+_BAR: "|" | "\\mid"
+_DOUBLE_BAR: "||" | /\\mid\s*\\mid/ | "\\Vert"
+_DOT: "."
+_CARET: "^"
+_COLON: ":"
+_COMMA: ","
+_UNDERSCORE: "_"
 
 // relational symbols
 EQUAL: "="
@@ -333,19 +340,16 @@ LTE: "\\leq" | "\\le" | "\\leqslant"
 GT: ">"
 GTE: "\\geq" | "\\ge" | "\\geqslant"
 
-OPERATOR_DIV: CMD_DIV | DIV
-OPERATOR_MUL: MUL | CMD_TIMES | CMD_CDOT
+OPERATOR_DIV: _CMD_DIV | DIV
+OPERATOR_MUL: MUL | _CMD_TIMES | _CMD_CDOT
 
 %import .greek_symbols.GREEK_SYMBOL
 
-DELTA_DIFFERENTIAL_SYMBOL: "\\delta"
-UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
-DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
+_DELTA_DIFFERENTIAL_SYMBOL: "\\delta"
+_UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
+_DIFFERENTIAL_SYMBOL: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _DELTA_DIFFERENTIAL_SYMBOL
 
 %import common.WS -> _WS
-
-FUNC_DIFFERENTIAL: CMD_FRAC _WS? L_BRACE _WS? DIFFERENTIAL_SYMBOL
-FUNC_DIFFERENTIAL_SEPARATOR: R_BRACE _WS? L_BRACE _WS? DIFFERENTIAL_SYMBOL
 
 // should this just be \w?
 LATIN_SYMBOL: /[a-zA-Z]/
@@ -359,7 +363,7 @@ MULTI_LETTER_SYMBOL: LATIN_SYMBOL_WITH_PRIMTES | GREEK_SYMBOL_WITH_PRIMES | MULT
 
 %import common.DIGIT -> NUMERIC_DIGIT
 
-NUMERIC_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* DOT NUMERIC_DIGIT+
+NUMERIC_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* _DOT NUMERIC_DIGIT+
 
 CMD_PRIME: "\\prime"
 CMD_ASTERISK: "\\ast"
@@ -369,42 +373,40 @@ STARS: "*"+
 PRIMES_VIA_CMD: CMD_PRIME+
 STARS_VIA_CMD: CMD_ASTERISK+
 
-CMD_IMAGINARY_UNIT: "\\imaginaryunit"
-
 CMD_BEGIN: "\\begin"
 CMD_END: "\\end"
 
 // matrices
-IGNORE_L: /[ \t\n\r]*/ L_BRACE* /[ \t\n\r]*/
-IGNORE_R: /[ \t\n\r]*/ R_BRACE* /[ \t\n\r]*/
-ARRAY_MATRIX_BEGIN: L_BRACE "array" R_BRACE L_BRACE /[^}]*/ R_BRACE
-ARRAY_MATRIX_END: L_BRACE "array" R_BRACE
-AMSMATH_MATRIX: L_BRACE "matrix" R_BRACE
-AMSMATH_PMATRIX: L_BRACE "pmatrix" R_BRACE
-AMSMATH_BMATRIX: L_BRACE "bmatrix" R_BRACE
-// Without the (L|R)_PARENs and (L|R)_BRACKETs, a matrix defined using
-// \begin{array}...\end{array} or \begin{matrix}...\end{matrix} must
-// not qualify as a complete matrix expression; this is done so that
-// if we have \begin{array}...\end{array} or \begin{matrix}...\end{matrix}
-// between BAR pairs, then they should be interpreted as determinants as
-// opposed to sympy.Abs (absolute value) applied to a matrix.
-CMD_BEGIN_AMSPMATRIX_AMSBMATRIX: CMD_BEGIN (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
-CMD_BEGIN_ARRAY_AMSMATRIX: (L_PAREN | L_BRACKET) IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
-CMD_MATRIX_BEGIN: CMD_BEGIN_AMSPMATRIX_AMSBMATRIX | CMD_BEGIN_ARRAY_AMSMATRIX
-CMD_END_AMSPMATRIX_AMSBMATRIX: CMD_END (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
-CMD_END_ARRAY_AMSMATRIX: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? (R_PAREN | R_BRACKET)
-CMD_MATRIX_END: CMD_END_AMSPMATRIX_AMSBMATRIX | CMD_END_ARRAY_AMSMATRIX
-MATRIX_COL_DELIM: "&"
-MATRIX_ROW_DELIM: "\\\\"
-FUNC_MATRIX_TRACE: "\\trace"
-FUNC_MATRIX_ADJUGATE: "\\adjugate"
+// IGNORE_L: /[ \t\n\r]*/ L_BRACE* /[ \t\n\r]*/
+// IGNORE_R: /[ \t\n\r]*/ R_BRACE* /[ \t\n\r]*/
+// ARRAY_MATRIX_BEGIN: L_BRACE "array" R_BRACE L_BRACE /[^}]*/ R_BRACE
+// ARRAY_MATRIX_END: L_BRACE "array" R_BRACE
+// AMSMATH_MATRIX: L_BRACE "matrix" R_BRACE
+// AMSMATH_PMATRIX: L_BRACE "pmatrix" R_BRACE
+// AMSMATH_BMATRIX: L_BRACE "bmatrix" R_BRACE
+// // Without the (L|R)_PARENs and (L|R)_BRACKETs, a matrix defined using
+// // \begin{array}...\end{array} or \begin{matrix}...\end{matrix} must
+// // not qualify as a complete matrix expression; this is done so that
+// // if we have \begin{array}...\end{array} or \begin{matrix}...\end{matrix}
+// // between BAR pairs, then they should be interpreted as determinants as
+// // opposed to sympy.Abs (absolute value) applied to a matrix.
+// CMD_BEGIN_AMSPMATRIX_AMSBMATRIX: CMD_BEGIN (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
+// CMD_BEGIN_ARRAY_AMSMATRIX: (L_PAREN | L_BRACKET) IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
+// CMD_MATRIX_BEGIN: CMD_BEGIN_AMSPMATRIX_AMSBMATRIX | CMD_BEGIN_ARRAY_AMSMATRIX
+// CMD_END_AMSPMATRIX_AMSBMATRIX: CMD_END (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
+// CMD_END_ARRAY_AMSMATRIX: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? (R_PAREN | R_BRACKET)
+// CMD_MATRIX_END: CMD_END_AMSPMATRIX_AMSBMATRIX | CMD_END_ARRAY_AMSMATRIX
+// MATRIX_COL_DELIM: "&"
+// MATRIX_ROW_DELIM: "\\\\"
+// FUNC_MATRIX_TRACE: "\\trace"
+// FUNC_MATRIX_ADJUGATE: "\\adjugate"
 
-// determinants
-AMSMATH_VMATRIX: L_BRACE "vmatrix" R_BRACE
-CMD_DETERMINANT_BEGIN_SIMPLE: CMD_BEGIN AMSMATH_VMATRIX
-CMD_DETERMINANT_BEGIN_VARIANT: BAR IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
-CMD_DETERMINANT_BEGIN: CMD_DETERMINANT_BEGIN_SIMPLE | CMD_DETERMINANT_BEGIN_VARIANT
-CMD_DETERMINANT_END_SIMPLE: CMD_END AMSMATH_VMATRIX
-CMD_DETERMINANT_END_VARIANT: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? BAR
-CMD_DETERMINANT_END: CMD_DETERMINANT_END_SIMPLE | CMD_DETERMINANT_END_VARIANT
-FUNC_DETERMINANT: "\\det"
+// // determinants
+// AMSMATH_VMATRIX: L_BRACE "vmatrix" R_BRACE
+// CMD_DETERMINANT_BEGIN_SIMPLE: CMD_BEGIN AMSMATH_VMATRIX
+// CMD_DETERMINANT_BEGIN_VARIANT: BAR IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
+// CMD_DETERMINANT_BEGIN: CMD_DETERMINANT_BEGIN_SIMPLE | CMD_DETERMINANT_BEGIN_VARIANT
+// CMD_DETERMINANT_END_SIMPLE: CMD_END AMSMATH_VMATRIX
+// CMD_DETERMINANT_END_VARIANT: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? BAR
+// CMD_DETERMINANT_END: CMD_DETERMINANT_END_SIMPLE | CMD_DETERMINANT_END_VARIANT
+// FUNC_DETERMINANT: "\\det"

@@ -1,3 +1,4 @@
+from typing import Iterator
 from sympy_client.grammar.CachedSymbolSubstitutor import CachedSymbolSubstitutor
 from sympy_client.grammar.FunctionStore import FunctionStore
 
@@ -9,7 +10,7 @@ from sympy.core.relational import Relational
 from sympy.logic.boolalg import *
 from sympy import *
 from sympy.core.numbers import Integer, Float
-from lark import Token, Discard
+from lark import Token, Discard, v_args
 
 class ChainedRelation(And):
     
@@ -78,65 +79,60 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         
         return result
     
-    def implicit_multiplication(self, tokens):
+    def implicit_multiplication(self, factors: Iterator[Expr]):
         result = S.One
         
-        for token in tokens:
+        for token in factors:
             result *= token
         
         return result
     
-    def exponentiation(self, tokens):
-        base = tokens[0]
-        exponent = tokens[2]
-        
+    @v_args(inline=True)
+    def exponentiation(self, base: Expr, exponent: Expr):        
         return base ** exponent
     
-    def delimited_expression(self, tokens):
-        return tokens[1]
+    @v_args(inline=True)
+    def symbol(self, *symbol_strings: str):
+        return Symbol(''.join(map(str,symbol_strings)))
     
-    def symbol(self, tokens):
-        return Symbol(''.join(map(str,tokens)))
-    
-    def indexed_symbol(self, tokens):
-        assert len(tokens) == 3 or len(tokens) == 4
-        
-        indexed_text = str(tokens[2])
+    @v_args(inline=True)
+    def indexed_symbol(self, symbol: Expr, index: Expr | str, primes: str | None):
+        primes = '' if primes is None else primes
+        indexed_text = str(index)
         
         if not indexed_text.startswith('{') or not indexed_text.endswith('}'):
             indexed_text = f"{{{indexed_text}}}"
         
-        if len(tokens) == 3:
-            return f"{tokens[0]}_{indexed_text}"
-        if len(tokens) == 4:
-            return f"{tokens[0]}_{indexed_text}{tokens[3]}"
+        return f"{symbol}_{indexed_text}{primes}"
     
-    def formatted_symbol(self, tokens):
-        assert len(tokens) == 2 or len(tokens) == 3
+    @v_args(inline=True)
+    def formatted_symbol(self, formatter: Token, text: str, primes: str | None):
+        formatter_text = str(formatter)
+        primes = '' if primes is None else primes
         
-        if len(tokens) == 2:
-            return f"{tokens[0]}{tokens[1]}"
-        elif len(tokens) == 3:
-            return f"{tokens[0]}{tokens[1]}{tokens[2]}"
+        return f"{formatter_text}{text}{primes}"
             
     
     def brace_surrounded_text(self, tokens):        
         return ''.join(map(str, tokens))
     
     # TODO: how does sympy do it?
-    def NUMERIC_DIGIT(self, tokens):
-        return Integer(tokens[0])
+    @v_args(inline=True)
+    def NUMERIC_DIGIT(self, digit: Token):
+        return Integer(str(digit))
     
-    def NUMERIC_NUMBER(self, tokens):
+    @v_args(inline=True)
+    def NUMERIC_NUMBER(self, number: Token):
         
-        number_str = str(tokens)
+        number_str = str(number)
         
         if '.' in number_str:
             return Float(number_str)
         return Integer(number_str)
-        
-    def unit(self, tokens):
-        return self.symbol(tokens[1])
+    
+    @v_args(inline=True)
+    def unit(self, unit_symbol: Token):
+        return self.symbol(unit_symbol)
     
     SIGN_DICT = {
         'ADD': S.One,

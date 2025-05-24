@@ -18,10 +18,10 @@ import re
 class MultiargFuncDelimiter(PostLex):
     FUNC_PREFIX = 'MULTIARG_FUNC_'
     
-    L_ARG_BRACES = 'L_BRACE'
-    R_ARG_BRACES = 'R_BRACE'
+    L_ARG_BRACES = '_L_BRACE'
+    R_ARG_BRACES = '_R_BRACE'
     
-    ARG_DELIMITER = 'MULTIARG_FUNC_ARG_DELIMITER'
+    ARG_DELIMITER = '_MULTIARG_FUNC_ARG_DELIMITER'
     
     SAME_LR_DELIMS = { 'BAR', 'DOUBLE_BAR' }
     LR_DELIMS_IGNORE = {
@@ -29,7 +29,7 @@ class MultiargFuncDelimiter(PostLex):
     }
     
     def process(self, stream: Iterator[Token]) -> Iterator[Token]:
-        yield from self._handle_delim(stream)
+        yield from self._handle_delim(self._handle_multiarg(stream))
 
     # TODO: make this recursive, it should consider ALL LR delims, and if it encounters
     def _handle_delim(self, stream: Iterator[Token], curr_delim: str = None) -> Iterator[Token]:
@@ -38,8 +38,8 @@ class MultiargFuncDelimiter(PostLex):
             token_type = token.type
             
             # need to check if this is a same delim, or just a standard delim.
-            if token_type.startswith('L_'):
-                delim_type = token_type[2:]
+            if token_type.startswith('_L_'):
+                delim_type = token_type[3:]
                 
                 
                 if delim_type in self.SAME_LR_DELIMS:
@@ -52,19 +52,19 @@ class MultiargFuncDelimiter(PostLex):
                     yield from self._handle_delim(stream, delim_type)
                 
             # ok we have hit the end of this scope, go up one level.
-            elif token_type.startswith('R_') and token_type[2:] == curr_delim:
+            elif token_type.startswith('_R_') and token_type[3:] == curr_delim:
                 break
                 
     def _handle_same_delim(self, stream: Iterator[Token], curr_delim: str) -> Iterator[Token]:
         for token in stream:
             token_type: str = token.type
             
-            if token_type.startswith('L_'):
-                delim_type = token_type[2:]
+            if token_type.startswith('_L_'):
+                delim_type = token_type[3:]
                 if delim_type in self.SAME_LR_DELIMS:
                     # check if it is already in the stack, if so convert it to an R_ version.
                     if curr_delim == delim_type:
-                        yield Token(f"R_{delim_type}", token.value)
+                        yield Token(f"_R_{delim_type}", token.value)
                         break
                     else:
                         yield token
@@ -73,7 +73,7 @@ class MultiargFuncDelimiter(PostLex):
                     yield token
                     yield from self._handle_delim(stream, delim_type)
             elif token_type == curr_delim:
-                yield Token(f"R_{curr_delim}", token.value)
+                yield Token(f"_R_{curr_delim}", token.value)
                 break
             else:
                 yield token
@@ -148,8 +148,7 @@ class ObsimatLatexParser(SympyParser):
             debug=True,
             cache=True,
             propagate_positions=True,
-            maybe_placeholders=False,
-            keep_all_tokens=True,
+            maybe_placeholders=True,
             postlex=MultiargFuncDelimiter()
         )
 

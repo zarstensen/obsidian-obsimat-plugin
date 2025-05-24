@@ -1,25 +1,19 @@
-from lark import Token, Transformer, Discard
+from typing import Iterator
+from lark import Token, Transformer, Discard, v_args
 from sympy import *
 import sympy
 import sympy.parsing.latex.lark.transformer
 
+@v_args(inline=True)
 class FunctionsTransformer(Transformer):
     
-    def MULTIARG_FUNC_ARG_DELIMITER(self,_):
+    def _MULTIARG_FUNC_ARG_DELIMITER(self,_):
         return Discard
     
-    def trig_function(self, tokens):
-        exponent = 1
-        arg = None
-        
-        if len(tokens) == 4:
-            assert tokens[1].type == 'CARET'
-            exponent = tokens[2]
-            arg = tokens[3]
-        else:
-            arg = tokens[1]
-        
-        func_name = str(tokens[0])
+    def trig_function(self, func_token: Token, exponent: Expr | None, arg: Expr):
+        exponent = 1 if exponent is None else exponent
+        # TODO: should this use the type instead of the value?
+        func_name = func_token.value
         
         is_hyperbolic = func_name.endswith('h')
         is_inverse = func_name.startswith('\\a')
@@ -41,144 +35,88 @@ class FunctionsTransformer(Transformer):
         
         return trig_func(arg)**exponent
         
-    def frac(self, tokens):
-        return tokens[1] * tokens[2]**-1
+    def frac(self, _, numerator: Expr, denominator: Expr):
+        return numerator * denominator**-1
     
-    def binom(self, tokens):
-        return binomial(tokens[1], tokens[2])
+    def binom(self, _, n: Expr, k: Expr):
+        return binomial(n, k)
     
-    def sqrt(self, tokens):
-        assert len(tokens) == 2 or len(tokens) == 3
-        
-        if len(tokens) == 2:
-            return sqrt(tokens[1])
-        elif len(tokens) == 3:
-            return root(tokens[2], tokens[1])
-        
-    def conjugate(self, tokens):
-        return conjugate(tokens[1])
-
-    def log_implicit_base(self, tokens):
-        exponent = 1
-        arg = None
-        
-        if len(tokens) == 4:
-            exponent = tokens[2]
-            arg = tokens[3]
+    def sqrt(self, degree: Expr | None, arg: Expr):
+        if degree is None:
+            return sqrt(arg)
         else:
-            arg = tokens[1]
-            
-        log_type = tokens[0].type
+            return root(arg, degree)
+        
+    def conjugate(self, arg: Expr):
+        return conjugate(arg)
+
+    def log_implicit_base(self, func_token: Token, exponent: Expr | None, arg: Expr):
+        exponent = 1 if exponent is None else exponent
+        
+        log_type = func_token.type
             
         if log_type == 'FUNC_LOG' or log_type == 'FUNC_LN':
             return log(arg)**exponent
-        elif tokens[0].type == 'FUNC_LG':
+        elif log_type == 'FUNC_LG':
             return log(arg, 10)**exponent
 
-    def log_explicit_base(self, tokens):
-        exponent = 1
-        
-        if len(tokens) == 6:
-            # we have an exponent, time to figure out where it is
-            if tokens[1].type == 'CARET':
-                exponent = tokens[2]
-                base = tokens[4]
-            elif tokens[1].type == 'UNDERSCORE':
-                exponent = tokens[4]
-                base = tokens[2]
-                
-            arg = tokens[5]
-        else:
-            arg = tokens[3]
-            base = tokens[2]
+    def log_explicit_base(self, _func_token: Token, base: Expr, exponent: Expr | None, arg: Expr):
+        exponent = 1 if exponent is None else exponent
             
         return log(arg, base)**exponent
     
-    def exponential(self, tokens):
-        exponent = 1
-        arg = None
-        
-        if len(tokens) == 4:
-            exponent = tokens[2]
-            arg = tokens[3]
-        else:
-            arg = tokens[1]
+    def log_explicit_base_exponent_first(self, func_token: Token, exponent: Expr | None, base: Expr, arg: Expr):
+        return self.log_explicit_base(func_token, base, exponent, arg)
+    
+    def exponential(self, exponent: Expr | None, arg: Expr):
+        exponent = 1 if exponent is None else exponent
         
         return exp(arg)**exponent
 
-    def factorial(self, tokens):
-        return factorial(tokens[0])
+    def factorial(self, arg: Expr):
+        return factorial(arg)
 
-    def limit(self, tokens):
-        symbol = tokens[3]
-        approach_value = tokens[5]
+    def limit(self, symbol: Expr, approach_value: Expr, direction: str | None, arg: Expr):
+        direction = '+-' if direction is None else direction
         
-        direction = '+-'
-        expression = None
-        
-        if len(tokens) == 10:
-            direction = tokens[7].value
-            expression = tokens[9]
-        else:
-            expression = tokens[7]
-            
-        return limit(expression, symbol, approach_value, direction)
+        return limit(arg, symbol, approach_value, direction)
     
-    def sum(self, tokens):
-        expression = tokens[9]
-        
-        if tokens[1].type == 'CARET':
-            end_iter = tokens[2]
-            start_iter = tokens[7]
-            iter_symbol = tokens[5]
-        elif tokens[1].type == 'UNDERSCORE':
-            end_iter = tokens[8]
-            start_iter = tokens[5]
-            iter_symbol = tokens[3]
-        else:
-            raise RuntimeError(f"Unexpected token {tokens[1]}")
-        
+
+    def sum_start_iter_first(self, iter_symbol: Expr, start_iter: Expr, end_iter: Expr, expression: Expr):
         return Sum(expression, (iter_symbol, start_iter, end_iter))
     
-    def product(self, tokens):
-        
-        expression = tokens[9]
-        
-        if tokens[1].type == 'CARET':
-            end_iter = tokens[2]
-            start_iter = tokens[7]
-            iter_symbol = tokens[5]
-        elif tokens[1].type == 'UNDERSCORE':
-            end_iter = tokens[8]
-            start_iter = tokens[5]
-            iter_symbol = tokens[3]
-        else:
-            raise RuntimeError(f"Unexpected token {tokens[1]}")
-        
+    def sum_end_iter_first(self, end_iter: Expr, iter_symbol: Expr, start_iter: Expr, expression: Expr):
+        return self.sum_start_iter_first(iter_symbol, start_iter, end_iter, expression)
+    
+    def product_start_iter_first(self, iter_symbol: Expr, start_iter: Expr, end_iter: Expr, expression: Expr):
         return Product(expression, (iter_symbol, start_iter, end_iter))
     
-    def sign(self, tokens):
-        return tokens[0]
+    def product_end_iter_first(self, end_iter: Expr, iter_symbol: Expr, start_iter: Expr, expression: Expr):
+        return self.product_start_iter_first(iter_symbol, start_iter, end_iter, expression)
+    
+    def sign(self, sign_token: Token):
+        return sign_token.value
 
-    def abs(self, tokens):
-        return Abs(tokens[1])
+    def abs(self, arg: Expr):
+        return Abs(arg)
     
-    def norm(self, tokens):
+    def norm(self, arg: Expr):
         # only if scalar maybe?
-        return Abs(tokens[1])
+        return Abs(arg)
     
-    def floor(self, tokens):
-        return floor(tokens[1])
+    def floor(self, arg: Expr):
+        return floor(arg)
     
-    def ceil(self, tokens):
-        return ceiling(tokens[1])
+    def ceil(self, arg: Expr):
+        return ceiling(arg)
     
-    def max(self, tokens):
-        return Max(*tokens[2])
+    def max(self, args: Iterator[Expr]):
+        return Max(*args)
     
-    def min(self, tokens):
-        return Min(*tokens[2])
+    def min(self, args: Iterator[Expr]):
+        return Min(*args)
     
-    def list_of_expressions(self, tokens):
+    @v_args(inline=False)
+    def list_of_expressions(self, tokens: Iterator[Expr]):
         return list(filter(lambda x: not isinstance(x, Token) or x.type != 'COMMA', tokens))
         

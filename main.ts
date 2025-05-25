@@ -10,6 +10,7 @@ import { SympyConvertCommand } from 'src/commands/SympyConvertCommand';
 import { UnitConvertCommand } from 'src/commands/UnitConvertCommand';
 import { AssetDownloader } from 'src/AssetDownloader';
 import path from 'path';
+import sympy_client from './SympyClient.exe'
 
 interface ObsimatPluginSettings {
     dev_mode: boolean;
@@ -23,6 +24,7 @@ export default class ObsiMatPlugin extends Plugin {
     settings: ObsimatPluginSettings;
 
     async onload() {
+        console.log(sympy_client);
         await this.loadSettings();
         this.addSettingTab(new ObsimatSettingsTab(this.app, this));
 

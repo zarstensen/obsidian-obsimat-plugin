@@ -101,11 +101,48 @@ class FunctionsTransformer(Transformer):
         return sign_token.value
 
     def abs(self, arg: Expr):
+        
+        # if arg is a matrix, this notation actually means taking its determinant.
+        if isinstance(arg, MatrixBase):
+            return arg.det()
+        
         return Abs(arg)
     
     def norm(self, arg: Expr):
-        # only if scalar maybe?
-        return Abs(arg)
+        return self._ensure_matrix(arg).norm()
+    
+    def inner_product(self, lhs: Expr, rhs: Expr):
+        return self._ensure_matrix(lhs).dot(self._ensure_matrix(rhs), conjugate_convention='right')
+    
+    def determinant(self, exponent: Expr, mat: Expr):
+        exponent = 1 if exponent is None else exponent
+        return self._ensure_matrix(mat).det() ** exponent
+    
+    def trace(self, exponent: Expr, mat: Expr):
+        exponent = 1 if exponent is None else exponent
+        return self._ensure_matrix(mat).trace() ** exponent
+    
+    def adjugate(self, exponent: Expr, mat: Expr):
+        exponent = 1 if exponent is None else exponent
+        return self._ensure_matrix(mat).adjugate() ** exponent
+    
+    def rref(self, exponent: Expr, mat: Expr):
+        exponent = 1 if exponent is None else exponent
+        return self._ensure_matrix(mat).rref()[0] ** exponent
+    
+    def exp_transpose(self, mat: Expr, exponent: Token):
+        exponents_str = exponent.value
+        exponents_str = exponents_str.replace('{', '').replace('}', '').replace('\\ast', 'H').replace('*', 'H').replace('\\prime', 'T').replace("'", 'T').replace(' ', '')
+        
+        for e in exponents_str:
+            if e == 'T':
+                mat = mat.transpose()
+            elif e == 'H':
+                mat = mat.adjoint()
+            else:
+                raise RuntimeError(f"Unexpected exponent: {e}")
+        
+        return mat
     
     def floor(self, arg: Expr):
         return floor(arg)
@@ -145,4 +182,9 @@ class FunctionsTransformer(Transformer):
     @v_args(inline=False)
     def list_of_expressions(self, tokens: Iterator[Expr]):
         return list(filter(lambda x: not isinstance(x, Token) or x.type != 'COMMA', tokens))
+
+    def _ensure_matrix(self, obj: Basic) -> MatrixBase:
+        if not isinstance(obj, MatrixBase):
+            return Matrix([obj])
+        return obj
         

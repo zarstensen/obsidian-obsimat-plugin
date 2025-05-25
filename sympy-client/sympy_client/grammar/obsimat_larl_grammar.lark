@@ -21,15 +21,20 @@ _factor: _factor_no_unit
  _factor_no_unit: exponentiation
     | _base_factor
 
-// _base_factor groups all factors which can be the base value of an exponentiation.
 _base_factor: parenthesees_expression
     | braces_expression
     | _function
     | _number
     | symbol
+    | _matrix_notation
+
+// _base_factor groups all factors which can be the base value of an exponentiation.
+// _base_factor_no_matrix: 
 
 // groups a base factor and an exponent factor to be evaluated in an exponentation.
 exponentiation: _base_factor _CARET function_special_arg
+    | _base_factor _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
+    | _base_factor PRIMES -> exp_transpose
 
 // various rules for grouping expressions surrounded by delimiters.
 ?parenthesees_expression: _L_PAREN expression _R_PAREN
@@ -86,7 +91,7 @@ _function: _delimited_function
     | factorial
     | derivative
 
-_named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions
+_named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions | _matrix_functions
 
 // this rule matches a singular argument to a function.
 // if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
@@ -136,6 +141,8 @@ exponential: _func_template{_FUNC_EXP}
 
 factorial: _factor_no_unit _BANG
 
+derivative_prime: _factor_no_unit PRIMES
+
 sign: _L_BRACE (ADD|SUB) _R_BRACE
     | ADD
     | SUB
@@ -167,19 +174,15 @@ max: _FUNC_MAX _L_PAREN list_of_expressions _R_PAREN
 
 // delimited functions
 _delimited_function: abs | norm | inner_product | floor | ceil
-_inner_product_separator: _L_BAR | _COMMA
-inner_product: _CMD_LANGLE expression _inner_product_separator expression _CMD_RANGLE
+
+%declare _INNER_PRODUCT_SEPARATOR
+inner_product: _L_ANGLE expression _INNER_PRODUCT_SEPARATOR expression _R_ANGLE
 abs: _L_BAR expression _R_BAR
 norm: _L_DOUBLE_BAR expression _R_DOUBLE_BAR
 floor: _L_FLOOR expression _R_FLOOR
 ceil: _L_CEIL expression _R_CEIL
 sqrt: _FUNC_SQRT [brackets_expression] (braces_expression|single_letter_symbol|_digit)
 conjugate: _FUNC_CONJUGATE (braces_expression|single_letter_symbol|_digit)
-
-// TODO: wait for matrix implementation.
-// determinant: _func_template{FUNC_DETERMINANT}
-// trace: _func_template{FUNC_MATRIX_TRACE}
-// adjungate: _func_template{FUNC_MATRIX_ADJUGATE}
 
 // match a single argument in a list of arguments latex style (that is \command{arg1}{arg2}...{argN})
 _multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
@@ -206,11 +209,34 @@ diff_symbol_arg_list: (_DIFFERENTIAL_SYMBOL diff_symbol_exponent)+
 derivative: _FUNC_DERIVATIVE expression _R_BRACE _L_BRACE diff_symbol_arg_list _R_BRACE -> derivative_func_first
     |   _FUNC_DERIVATIVE _R_BRACE _L_BRACE diff_symbol_arg_list _R_BRACE _factor_no_unit -> derivative_symbols_first
 
-// DIFFERENTIAL_SYMBOl should be outputted by the post lexer.
-// it should probably be restructured a bit before this though.
 integral: _FUNC_INTEGRAL [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_no_bounds
     | _FUNC_INTEGRAL _UNDERSCORE function_special_arg _CARET function_special_arg [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_lower_bound_first
     | _FUNC_INTEGRAL _CARET function_special_arg _UNDERSCORE function_special_arg [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_upper_bound_first
+
+// ======== Matrices ========
+
+// det_matrix is differentiated from the other matrices, as this one evaluates to the determinant value, which is a scalar and not a matrix.
+// TODO: different name for these?
+_matrix_notation: _matrix_type | det_matrix
+_matrix_type: matrix | array_matrix
+
+matrix_body: expression ((_MATRIX_COL_DELIM|MATRIX_ROW_DELIM) expression)*
+matrix: CMD_BEGIN_MATRIX matrix_body CMD_END_MATRIX _MATRIX_ENV_END
+array_matrix: CMD_BEGIN_ARRAY ARRAY_ENV_OPTIONS matrix_body CMD_END_ARRAY _MATRIX_ENV_END
+det_matrix: CMD_BEGIN_VMATRIX matrix_body CMD_END_VMATRIX _MATRIX_ENV_END
+
+// ======== Matrices functions ========
+
+_matrix_functions: determinant | trace | adjugate | rref | gradient | hessian | jacobian | rref
+
+determinant: _func_template{_FUNC_MATRIX_DETERMINANT}
+trace: _func_template{_FUNC_MATRIX_TRACE}
+adjugate: _func_template{_FUNC_MATRIX_ADJUGATE}
+rref: _func_template{_FUNC_MATRIX_RREF}
+
+gradient: _func_template{_FUNC_GRADIENT}
+hessian: _func_template{_FUNC_HESSIAN}
+jacobian: _func_template{_FUNC_JACOBIAN}
 
 // ======== Miscellaneous rules ========
 
@@ -245,11 +271,11 @@ _CMD_CDOT:  "\\cdot"
 _CMD_DIV:   "\\div"
 _CMD_BAR: "\\bar"
 _CMD_OVERLINE: "\\overline"
-_CMD_LANGLE: "\\langle" | "<"
-_CMD_RANGLE: "\\rangle" | ">"
 _CMD_INNER_PRODUCT_SEPARATOR: _BAR | _COMMA
 
 // tokens with distinct left and right symbols
+_L_ANGLE: "\\langle" | "<"
+_R_ANGLE: "\\rangle" | ">"
 _L_BRACE: "{"
 _R_BRACE: "}"
 L_BRACE_LITERAL: "\\{"
@@ -266,6 +292,9 @@ _L_BAR: _BAR
 %declare _R_BAR
 _L_DOUBLE_BAR: _DOUBLE_BAR
 %declare _R_DOUBLE_BAR
+
+_L_DELIMITER: _L_ANGLE | L_BRACE_LITERAL | _L_BRACKET | _L_CEIL | _L_FLOOR | _L_PAREN
+_R_DELIMITER: _R_ANGLE | R_BRACE_LITERAL | _R_BRACKET | _R_CEIL | _R_FLOOR | _R_PAREN
 
 // limit, integral, sum, and product symbols
 _FUNC_LIMIT:  "\\lim"
@@ -318,6 +347,19 @@ FUNC_ARTANH: "\\artanh"
 
 _FUNC_SQRT: "\\sqrt"
 
+// matrix functions
+
+_FUNC_MATRIX_DETERMINANT: "\\det"
+_FUNC_MATRIX_TRACE: CMD_OPERATOR _WS? _L_BRACE _WS? "\\trace" _WS? _R_BRACE
+_FUNC_MATRIX_ADJUGATE: CMD_OPERATOR _WS? _L_BRACE _WS? "\\adjugate" _WS? _R_BRACE
+_FUNC_MATRIX_RREF: CMD_OPERATOR _WS? _L_BRACE _WS? "\\rref" _WS? _R_BRACE
+
+// linear alg functions.
+
+_FUNC_GRADIENT: "\\nabla"
+_FUNC_HESSIAN: CMD_MATRIX_FORMAT _WS? _L_BRACE _WS? "H" _WS? _R_BRACE
+_FUNC_JACOBIAN: CMD_MATRIX_FORMAT _WS? _L_BRACE _WS? "J" _WS? _R_BRACE
+
 // TODO: use a bit more elaborate regex here, so more complex strings are allowed in the index.
 UNDEFINED_FUNC_START: (SINGLE_LETTER_SYMBOL|MULTI_LETTER_SYMBOL) (_WS? _UNDERSCORE _WS? _L_BRACE /\s*[^{}]+\s*/ _R_BRACE)? _L_PAREN
 
@@ -331,6 +373,10 @@ CMD_MATH: /\\math\w+/
 CMD_BOLD_FORMAT: "\\pmb"
 
 CMD_FORMAT: CMD_MATH | CMD_BOLD_FORMAT
+
+// mathrm is also included here so operatorname does not have to be used everywhere.
+CMD_OPERATOR: "\\operatorname" | "\\mathrm"
+CMD_MATRIX_FORMAT: "\\mathbf"
 
 _BANG: "!"
 _BAR: "|" | "\\mid"
@@ -356,6 +402,7 @@ OPERATOR_MUL: MUL | _CMD_TIMES | _CMD_CDOT
 
 _DELTA_DIFFERENTIAL_SYMBOL: "\\delta"
 _UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
+// TODO: this priority should ideally not be here.
 _DIFFERENTIAL_SYMBOL.2: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _DELTA_DIFFERENTIAL_SYMBOL
 
 %import common.WS -> _WS
@@ -382,10 +429,37 @@ STARS: "*"+
 PRIMES_VIA_CMD: CMD_PRIME+
 STARS_VIA_CMD: CMD_ASTERISK+
 
-CMD_BEGIN: "\\begin"
-CMD_END: "\\end"
+TRANSPOSE_EXPONENT: CMD_PRIME | "'"
+ADJOINT_EXPONENT: CMD_ASTERISK | "*"
+
+ADJOINT_TRANSPOSE_EXPONENT: /(\\prime|\\ast|'|\*)/
+ADJOINT_TRANSPOSE_EXPONENTS: /{(\\prime|\\ast|'|\*|\s)+}/
+
+CMD_BEGIN: "\\begin" _WS? _L_BRACE
+// TODO: this is not going to be used?
+CMD_END: "\\end" _WS? _L_BRACE
 
 // matrices
+
+ARRAY_ENV: "array"
+MATRIX_ENV: /([bp]?(?:small)?)matrix/
+VMATRIX_ENV: /v(small)?matrix/
+
+%declare _MATRIX_ENV_END
+
+CMD_BEGIN_MATRIX: CMD_BEGIN _WS? MATRIX_ENV _WS? _R_BRACE
+CMD_END_MATRIX: CMD_END _WS? MATRIX_ENV _WS? _R_BRACE
+
+CMD_BEGIN_VMATRIX: CMD_BEGIN _WS? VMATRIX_ENV _WS? _R_BRACE
+CMD_END_VMATRIX: CMD_END _WS? VMATRIX_ENV _WS? _R_BRACE
+
+CMD_BEGIN_ARRAY: ("\\left" _WS? _L_DELIMITER)? _WS? CMD_BEGIN _WS? ARRAY_ENV _WS? _R_BRACE
+ARRAY_ENV_OPTIONS: _L_BRACE (/[clr|\s]+/)? _R_BRACE
+CMD_END_ARRAY: CMD_END _WS? ARRAY_ENV _WS? _R_BRACE _WS? ("\\right" _WS? _R_DELIMITER)?
+
+_MATRIX_COL_DELIM: "&"
+MATRIX_ROW_DELIM: "\\\\"
+
 // IGNORE_L: /[ \t\n\r]*/ L_BRACE* /[ \t\n\r]*/
 // IGNORE_R: /[ \t\n\r]*/ R_BRACE* /[ \t\n\r]*/
 // ARRAY_MATRIX_BEGIN: L_BRACE "array" R_BRACE L_BRACE /[^}]*/ R_BRACE
@@ -405,8 +479,6 @@ CMD_END: "\\end"
 // CMD_END_AMSPMATRIX_AMSBMATRIX: CMD_END (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
 // CMD_END_ARRAY_AMSMATRIX: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? (R_PAREN | R_BRACKET)
 // CMD_MATRIX_END: CMD_END_AMSPMATRIX_AMSBMATRIX | CMD_END_ARRAY_AMSMATRIX
-// MATRIX_COL_DELIM: "&"
-// MATRIX_ROW_DELIM: "\\\\"
 // FUNC_MATRIX_TRACE: "\\trace"
 // FUNC_MATRIX_ADJUGATE: "\\adjugate"
 

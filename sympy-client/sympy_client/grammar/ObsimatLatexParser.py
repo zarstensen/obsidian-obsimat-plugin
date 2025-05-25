@@ -22,13 +22,13 @@ class LexerScope:
         self.scope_pairs = scope_pairs
         self.replace_tokens = replace_tokens
     
-    def token_handler(self, token_stream: Iterator[Token]) -> Iterator[Token]:
+    def token_handler(self, token_stream: Iterator[Token], _scope_start_token: Token) -> Iterator[Token]:
         for t in token_stream:
             # try to replace the token
             if t.type in self.replace_tokens:
                 if isinstance(self.replace_tokens[t.type], str):
                     yield Token(self.replace_tokens[t.type], t.value)
-                    break
+                    continue
                 
                 for replace_token in self.replace_tokens[t.type]:
                     if re.fullmatch(replace_token.pattern.to_regexp(), t.value):
@@ -41,16 +41,27 @@ class LexerScope:
                 yield t
 
 class MultiArgScope(LexerScope):
-    def __init__(self, arg_count: int, scope_pairs = [], replace_tokens = {}):
-        super().__init__(scope_pairs, replace_tokens)
+    def __init__(self, arg_count: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.arg_count = arg_count
     
-    def token_handler(self, token_stream: Iterator[Token]) -> Iterator[Token]:
+    def token_handler(self, token_stream: Iterator[Token], scope_start_token: Token) -> Iterator[Token]:
         for _ in range(1, self.arg_count):
-            yield next(super().token_handler(token_stream))
+            yield next(super().token_handler(token_stream, scope_start_token))
             yield Token("_MULTIARG_DELIMITER", "")
-        yield next(super().token_handler(token_stream))
+        yield next(super().token_handler(token_stream, scope_start_token))
         yield Token("_MULTIARG_EOS", "")
+
+class MatrixScope(LexerScope):
+    def token_handler(self, token_stream: Iterator[Token], scope_start_token: Token) -> Iterator[Token]:
+        ignore_regex = r'(\\left\s*.|\\right\s*.|\s)'
+        expected_end_token_type = scope_start_token.type.replace('BEGIN', 'END')
+        expected_end_token_value = re.sub(ignore_regex, '', scope_start_token.value).replace('\\begin', '\\end')
+        for token in super().token_handler(token_stream, scope_start_token):
+            yield token
+            if token.type == expected_end_token_type and re.sub(ignore_regex, '', token.value) == expected_end_token_value:
+                yield Token('_MATRIX_ENV_END', '')
+        
 
 class ScopePostLexer(PostLex):
     def __init__(self):
@@ -60,12 +71,23 @@ class ScopePostLexer(PostLex):
         self.scopes = [
             LexerScope(
                 scope_pairs=[
+                    ("_L_ANGLE", "_R_ANGLE")
+                ],
+                replace_tokens={
+                    "_L_BAR": "_INNER_PRODUCT_SEPARATOR",
+                    "_COMMA": "_INNER_PRODUCT_SEPARATOR"
+                }
+            ),
+            LexerScope(
+                scope_pairs=[
                     ("_L_BAR", "_R_BAR"),
                     ("_L_DOUBLE_BAR", "_R_DOUBLE_BAR")
-                    ],
+                ],
                 replace_tokens={
                     "_L_BAR": "_R_BAR",
-                    "_L_DOUBLE_BAR": "_R_DOUBLE_BAR"
+                    "_L_DOUBLE_BAR": "_R_DOUBLE_BAR",
+                    "MATRIX_COL_DELIM": "_WS",
+                    "MATRIX_ROW_DELIM": "_WS"
                 }
             ),
             MultiArgScope(
@@ -73,28 +95,46 @@ class ScopePostLexer(PostLex):
                 scope_pairs=[
                     ("_FUNC_FRAC", "_MULTIARG_EOS"),
                     ("_FUNC_BINOM", "_MULTIARG_EOS")
-                ]
+                ],
+                replace_tokens={
+                    "MATRIX_COL_DELIM": "_WS",
+                    "MATRIX_ROW_DELIM": "_WS"
+                }
             ),
             LexerScope(
                 scope_pairs=[
                     ("_FUNC_DERIVATIVE", "_R_BRACE"),
                     ("_FUNC_INT", "_DIFFERENTIAL_SYMBOL")
-                    ],
+                ],
                 replace_tokens={
                     "SINGLE_LETTER_SYMBOL": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
-                    "FORMATTED_SYMBOLS": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ]
+                    "FORMATTED_SYMBOLS": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
+                    "MATRIX_COL_DELIM": "_WS",
+                    "MATRIX_ROW_DELIM": "_WS"
                 }
             ),
+            # this should have a custom token handler, which appends the end thing with MATRIX_ENV_END
+            MatrixScope(
+                scope_pairs=[
+                    ("CMD_BEGIN_MATRIX", "_MATRIX_ENV_END"),
+                    ("CMD_BEGIN_ARRAY", "_MATRIX_ENV_END"),
+                    ("CMD_BEGIN_VMATRIX", "_MATRIX_ENV_END")
+                ]
+            ),
             LexerScope(
-                scope_pairs=[("_?L_(.*)", lambda match : f"_?R_{match.groups()[0]}")]
+                scope_pairs=[("_?L_(.*)", lambda match : f"_?R_{match.groups()[0]}")],
+                replace_tokens={
+                    "MATRIX_COL_DELIM": "_WS",
+                    "MATRIX_ROW_DELIM": "_WS"
+                }
             )
         ]
         
     def process(self, stream: Iterator[Token]) -> Iterator[Token]:
-        yield from self.process_scope(stream, LexerScope(), None)
+        yield from self.process_scope(stream, LexerScope(), None, None)
             
-    def process_scope(self, stream, scope: LexerScope, scope_end_terminal: str | None):
-        for token in scope.token_handler(stream):
+    def process_scope(self, stream, scope: LexerScope, scope_begin_token: Token | None, scope_end_terminal: str | None):
+        for token in scope.token_handler(stream, scope_begin_token):
             yield token
             
             # check if we are ourselves at an end terminal
@@ -109,7 +149,7 @@ class ScopePostLexer(PostLex):
                     # WE BEGINNING A NEW SCOPE BABY
                     if match:
                         end_terminal = scope_pair[1] if isinstance(scope_pair[1], str) else scope_pair[1](match)
-                        yield from self.process_scope(stream, new_scope, end_terminal)
+                        yield from self.process_scope(stream, new_scope, token, end_terminal)
                         break # do not consider other scopes
                 # do not continue if the inner loop was broken out of.
                 else:

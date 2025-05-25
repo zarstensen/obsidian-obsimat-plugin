@@ -31,7 +31,7 @@ class TestEvaluate:
         
         result = handler.handle({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}})
 
-        assert result.sympy_expr.rhs == 2 * Matrix([[1], [1]])
+        assert result.sympy_expr == 2 * Matrix([[1], [1]])
         
                 
     def test_matrix_multi_line(self):
@@ -40,11 +40,12 @@ class TestEvaluate:
         2
         \cdot 
         \begin{bmatrix} 
-        1 \\ 1
+        1 & 2 \\
+        3 & 4
         \end{bmatrix}
         """, "environment": {}})
         
-        assert result.sympy_expr.rhs == 2 * Matrix([[1], [1]])
+        assert result.sympy_expr == 2 * Matrix([[1, 2], [3, 4]])
         
     def test_matrix_normal(self):
         handler = EvalHandler(self.parser)

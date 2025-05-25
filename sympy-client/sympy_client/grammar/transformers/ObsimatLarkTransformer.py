@@ -11,6 +11,7 @@ from sympy.logic.boolalg import *
 from sympy import *
 from sympy.core.numbers import Integer, Float
 from lark import Token, Discard, v_args
+import itertools
 
 class ChainedRelation(And):
     
@@ -44,9 +45,9 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         if len(signs) != len(values):
             raise RuntimeError(f"Error, too few signs were present in expression, expected {len(values) - 1} - {len(values)} got {len(signs)}")
         
-        result = S.Zero
+        result = signs[0] * values[0]
         
-        for sign, value in zip(signs, values):
+        for sign, value in zip(signs[1:], values[1:]):
             result += sign * value
         
         return result
@@ -88,7 +89,13 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         return result
     
     @v_args(inline=True)
-    def exponentiation(self, base: Expr, exponent: Expr):        
+    def exponentiation(self, base: Expr, exponent: Expr):
+        if isinstance(base, MatrixBase) and isinstance(exponent, Symbol):
+            if str(exponent) == "T":
+                return base.transpose()
+            elif str(exponent) == "H":
+                return base.adjoint()
+            
         return base ** exponent
     
     @v_args(inline=True)
@@ -133,6 +140,22 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     @v_args(inline=True)
     def unit(self, unit_symbol: Token):
         return self.symbol(unit_symbol)
+    
+    @v_args(inline=True)
+    def matrix_body(self, *body: Expr | Token):
+        return [ list(row) for is_delim, row in itertools.groupby(body, lambda t: isinstance(t, Token) and t.type == 'MATRIX_ROW_DELIM') if not is_delim]
+    
+    @v_args(inline=True)
+    def matrix(self, matrix_begin_cmd, matrix_body, matrix_end_cmd):
+        return Matrix(matrix_body)
+    
+    @v_args(inline=True)
+    def array_matrix(self, matrix_begin_cmd, array_options, matrix_body, matrix_end_cmd):
+        return Matrix(matrix_body)
+    
+    @v_args(inline=True)
+    def det_matrix(self, _begin, matrix_body, _end):
+        return self.matrix(_begin, matrix_body, _end).det()
     
     SIGN_DICT = {
         'ADD': S.One,

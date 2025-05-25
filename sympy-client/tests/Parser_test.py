@@ -111,7 +111,7 @@ class TestParse:
         assert self.parser.doparse(r"a^2 b") == a**2 * b
         
         #scripts
-        x1 = symbols("x_1")
+        x1 = symbols("x_{1}")
         assert self.parser.doparse(r"b x_1") == x1 * b
         assert self.parser.doparse(r"x_1 b") == x1 * b
         

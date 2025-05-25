@@ -40,6 +40,9 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: "main.js",
 	minify: prod,
+	loader: {
+		'.exe': 'binary'
+	}
 });
 
 if (prod) {

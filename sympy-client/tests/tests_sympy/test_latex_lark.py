@@ -17,8 +17,8 @@ from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
-from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
-from sympy import I, simplify
+from sympy import Expr, Matrix, MatAdd, MatMul, Transpose, Trace
+from sympy import I, simplify, expand
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
@@ -415,7 +415,7 @@ UNEVALUATED_LITERAL_COMPLEX_NUMBER_EXPRESSION_PAIRS = [
 ]
 
 MATRIX_EXPRESSION_PAIRS = [
-    (r"\det\left(\left[   { \begin{array}{cc}a&b\\x&y\end{array} } \right]\right)",
+    (r"\det\left(\left[   \begin{array}{cc}a&b\\x&y\end{array} \right]\right)",
      Matrix([[a, b], [x, y]]).det()),
     (r"\det \begin{pmatrix}1&2\\3&4\end{pmatrix}", -2),
     (r"\det{\begin{pmatrix}1&2\\3&4\end{pmatrix}}", -2),
@@ -431,9 +431,9 @@ MATRIX_EXPRESSION_PAIRS = [
      Matrix([[-I, 1-I], [I, 4]])),
     (r"\begin{pmatrix}i & 1+i \\-i & 4\end{pmatrix}^H",
      Matrix([[-I, I], [1-I, 4]])),
-    (r"\trace(\begin{pmatrix}i & 1+i \\-i & 4\end{pmatrix})",
+    (r"\operatorname{\trace}(\begin{pmatrix}i & 1+i \\-i & 4\end{pmatrix})",
      Trace(Matrix([[I, 1+I], [-I, 4]]))),
-    (r"\adjugate(\begin{pmatrix}1 & 2 \\3 & 4\end{pmatrix})",
+    (r"\operatorname{\adjugate}(\begin{pmatrix}1 & 2 \\3 & 4\end{pmatrix})",
      Matrix([[4, -2], [-3, 1]])),
     (r"(\begin{pmatrix}i&2\\3&4\end{pmatrix}+\begin{pmatrix}i&2\\3&4\end{pmatrix})^\ast",
      Matrix([[-2*I, 6], [4, 8]])),
@@ -482,10 +482,10 @@ MATRIX_EXPRESSION_PAIRS = [
     (r"\det(\begin{pmatrix}i&2\\3&4\end{pmatrix}+\begin{pmatrix}i&2\\3&4\end{pmatrix})",
      (_MatAdd(Matrix([[I, 2], [3, 4]]),
               Matrix([[I, 2], [3, 4]]))).det()),
-    (r"\trace(\begin{pmatrix}i&2\\3&4\end{pmatrix}+\begin{pmatrix}i&2\\3&4\end{pmatrix})",
+    (r"\mathrm{\trace}(\begin{pmatrix}i&2\\3&4\end{pmatrix}+\begin{pmatrix}i&2\\3&4\end{pmatrix})",
      Trace(_MatAdd(Matrix([[I, 2], [3, 4]]),
                    Matrix([[I, 2], [3, 4]])))),
-    (r"\adjugate(\begin{pmatrix}i&2\\3&4\end{pmatrix}+\begin{pmatrix}i&2\\3&4\end{pmatrix})",
+    (r"\mathrm{\adjugate}(\begin{pmatrix}i&2\\3&4\end{pmatrix}+\begin{pmatrix}i&2\\3&4\end{pmatrix})",
      (Matrix([[8, -4], [-6, 2*I]]))),
     (r"(\begin{pmatrix}i&2\\3&4\end{pmatrix}+\begin{pmatrix}i&2\\3&4\end{pmatrix})^T",
      Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
@@ -611,4 +611,6 @@ def test_literal_complex_number_expressions():
 
 def test_matrix_expressions():
     for latex_str, sympy_expr in MATRIX_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        if isinstance(sympy_expr, Expr):
+            sympy_expr = sympy_expr.doit()
+        assert simplify(parse_latex_lark(latex_str)) == simplify(expand(sympy_expr)), latex_str

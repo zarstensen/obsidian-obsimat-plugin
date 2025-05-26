@@ -3,19 +3,20 @@
 
 // ======== Core structure ========
 
-latex_string: relation
+latex_string: relation | system_of_relations
 
 _rel_op: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
-relation: _rel_op? expression (_rel_op expression)* _rel_op?
+_align: _ALIGN | _LATEX_NEWLINE
+relation: (_align? _rel_op)? expression (_rel_op expression)* (_rel_op _align?)?
 
 // an expression is a sum of terms
-expression: term ((ADD|SUB) term)*
-    | ((ADD|SUB) term)+
+expression: (_align? (ADD|SUB))? term ((ADD|SUB) term)*
 
 // a term is a series of products of factors separated by product operators.
-term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (ADD|SUB)? implicit_multiplication)*
+term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (_align? (ADD|SUB))? implicit_multiplication)*
+
 // factors with no operator between them are implicitly multiplied together.
-?implicit_multiplication: _factor+
+?implicit_multiplication: _align? _factor (_align? _factor)* _align?
 
 // a factor is either a number, a constant, a symbol, or a function.
 // here exponentiation, fractions, binomials are loosly seen as functions.
@@ -26,19 +27,16 @@ _factor: _factor_no_unit
     | _base_factor
 
 _base_factor: parenthesees_expression
+    | brackets_expression
     | braces_expression
     | _function
     | _number
     | symbol
     | _matrix_notation
 
-// _base_factor groups all factors which can be the base value of an exponentiation.
-// _base_factor_no_matrix: 
-
 // groups a base factor and an exponent factor to be evaluated in an exponentation.
 exponentiation: _base_factor _CARET function_special_arg
     | _base_factor _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
-    | _base_factor PRIMES -> exp_transpose
 
 // various rules for grouping expressions surrounded by delimiters.
 ?parenthesees_expression: _L_PAREN expression _R_PAREN
@@ -186,17 +184,10 @@ ceil: _L_CEIL expression _R_CEIL
 sqrt: _FUNC_SQRT [brackets_expression] (braces_expression|single_letter_symbol|_digit)
 conjugate: _FUNC_CONJUGATE (braces_expression|single_letter_symbol|_digit)
 
-// match a single argument in a list of arguments latex style (that is \command{arg1}{arg2}...{argN})
+// match a single argument in a list of latex style arguments (that is \command{arg1}{arg2}...{argN})
 _multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
-// terminal signifying the end of a single argument in a latex style argument list.
+// terminals signifying the delimiters and end of multiple arguments in a latex style argument list.
 // due to lalr's limited lookahead, a custom post lexer needs to insert this token when parsing.
-// this also requires a bit more setup in the grammar for this to work, which is specified in the following comment.
-//
-// this token should be placed between _multiarg_func_arg rules when specifying the list of arguments.
-// additionally, there must be a terminal before the first _multiarg_func_arg rule, which follows the following naming convention:
-// MULTIARG_FUNC_[num_args][terminal_name]
-// num_args: number of arguments this function takes. This must be number of MULTIARG_FUNC_ARG_DELIMITER occurenses + 1
-// terminal_name: this is ignored by the postlexer and can be used to name the terminal appropiately.
 %declare _MULTIARG_DELIMITER
 %declare _MULTIARG_EOS
 
@@ -222,14 +213,18 @@ integral: _FUNC_INTEGRAL [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_no
 _matrix_notation: _matrix_type | det_matrix
 _matrix_type: matrix | array_matrix
 
-matrix_body: expression ((_MATRIX_COL_DELIM|MATRIX_ROW_DELIM) expression)*
+// _matrix_col_delim: _ALIGN
+// matrix_row_delim: _LATEX_NEWLINE -> matrix_like_delim
+
+matrix_row_delim: MATRIX_ROW_DELIM -> matrix_like_delim
+matrix_body: matrix_row_delim? expression ((_MATRIX_COL_DELIM|matrix_row_delim) expression)* matrix_row_delim?
 matrix: CMD_BEGIN_MATRIX matrix_body CMD_END_MATRIX _MATRIX_ENV_END
 array_matrix: CMD_BEGIN_ARRAY ARRAY_ENV_OPTIONS matrix_body CMD_END_ARRAY _MATRIX_ENV_END
 det_matrix: CMD_BEGIN_VMATRIX matrix_body CMD_END_VMATRIX _MATRIX_ENV_END
 
 // ======== Matrices functions ========
 
-_matrix_functions: determinant | trace | adjugate | rref | gradient | hessian | jacobian | rref
+_matrix_functions: determinant | trace | adjugate | rref | gradient | hessian | jacobian
 
 determinant: _func_template{_FUNC_MATRIX_DETERMINANT}
 trace: _func_template{_FUNC_MATRIX_TRACE}
@@ -239,6 +234,15 @@ rref: _func_template{_FUNC_MATRIX_RREF}
 gradient: _func_template{_FUNC_GRADIENT}
 hessian: _func_template{_FUNC_HESSIAN}
 jacobian: _func_template{_FUNC_JACOBIAN}
+
+// ======== System of relations ========
+
+%declare _EXPR_DELIM
+system_of_relations_expr: relation
+system_of_relations_delim: _EXPR_DELIM -> matrix_like_delim
+_system_of_relations_body: system_of_relations_delim? system_of_relations_expr (system_of_relations_delim system_of_relations_expr)* system_of_relations_delim?
+system_of_relations: _CMD_BEGIN_ALIGN _system_of_relations_body _CMD_END_ALIGN
+    | _CMD_BEGIN_CASES _system_of_relations_body _CMD_END_CASES
 
 // ======== Miscellaneous rules ========
 
@@ -354,9 +358,9 @@ _FUNC_SQRT: "\\sqrt"
 // matrix functions
 
 _FUNC_MATRIX_DETERMINANT: "\\det"
-_FUNC_MATRIX_TRACE: CMD_OPERATOR _WS? _L_BRACE _WS? "\\trace" _WS? _R_BRACE
-_FUNC_MATRIX_ADJUGATE: CMD_OPERATOR _WS? _L_BRACE _WS? "\\adjugate" _WS? _R_BRACE
-_FUNC_MATRIX_RREF: CMD_OPERATOR _WS? _L_BRACE _WS? "\\rref" _WS? _R_BRACE
+_FUNC_MATRIX_TRACE: CMD_OPERATOR _WS? _L_BRACE _WS? "trace" _WS? _R_BRACE
+_FUNC_MATRIX_ADJUGATE: CMD_OPERATOR _WS? _L_BRACE _WS? "adjugate" _WS? _R_BRACE
+_FUNC_MATRIX_RREF: CMD_OPERATOR _WS? _L_BRACE _WS? "rref" _WS? _R_BRACE
 
 // linear alg functions.
 
@@ -393,7 +397,7 @@ _UNDERSCORE: "_"
 
 // relational symbols
 EQUAL: "="
-NOT_EQUAL: _BANG EQUAL | "\\neq" | "\\ne"
+NOT_EQUAL: "\\neq" | "\\ne"
 LT: "<"
 LTE: LT EQUAL | "\\leq" | "\\leqslant" // | "\\le" removed because it collides with \\left
 GT: ">"
@@ -461,37 +465,14 @@ CMD_BEGIN_ARRAY: ("\\left" _WS? _L_DELIMITER)? _WS? CMD_BEGIN _WS? ARRAY_ENV _WS
 ARRAY_ENV_OPTIONS: _L_BRACE (/[clr|\s]+/)? _R_BRACE
 CMD_END_ARRAY: CMD_END _WS? ARRAY_ENV _WS? _R_BRACE _WS? ("\\right" _WS? _R_DELIMITER)?
 
-_MATRIX_COL_DELIM: "&"
-MATRIX_ROW_DELIM: "\\\\"
+_ALIGN: "&"
+_LATEX_NEWLINE: "\\\\"
 
-// IGNORE_L: /[ \t\n\r]*/ L_BRACE* /[ \t\n\r]*/
-// IGNORE_R: /[ \t\n\r]*/ R_BRACE* /[ \t\n\r]*/
-// ARRAY_MATRIX_BEGIN: L_BRACE "array" R_BRACE L_BRACE /[^}]*/ R_BRACE
-// ARRAY_MATRIX_END: L_BRACE "array" R_BRACE
-// AMSMATH_MATRIX: L_BRACE "matrix" R_BRACE
-// AMSMATH_PMATRIX: L_BRACE "pmatrix" R_BRACE
-// AMSMATH_BMATRIX: L_BRACE "bmatrix" R_BRACE
-// // Without the (L|R)_PARENs and (L|R)_BRACKETs, a matrix defined using
-// // \begin{array}...\end{array} or \begin{matrix}...\end{matrix} must
-// // not qualify as a complete matrix expression; this is done so that
-// // if we have \begin{array}...\end{array} or \begin{matrix}...\end{matrix}
-// // between BAR pairs, then they should be interpreted as determinants as
-// // opposed to sympy.Abs (absolute value) applied to a matrix.
-// CMD_BEGIN_AMSPMATRIX_AMSBMATRIX: CMD_BEGIN (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
-// CMD_BEGIN_ARRAY_AMSMATRIX: (L_PAREN | L_BRACKET) IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
-// CMD_MATRIX_BEGIN: CMD_BEGIN_AMSPMATRIX_AMSBMATRIX | CMD_BEGIN_ARRAY_AMSMATRIX
-// CMD_END_AMSPMATRIX_AMSBMATRIX: CMD_END (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
-// CMD_END_ARRAY_AMSMATRIX: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? (R_PAREN | R_BRACKET)
-// CMD_MATRIX_END: CMD_END_AMSPMATRIX_AMSBMATRIX | CMD_END_ARRAY_AMSMATRIX
-// FUNC_MATRIX_TRACE: "\\trace"
-// FUNC_MATRIX_ADJUGATE: "\\adjugate"
+%declare _MATRIX_COL_DELIM
+%declare MATRIX_ROW_DELIM
 
-// // determinants
-// AMSMATH_VMATRIX: L_BRACE "vmatrix" R_BRACE
-// CMD_DETERMINANT_BEGIN_SIMPLE: CMD_BEGIN AMSMATH_VMATRIX
-// CMD_DETERMINANT_BEGIN_VARIANT: BAR IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
-// CMD_DETERMINANT_BEGIN: CMD_DETERMINANT_BEGIN_SIMPLE | CMD_DETERMINANT_BEGIN_VARIANT
-// CMD_DETERMINANT_END_SIMPLE: CMD_END AMSMATH_VMATRIX
-// CMD_DETERMINANT_END_VARIANT: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? BAR
-// CMD_DETERMINANT_END: CMD_DETERMINANT_END_SIMPLE | CMD_DETERMINANT_END_VARIANT
-// FUNC_DETERMINANT: "\\det"
+// system of relations
+_CMD_BEGIN_ALIGN: CMD_BEGIN _WS? "align" _WS? _R_BRACE
+_CMD_BEGIN_CASES: CMD_BEGIN _WS? "cases" _WS? _R_BRACE
+_CMD_END_ALIGN: CMD_END _WS? "align" _WS? _R_BRACE
+_CMD_END_CASES: CMD_END _WS? "cases" _WS? _R_BRACE

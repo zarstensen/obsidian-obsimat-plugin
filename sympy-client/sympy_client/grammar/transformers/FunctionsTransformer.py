@@ -1,6 +1,7 @@
 from typing import Iterator
 from lark import Token, Transformer, Discard, v_args
 from sympy import *
+from sympy.tensor.array import derive_by_array
 import sympy
 import sympy.parsing.latex.lark.transformer
 
@@ -14,7 +15,6 @@ class FunctionsTransformer(Transformer):
         return Function(func_name[:-1])(*func_args)
     
     def trig_function(self, func_token: Token, exponent: Expr | None, arg: Expr):
-        exponent = 1 if exponent is None else exponent
         # TODO: should this use the type instead of the value?
         func_name = func_token.value
         
@@ -36,7 +36,7 @@ class FunctionsTransformer(Transformer):
         # find func name in sympy module
         trig_func = getattr(sympy, func_name)
         
-        return trig_func(arg)**exponent
+        return self._try_raise_exponent(trig_func(arg), exponent)
         
     def frac(self, numerator: Expr, denominator: Expr):
         return numerator * denominator**-1
@@ -54,27 +54,21 @@ class FunctionsTransformer(Transformer):
         return conjugate(arg)
 
     def log_implicit_base(self, func_token: Token, exponent: Expr | None, arg: Expr):
-        exponent = 1 if exponent is None else exponent
-        
         log_type = func_token.type
             
         if log_type == 'FUNC_LOG' or log_type == 'FUNC_LN':
-            return log(arg)**exponent
+            return self._try_raise_exponent(log(arg), exponent)
         elif log_type == 'FUNC_LG':
-            return log(arg, 10)**exponent
+            return self._try_raise_exponent(log(arg, 10), exponent)
 
     def log_explicit_base(self, _func_token: Token, base: Expr, exponent: Expr | None, arg: Expr):
-        exponent = 1 if exponent is None else exponent
-            
-        return log(arg, base)**exponent
+        return self._try_raise_exponent(log(arg, base), exponent)
     
     def log_explicit_base_exponent_first(self, func_token: Token, exponent: Expr | None, base: Expr, arg: Expr):
         return self.log_explicit_base(func_token, base, exponent, arg)
     
     def exponential(self, exponent: Expr | None, arg: Expr):
-        exponent = 1 if exponent is None else exponent
-        
-        return exp(arg)**exponent
+        return self._try_raise_exponent(exp(arg), exponent)
 
     def factorial(self, arg: Expr):
         return factorial(arg)
@@ -101,7 +95,6 @@ class FunctionsTransformer(Transformer):
         return sign_token.value
 
     def abs(self, arg: Expr):
-        
         # if arg is a matrix, this notation actually means taking its determinant.
         if isinstance(arg, MatrixBase):
             return arg.det()
@@ -114,21 +107,60 @@ class FunctionsTransformer(Transformer):
     def inner_product(self, lhs: Expr, rhs: Expr):
         return self._ensure_matrix(lhs).dot(self._ensure_matrix(rhs), conjugate_convention='right')
     
-    def determinant(self, exponent: Expr, mat: Expr):
-        exponent = 1 if exponent is None else exponent
-        return self._ensure_matrix(mat).det() ** exponent
+    def determinant(self, exponent: Expr | None, mat: Expr):
+        return self._try_raise_exponent(self._ensure_matrix(mat).det(), exponent)
     
-    def trace(self, exponent: Expr, mat: Expr):
-        exponent = 1 if exponent is None else exponent
-        return self._ensure_matrix(mat).trace() ** exponent
+    def trace(self, exponent: Expr | None, mat: Expr):
+        return self._try_raise_exponent(self._ensure_matrix(mat).trace(), exponent)
     
-    def adjugate(self, exponent: Expr, mat: Expr):
-        exponent = 1 if exponent is None else exponent
-        return self._ensure_matrix(mat).adjugate() ** exponent
+    def adjugate(self, exponent: Expr | None, mat: Expr):
+        return self._try_raise_exponent(self._ensure_matrix(mat).adjugate(), exponent)
     
-    def rref(self, exponent: Expr, mat: Expr):
-        exponent = 1 if exponent is None else exponent
-        return self._ensure_matrix(mat).rref()[0] ** exponent
+    def rref(self, exponent: Expr | None, mat: Expr):
+        return self._try_raise_exponent(self._ensure_matrix(mat).rref()[0], exponent)
+    
+    def gradient(self, exponent: Expr | None, expr: Expr):
+        if expr in self._function_store:
+            func = self._function_store[expr]
+            symbols = func.args
+            expr = func.parse_body()
+        else:
+            symbols = list(sorted(expr.free_symbols, key=str))
+        
+        return self._try_raise_exponent(Matrix([derive_by_array(expr, symbols)]), exponent)
+
+    def hessian(self, exponent: Expr | None, expr: Expr):
+        if expr in self._function_store:
+            func = self._function_store[expr]
+            symbols = func.args
+            expr = func.parse_body()
+        else:
+            symbols = list(sorted(expr.free_symbols, key=str))
+        
+        return self._try_raise_exponent(hessian(expr, symbols), exponent)
+        
+    def jacobian(self, exponent: Expr | None, matrix: Expr):
+        if matrix in self._function_store:
+            func = self._function_store[matrix]
+            symbols = func.args
+            matrix = func.parse_body() 
+        else:
+            symbols = list(sorted(matrix.free_symbols, key=str))
+        
+        matrix = self._ensure_matrix(matrix)
+            
+        if not matrix.rows == 1 and not matrix.cols == 1:
+            raise ShapeError("Jacobian expects a single row or column vector")
+        
+        # sympy has a built in jacobian, but it does not have an evaluate option,
+        # so we just do it manually here.
+        
+        gradients = []
+        
+        for item in matrix:
+            gradients.append(Matrix([derive_by_array(item, symbols)]))
+        
+        return self._try_raise_exponent(Matrix.vstack(*gradients), exponent)
     
     def exp_transpose(self, mat: Expr, exponent: Token):
         exponents_str = exponent.value
@@ -183,8 +215,13 @@ class FunctionsTransformer(Transformer):
     def list_of_expressions(self, tokens: Iterator[Expr]):
         return list(filter(lambda x: not isinstance(x, Token) or x.type != 'COMMA', tokens))
 
+    def _try_raise_exponent(self, arg: Expr, exponent: Expr | None):
+        if exponent is not None and exponent != 1:
+            return pow(arg, exponent)
+        else:
+            return arg
+
     def _ensure_matrix(self, obj: Basic) -> MatrixBase:
-        if not isinstance(obj, MatrixBase):
+        if not hasattr(obj, "is_Matrix") or not obj.is_Matrix:
             return Matrix([obj])
         return obj
-        

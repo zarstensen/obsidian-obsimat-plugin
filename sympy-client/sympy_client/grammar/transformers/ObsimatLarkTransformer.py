@@ -1,10 +1,12 @@
+from enum import Enum
 from typing import Iterator
-from sympy_client.grammar.CachedSymbolSubstitutor import CachedSymbolSubstitutor
-from sympy_client.grammar.FunctionStore import FunctionStore
+from ..CachedSymbolSubstitutor import CachedSymbolSubstitutor
+from ..FunctionStore import FunctionStore
 
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 from .ConstantsTransformer import ConstantsTransformer
 from .FunctionsTransformer import FunctionsTransformer
+from ..SystemOfExpr import SystemOfExpr
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import *
@@ -20,7 +22,9 @@ class ChainedRelation(And):
         args = BooleanFunction.binary_check_and_simplify(*args)
         args = LatticeOp._new_args_filter(args, And)
         return args
-    
+
+class Delim(Enum):
+    Delim = 1
 
 # The ObsimatLarkTransofmer class provides functions for transforming
 # rules defined in obsimat_grammar.lark into sympy expressions.
@@ -32,6 +36,19 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         self._symbol_substitutor = symbol_substitutor
         self._function_store = function_store
 
+    def system_of_relations(self, relations: list[Expr]):
+        return SystemOfExpr([
+            next(row) # the row iterator should only contain 1 element
+            for is_delim, row in itertools.groupby(relations, lambda t: t == Delim.Delim)
+            if not is_delim
+            ])
+
+    class system_of_relations_expr:
+        @staticmethod
+        def visit_wrapper(_f, _data, children, meta):
+            # location data is needed for system_of_expressions handler.
+            return (children[0], meta)
+
     def relation(self, tokens):
         if len(tokens) == 1:
             return tokens[0]
@@ -42,41 +59,23 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         relations = []
         
         for token in tokens:
-            if isinstance(token, Expr):
+            if isinstance(token, Token):
+                relation_type = token.type
+            else:
                 if relation_type is not None:
                     relations.append(self._create_relation(prev_expr, token, relation_type))
                     relation_type = None
                 prev_expr = token
-            elif isinstance(token, Token):
-                relation_type = token.type
-            else:
-                raise RuntimeError(f"Unexpected token type {token}")
-        
+                
         if relation_type is not None:
             relations.append(self._create_relation(prev_expr, Dummy(), relation_type))
+        
+        print(relations)
         
         if len(relations) == 1:
             return relations[0]
         else:
             return ChainedRelation(*relations, evaluate=False)
-
-    def _create_relation(self, left: Expr, right: Expr, relation_type: str):
-        with evaluate(False):
-            match relation_type:
-                case 'EQUAL':
-                    return Eq(left, right)
-                case 'NOT_EQUAL':
-                    return Ne(left, right)
-                case 'LT':
-                    return Lt(left, right)
-                case 'LTE':
-                    return Le(left, right)
-                case 'GT':
-                    return Gt(left, right)
-                case 'GTE':
-                    return Ge(left, right)
-                case _:
-                    raise RuntimeError(f"Unknown relation type '{relation_type}' between {left} and {right}")
 
     # sum a list of terms in an expression together
     def expression(self, tokens):
@@ -142,7 +141,7 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
             elif str(exponent) == "H":
                 return base.adjoint()
             
-        return base ** exponent
+        return pow(base, exponent)
     
     @v_args(inline=True)
     def symbol(self, *symbol_strings: str):
@@ -189,7 +188,11 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     
     @v_args(inline=True)
     def matrix_body(self, *body: Expr | Token):
-        return [ list(row) for is_delim, row in itertools.groupby(body, lambda t: isinstance(t, Token) and t.type == 'MATRIX_ROW_DELIM') if not is_delim]
+        return [
+            list(row)
+            for is_delim, row in itertools.groupby(body, lambda t: t == Delim.Delim)
+            if not is_delim
+        ]
     
     @v_args(inline=True)
     def matrix(self, matrix_begin_cmd, matrix_body, matrix_end_cmd):
@@ -203,7 +206,28 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     def det_matrix(self, _begin, matrix_body, _end):
         return self.matrix(_begin, matrix_body, _end).det()
     
+    def matrix_like_delim(self, _: Iterator[Token]):
+        return Delim.Delim
+    
     SIGN_DICT = {
         'ADD': S.One,
         'SUB': S.NegativeOne
     }
+    
+    def _create_relation(self, left: Expr, right: Expr, relation_type: str):
+        with evaluate(False):
+            match relation_type:
+                case 'EQUAL':
+                    return Eq(left, right, evaluate=False)
+                case 'NOT_EQUAL':
+                    return Ne(left, right)
+                case 'LT':
+                    return Lt(left, right)
+                case 'LTE':
+                    return Le(left, right)
+                case 'GT':
+                    return Gt(left, right)
+                case 'GTE':
+                    return Ge(left, right)
+                case _:
+                    raise RuntimeError(f"Unknown relation type '{relation_type}' between {left} and {right}")

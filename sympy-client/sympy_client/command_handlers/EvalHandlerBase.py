@@ -28,7 +28,7 @@ class EvalResult(CommandResult, ABC):
         if self.expr_lines is not None:
             metadata = dict(
                 start_line = self.expr_lines[0],
-                end_line = self.expr_lines[1]
+                end_line = self.expr_lines[1] if self.expr_lines[1] is not None else self.expr_lines[0]
             )
         
         return CommandResult.result(obsimat_latex(self.sympy_expr), metadata=metadata)

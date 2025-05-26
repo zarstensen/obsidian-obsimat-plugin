@@ -284,7 +284,7 @@ class TestEvaluate:
             "expression": r"\mathbf{H}(y x^5 + \sin(y))",
             "environment": {}
         })
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr == Matrix([
                                                 [20 * x**3 * y,     5 * x ** 4],
                                                 [5 * x ** 4,        - sin(y)]
                                                 ])
@@ -301,7 +301,7 @@ class TestEvaluate:
             }
         })
         
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr == Matrix([
             [- 1 / x**2,    0,      0],
             [0,             E**y,   0],
             [0,             0,      0]
@@ -317,7 +317,7 @@ class TestEvaluate:
             "expression": r"\mathbf{J}(\begin{bmatrix} x^2 \\ y \\ x * y \end{bmatrix})",
             "environment": {}
         })
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr == Matrix([
             [2 * x, 0],
             [0,     1],
             [y,     x]
@@ -335,7 +335,7 @@ class TestEvaluate:
             }
         })
         
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr == Matrix([
             [1 / x,             0,              0],
             [0,                 cos(y),         0],
             [-sin(x) * sin(y),  cos(x) * cos(y),0]

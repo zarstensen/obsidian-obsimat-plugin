@@ -43,6 +43,7 @@ class TestParse:
         assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \end{bmatrix}") == Matrix([[1, 2]])
         assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}") == Matrix([[1, 2], [3, 4]])
         assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{bmatrix}") == Matrix([[1, 2], [3, 4], [5, 6]])
+
     
     def test_mathematical_constants(self):
         
@@ -159,7 +160,7 @@ class TestParse:
 
         assert result.get_expr(2) == Eq(z, x + 2 * y / x)
         assert result.get_location(2).line == 5
-        assert result.get_location(2).end_line == 5
+        assert result.get_location(2).end_line == None
 
 
         result = self.parser.doparse(r"""

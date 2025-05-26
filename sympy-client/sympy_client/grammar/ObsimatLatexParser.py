@@ -86,8 +86,6 @@ class ScopePostLexer(PostLex):
                 replace_tokens={
                     "_L_BAR": "_R_BAR",
                     "_L_DOUBLE_BAR": "_R_DOUBLE_BAR",
-                    "MATRIX_COL_DELIM": "_WS",
-                    "MATRIX_ROW_DELIM": "_WS"
                 }
             ),
             MultiArgScope(
@@ -95,11 +93,7 @@ class ScopePostLexer(PostLex):
                 scope_pairs=[
                     ("_FUNC_FRAC", "_MULTIARG_EOS"),
                     ("_FUNC_BINOM", "_MULTIARG_EOS")
-                ],
-                replace_tokens={
-                    "MATRIX_COL_DELIM": "_WS",
-                    "MATRIX_ROW_DELIM": "_WS"
-                }
+                ]
             ),
             LexerScope(
                 scope_pairs=[
@@ -109,8 +103,6 @@ class ScopePostLexer(PostLex):
                 replace_tokens={
                     "SINGLE_LETTER_SYMBOL": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
                     "FORMATTED_SYMBOLS": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
-                    "MATRIX_COL_DELIM": "_WS",
-                    "MATRIX_ROW_DELIM": "_WS"
                 }
             ),
             # this should have a custom token handler, which appends the end thing with MATRIX_ENV_END
@@ -119,14 +111,23 @@ class ScopePostLexer(PostLex):
                     ("CMD_BEGIN_MATRIX", "_MATRIX_ENV_END"),
                     ("CMD_BEGIN_ARRAY", "_MATRIX_ENV_END"),
                     ("CMD_BEGIN_VMATRIX", "_MATRIX_ENV_END")
-                ]
+                ],
+                replace_tokens={
+                    "_ALIGN": "_MATRIX_COL_DELIM",
+                    "_LATEX_NEWLINE": "MATRIX_ROW_DELIM"
+                }
             ),
             LexerScope(
-                scope_pairs=[("_?L_(.*)", lambda match : f"_?R_{match.groups()[0]}")],
+                scope_pairs = [
+                    ("_CMD_BEGIN_ALIGN", "_CMD_END_ALIGN"),
+                    ("_CMD_BEGIN_CASES", "_CMD_END_CASES")
+                ],
                 replace_tokens={
-                    "MATRIX_COL_DELIM": "_WS",
-                    "MATRIX_ROW_DELIM": "_WS"
+                    "_LATEX_NEWLINE": "_EXPR_DELIM"
                 }
+            ),
+            LexerScope(
+                scope_pairs=[("_?L_(.*)", lambda match : f"_?R_{match.groups()[0]}")]
             )
         ]
         

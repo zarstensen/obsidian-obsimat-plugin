@@ -7,6 +7,7 @@ from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 from .ConstantsTransformer import ConstantsTransformer
 from .FunctionsTransformer import FunctionsTransformer
 from ..SystemOfExpr import SystemOfExpr
+import sympy_client.UnitsUtils as UnitUtils
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import *
@@ -135,7 +136,7 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     
     @v_args(inline=True)
     def exponentiation(self, base: Expr, exponent: Expr):
-        if isinstance(base, MatrixBase) and isinstance(exponent, Symbol):
+        if isinstance(exponent, Symbol) and hasattr(base, "is_Matrix") and base.is_Matrix:
             if str(exponent) == "T":
                 return base.transpose()
             elif str(exponent) == "H":
@@ -183,8 +184,13 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         return Integer(number_str)
     
     @v_args(inline=True)
-    def unit(self, unit_symbol: Token):
-        return self.symbol(unit_symbol)
+    def unit(self, unit_symbol: Symbol):
+        unit = UnitUtils.str_to_unit(str(unit_symbol))
+        
+        if unit is not None:
+            return unit
+        else:
+            return unit_symbol
     
     @v_args(inline=True)
     def matrix_body(self, *body: Expr | Token):

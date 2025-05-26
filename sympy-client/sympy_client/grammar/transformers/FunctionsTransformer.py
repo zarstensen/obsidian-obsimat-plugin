@@ -200,6 +200,19 @@ class FunctionsTransformer(Transformer):
     def derivative_func_first(self, expr: Expr, symbols: Iterator[tuple[Expr, Expr]]):
         return self.derivative_symbols_first(symbols, expr)
     
+    def derivative_prime(self, expr: Expr, primes: Token):
+        if expr in self._function_store:
+            func = self._function_store[expr]
+            symbols = func.args
+            expr = func.parse_body()
+        else:
+            symbols = expr.free_symbols
+        
+        if len(symbols) == 0:
+            return S.Zero
+        else:
+            return diff(expr, sorted(symbols, key=str)[0], primes.value.count("'"), evaluate=False)
+    
     def integral_no_bounds(self, expr: Expr | None, symbol: Expr):
         expr = 1 if expr is None else expr
         return integrate(expr, symbol)

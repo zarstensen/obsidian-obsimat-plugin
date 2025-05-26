@@ -92,6 +92,7 @@ _function: _delimited_function
     | binom
     | factorial
     | derivative
+    | derivative_prime
 
 _named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions | _matrix_functions
 

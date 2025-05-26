@@ -5,6 +5,18 @@ from sympy.physics.units import Quantity
 
 import re
 
+# this is a bit scuffed, but since the Quantity class, and not the printer class, implements a _latex method,
+# the printer class prioritizes this over a potential _print_Quantity in the ObsimatPrinter.
+# this could probably be solved by renaming the _printmethod in ObsimatPrinter to _obsimat_latex f.ex.
+def _quantity_latex(self, _printer):
+    if self._latex_repr:
+        return f"{{{self._latex_repr}}}"
+    else:
+        return f'{{{self.args[1] \
+                        if len(self.args) >= 2 else self.args[0]}}}'
+
+Quantity._latex = _quantity_latex
+
 # Convert a sympy expression to a formatted latex string.
 class ObsimatPrinter(LatexPrinter):
     
@@ -17,6 +29,9 @@ class ObsimatPrinter(LatexPrinter):
     def doprint(self, expr):
         # remove all \text latex, we do not want this.
         return re.sub(r"\\text\{(.*?)\}", r"\1", super().doprint(expr))
+    
+    def _print_Quantity(self, quantity: Quantity):
+        return f"{{{str(quantity)}}}"
     
     def _print_Mul(self, expr: Mul):
         # try to split any fraction up into at most 3 distinct fractions.

@@ -179,7 +179,7 @@ class ObsimatLatexParser(SympyParser):
             grammar_file,
             rel_to=os.path.dirname(grammar_file),
             parser="lalr",
-            start="expression",
+            start="latex_string",
             lexer="contextual",
             debug=True,
             cache=True,

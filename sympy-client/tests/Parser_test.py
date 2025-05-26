@@ -70,6 +70,11 @@ class TestParse:
         assert self.parser.doparse(r"a b \cdot c") == a * b * c
         assert self.parser.doparse(r"a \cdot b c") == a * b * c
         
+        # indexed_symbols
+        x1, x2 = symbols('x_{1} x_{2}')
+        
+        assert self.parser.doparse(r"x_{1} x_{2}") == x1 * x2
+        
         # functions 
         assert self.parser.doparse(r"b \sin(a)") == sin(a) * b
         assert self.parser.doparse(r"\sin(a) b") == sin(a) * b
@@ -118,7 +123,7 @@ class TestParse:
         f, x = symbols("f x")
         
         assert self.parser.doparse("f (x)") == f * x
-        assert self.parser.doparse("f(x)") == Function(f)(x)
+        assert self.parser.doparse("f(x)") == Function('f')(x)
     
     def test_partial_relations(self):
         x, y = symbols("x y")

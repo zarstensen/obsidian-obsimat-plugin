@@ -85,17 +85,17 @@ class FunctionsTransformer(Transformer):
         return limit(arg, symbol, approach_value, direction)
     
 
-    def sum_start_iter_first(self, iter_symbol: Expr, start_iter: Expr, end_iter: Expr, expression: Expr):
+    def sum_start_iter_first(self, iter_symbol: Expr, _: Token, start_iter: Expr, end_iter: Expr, expression: Expr):
         return Sum(expression, (iter_symbol, start_iter, end_iter))
     
-    def sum_end_iter_first(self, end_iter: Expr, iter_symbol: Expr, start_iter: Expr, expression: Expr):
-        return self.sum_start_iter_first(iter_symbol, start_iter, end_iter, expression)
+    def sum_end_iter_first(self, end_iter: Expr, iter_symbol: Expr, separator: Token, start_iter: Expr, expression: Expr):
+        return self.sum_start_iter_first(iter_symbol, separator, start_iter, end_iter, expression)
     
-    def product_start_iter_first(self, iter_symbol: Expr, start_iter: Expr, end_iter: Expr, expression: Expr):
+    def product_start_iter_first(self, iter_symbol: Expr, _: Token, start_iter: Expr, end_iter: Expr, expression: Expr):
         return Product(expression, (iter_symbol, start_iter, end_iter))
     
-    def product_end_iter_first(self, end_iter: Expr, iter_symbol: Expr, start_iter: Expr, expression: Expr):
-        return self.product_start_iter_first(iter_symbol, start_iter, end_iter, expression)
+    def product_end_iter_first(self, end_iter: Expr, iter_symbol: Expr, separator: Token, start_iter: Expr, expression: Expr):
+        return self.product_start_iter_first(iter_symbol, separator, start_iter, end_iter, expression)
     
     def sign(self, sign_token: Token):
         return sign_token.value

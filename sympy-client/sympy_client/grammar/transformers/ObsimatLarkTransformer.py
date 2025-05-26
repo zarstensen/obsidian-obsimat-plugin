@@ -32,6 +32,52 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         self._symbol_substitutor = symbol_substitutor
         self._function_store = function_store
 
+    def relation(self, tokens):
+        if len(tokens) == 1:
+            return tokens[0]
+
+        prev_expr = Dummy()
+        relation_type = None
+        
+        relations = []
+        
+        for token in tokens:
+            if isinstance(token, Expr):
+                if relation_type is not None:
+                    relations.append(self._create_relation(prev_expr, token, relation_type))
+                    relation_type = None
+                prev_expr = token
+            elif isinstance(token, Token):
+                relation_type = token.type
+            else:
+                raise RuntimeError(f"Unexpected token type {token}")
+        
+        if relation_type is not None:
+            relations.append(self._create_relation(prev_expr, Dummy(), relation_type))
+        
+        if len(relations) == 1:
+            return relations[0]
+        else:
+            return ChainedRelation(*relations, evaluate=False)
+
+    def _create_relation(self, left: Expr, right: Expr, relation_type: str):
+        with evaluate(False):
+            match relation_type:
+                case 'EQUAL':
+                    return Eq(left, right)
+                case 'NOT_EQUAL':
+                    return Ne(left, right)
+                case 'LT':
+                    return Lt(left, right)
+                case 'LTE':
+                    return Le(left, right)
+                case 'GT':
+                    return Gt(left, right)
+                case 'GTE':
+                    return Ge(left, right)
+                case _:
+                    raise RuntimeError(f"Unknown relation type '{relation_type}' between {left} and {right}")
+
     # sum a list of terms in an expression together
     def expression(self, tokens):
         

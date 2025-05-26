@@ -24,7 +24,6 @@ export default class ObsiMatPlugin extends Plugin {
     settings: ObsimatPluginSettings;
 
     async onload() {
-        console.log(sympy_client);
         await this.loadSettings();
         this.addSettingTab(new ObsimatSettingsTab(this.app, this));
 

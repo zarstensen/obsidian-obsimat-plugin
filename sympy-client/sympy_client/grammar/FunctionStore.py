@@ -1,14 +1,14 @@
 from dataclasses import dataclass
-from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.LmatEnvironment import LmatEnvironment
 from .SympyParser import SympyParser
 from sympy import *
 from copy import deepcopy
-from typing import Callable, Iterable, Iterator
+from typing import Iterable
 from sympy.core.symbol import Symbol
 
-# The FunctionStore class is responsible for managing and parsing all defined functions in a given obsimat environment.
+# The FunctionStore class is responsible for managing and parsing all defined functions in a given lmat environment.
 class FunctionStore:
-    def __init__(self, environment: ObsimatEnvironment, parser: SympyParser):
+    def __init__(self, environment: LmatEnvironment, parser: SympyParser):
         self._functions: dict[Symbol, FunctionStore._FunctionEntry] = {}
         
         if 'functions' in environment:
@@ -39,7 +39,7 @@ class FunctionStore:
 
     class _FunctionEntry:
         
-        def __init__(self, args: Iterable[Symbol], latex_expr: str, env: ObsimatEnvironment, parser: SympyParser):
+        def __init__(self, args: Iterable[Symbol], latex_expr: str, env: LmatEnvironment, parser: SympyParser):
             self._args = tuple(args)
             self._latex_expr = latex_expr
             self._env = env

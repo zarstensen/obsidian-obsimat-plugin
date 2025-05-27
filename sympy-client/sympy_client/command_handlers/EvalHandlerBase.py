@@ -7,9 +7,9 @@ from sympy.core.operations import AssocOp, LatticeOp
 from sympy.core.relational import Relational
 from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
-from sympy_client.ObsimatEnvironment import ObsimatEnvironment
-from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from sympy_client.ObsimatPrinter import obsimat_latex
+from sympy_client.LmatEnvironment import LmatEnvironment
+from sympy_client.LmatEnvironmentUtils import LmatEnvironmentUtils
+from sympy_client.LmatLatexPrinter import lmat_latex
 
 from .CommandHandler import CommandHandler, CommandResult
 
@@ -30,11 +30,11 @@ class EvalResult(CommandResult, ABC):
                 end_line = self.expr_lines[1] if self.expr_lines[1] is not None else self.expr_lines[0]
             )
         
-        return CommandResult.result(obsimat_latex(self.sympy_expr), metadata=metadata)
+        return CommandResult.result(lmat_latex(self.sympy_expr), metadata=metadata)
 
 class EvaluateMessage(TypedDict):
     expression: str
-    environment: ObsimatEnvironment
+    environment: LmatEnvironment
 
 class EvalHandlerBase(CommandHandler, ABC):
     
@@ -67,7 +67,7 @@ class EvalHandlerBase(CommandHandler, ABC):
         # store expression before units are converted and it is evaluated,
         # so we can display this intermediate step in the result.
         before_evaluate = deepcopy(sympy_expr)
-        sympy_expr = ObsimatEnvironmentUtils.substitute_units(sympy_expr, message['environment'])
+        sympy_expr = LmatEnvironmentUtils.substitute_units(sympy_expr, message['environment'])
 
         sympy_expr = self.evaluate(sympy_expr, message)
 

@@ -1,9 +1,9 @@
-from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from sympy_client.ObsimatEnvironment import ObsimatEnvironment
-from sympy_client.ObsimatClient import ObsimatClient
+from sympy_client.LmatEnvironmentUtils import LmatEnvironmentUtils
+from sympy_client.LmatEnvironment import LmatEnvironment
+from sympy_client.LatexMathClient import LatexMathClient
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.grammar.SympyParser import SympyParser
-from sympy_client.ObsimatPrinter import obsimat_latex
+from sympy_client.LmatLatexPrinter import lmat_latex
 from .CommandHandler import *
 
 from dataclasses import dataclass
@@ -15,7 +15,7 @@ from typing import Any, TypedDict, override
 class SolveModeMessage(TypedDict):
     expression: str
     symbol: str | None
-    environment: ObsimatEnvironment
+    environment: LmatEnvironment
 
 class MultivariateResult(CommandResult):
     
@@ -29,7 +29,7 @@ class MultivariateResult(CommandResult):
         
         result = dict(
             equation_count=self.equation_count,
-            symbols=[ dict(sympy_symbol=str(s), latex_symbol=obsimat_latex(s)) for s in self.symbols ]
+            symbols=[ dict(sympy_symbol=str(s), latex_symbol=lmat_latex(s)) for s in self.symbols ]
         )
         
         return CommandResult.result(result, status='multivariate_equation')
@@ -56,10 +56,10 @@ class SolveResult(CommandResult):
             symbols = tuple(self.symbols)
         
         if isinstance(solutions_set, FiniteSet) and len(solutions_set) <= SolveResult.MAX_RELATIONAL_FINITE_SOLUTIONS:
-            return CommandResult.result(obsimat_latex(solutions_set.as_relational(symbols)))
+            return CommandResult.result(lmat_latex(solutions_set.as_relational(symbols)))
         else:
             return CommandResult.result(
-                f"{obsimat_latex(symbols)} \\in {obsimat_latex(solutions_set)}"
+                f"{lmat_latex(symbols)} \\in {lmat_latex(solutions_set)}"
             )
 
 
@@ -76,7 +76,7 @@ class SolveHandler(CommandHandler):
     @override
     def handle(self, message: SolveModeMessage) -> SolveResult | MultivariateResult | ErrorResult:
         equations = self._parser.doparse(message['expression'], message['environment'])
-        equations = ObsimatEnvironmentUtils.substitute_units(equations, message['environment'])
+        equations = LmatEnvironmentUtils.substitute_units(equations, message['environment'])
 
         # position information is not needed here,
         # so extract the equations into a tuple, which sympy can work with.

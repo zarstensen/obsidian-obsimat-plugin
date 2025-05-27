@@ -1,10 +1,9 @@
-from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from sympy_client.ObsimatEnvironment import ObsimatEnvironment
-from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.LmatEnvironmentUtils import LmatEnvironmentUtils
+from sympy_client.LmatEnvironment import LmatEnvironment
 from .CommandHandler import *
 
 from sympy import *
-from typing import Any, TypedDict, override
+from typing import TypedDict, override
 
 SETS = [
     S.Complexes,
@@ -53,11 +52,11 @@ class SymbolSetResult(CommandResult):
         
 
 class SymbolSetModeMessage(TypedDict):
-    environment: ObsimatEnvironment
+    environment: LmatEnvironment
 
 class SymbolSetHandler(CommandHandler):
     def handle(self, message: SymbolSetModeMessage) -> SymbolSetResult:
-        environment: ObsimatEnvironment = message['environment']
+        environment: LmatEnvironment = message['environment']
     
         set_symbols = {set: [] for set in SETS}
 
@@ -67,7 +66,7 @@ class SymbolSetHandler(CommandHandler):
         # loop over sets and figure out which symbol belongs to which sets.
         
         for symbol in environment['symbols']:
-            sympy_symbol = ObsimatEnvironmentUtils.create_sympy_symbol(symbol, environment)
+            sympy_symbol = LmatEnvironmentUtils.create_sympy_symbol(symbol, environment)
             
             smallest_containing_set = None
             

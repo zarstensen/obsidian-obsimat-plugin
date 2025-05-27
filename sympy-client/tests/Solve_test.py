@@ -1,10 +1,10 @@
-from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.grammar.LmatLatexParser import LmatLatexParser
 from sympy_client.command_handlers.SolveHandler import *
 
 from sympy import *
 
 class TestSolve:
-    parser = ObsimatLatexParser()
+    parser = LmatLatexParser()
     
     def test_solve_with_domain(self):
         x = symbols('x')

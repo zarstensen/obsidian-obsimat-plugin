@@ -1,8 +1,8 @@
-.cm-preview-code-block:hover .obsimat-block-flair {
+.cm-preview-code-block:hover .lmat-block-flair {
     opacity: 0;
     visibility: hidden;
 }
 
-.obsimat-block-container-flair {
+.lmat-block-container-flair {
     overflow: auto;
 }

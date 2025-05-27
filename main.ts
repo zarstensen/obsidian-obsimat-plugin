@@ -1,9 +1,9 @@
 import { FileSystemAdapter, finishRenderMath, MarkdownPostProcessorContext, MarkdownView, Notice, Plugin, renderMath } from 'obsidian';
 import { SympyEvaluator } from 'src/SympyEvaluator';
-import { ObsimatEnvironment } from 'src/ObsimatEnvironment';
+import { LmatEnvironment } from 'src/LmatEnvironment';
 import { ExecutableSpawner, SourceCodeSpawner } from 'src/SympyClientSpawner';
-import { ObsimatSettingsTab } from 'src/ObsimatSettingsTab';
-import { IObsimatCommand } from 'src/commands/IObsimatCommand';
+import { LatexMathSettingsTab } from 'src/LatexMathSettingsTab';
+import { ILatexMathCommand } from 'src/commands/ILatexMathCommand';
 import { EvaluateCommand } from 'src/commands/EvaluateCommand';
 import { SolveCommand } from 'src/commands/SolveCommand';
 import { SympyConvertCommand } from 'src/commands/SympyConvertCommand';
@@ -11,24 +11,24 @@ import { UnitConvertCommand } from 'src/commands/UnitConvertCommand';
 import { AssetDownloader } from 'src/AssetDownloader';
 import path from 'path';
 
-interface ObsimatPluginSettings {
+interface LatexMathPluginSettings {
     dev_mode: boolean;
 }
 
-const DEFAULT_SETTINGS: ObsimatPluginSettings = {
+const DEFAULT_SETTINGS: LatexMathPluginSettings = {
     dev_mode: false
 };
 
-export default class ObsiMatPlugin extends Plugin {
-    settings: ObsimatPluginSettings;
+export default class LatexMathPlugin extends Plugin {
+    settings: LatexMathPluginSettings;
 
     async onload() {
         await this.loadSettings();
-        this.addSettingTab(new ObsimatSettingsTab(this.app, this));
+        this.addSettingTab(new LatexMathSettingsTab(this.app, this));
 
         
         if(!this.manifest.dir) {
-            new Notice("Obsimat could not determine its plugin directory, aborting load.");
+            new Notice("Latex Math could not determine its plugin directory, aborting load.");
             return;
         }
 
@@ -43,11 +43,11 @@ export default class ObsiMatPlugin extends Plugin {
             new Notice("Error\n" + truncatedError);
         });
         
-        this.registerMarkdownCodeBlockProcessor("obsimat", this.renderObsimatCodeBlock.bind(this));
+        this.registerMarkdownCodeBlockProcessor("latex-math", this.renderLmatCodeBlock.bind(this));
 
         // Add commands
 
-        this.addObsimatCommands(new Map([
+        this.addCommands(new Map([
             [ new EvaluateCommand("eval"), 'Evaluate LaTeX expression' ],
             [ new EvaluateCommand("evalf"), 'Evalf LaTeX expression' ],
             [ new EvaluateCommand("expand"), 'Expand LaTeX expression' ],
@@ -64,7 +64,7 @@ export default class ObsiMatPlugin extends Plugin {
 
     // sets up the given map of commands as obsidian commands.
     // the provided values for each command will be set as the command description.
-    addObsimatCommands(commands: Map<IObsimatCommand, string>) {
+    addCommands(commands: Map<ILatexMathCommand, string>) {
         commands.forEach((description, cmd) => {
           this.addCommand({
             id: cmd.id,
@@ -89,20 +89,20 @@ export default class ObsiMatPlugin extends Plugin {
         await this.saveData(this.settings);
     }
 
-    private async renderObsimatCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
+    private async renderLmatCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
         await this.spawn_sympy_client_promise;
         // Add the standard code block background div,
         // to ensure a consistent look with other code blocks.
-        const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg obsimat-block-container-flair");
+        const div = el.createDiv("HyperMD-codeblock HyperMD-codeblock-bg lmat-block-container-flair");
         // same goes with the code block flair
-        const flair = div.createSpan("code-block-flair obsimat-block-flair");
-        flair.innerText = "Obsimat";
+        const flair = div.createSpan("code-block-flair lmat-block-flair");
+        flair.innerText = "Latex Math";
         div.appendChild(flair);
 
         el.appendChild(div);
 
         // retreive to be rendered latex from python.
-        await this.sympy_evaluator.send("symbolsets", { environment: ObsimatEnvironment.fromCodeBlock(source, {}, {}) });
+        await this.sympy_evaluator.send("symbolsets", { environment: LmatEnvironment.fromCodeBlock(source, {}, {}) });
         const response = await this.sympy_evaluator.receive();
 
         // render the latex.
@@ -126,12 +126,12 @@ export default class ObsiMatPlugin extends Plugin {
 
         try {
             if(!await assetDownloader.hasRequiredAssets(asset_dir)) {
-                new Notice("Obsimat is downloading some required assets, this may take a while...");
+                new Notice("Latex Math is downloading some required assets, this may take a while...");
                 await assetDownloader.downloadAssets(asset_dir);
-                new Notice("Obsimat finished downloading the required assets, it is now usable.");
+                new Notice("Latex Math finished downloading the required assets, it is now usable.");
             }
         } catch (e) {
-            new Notice(`Obsimat could not download required assets, aborting load.\n${e.message}`);
+            new Notice(`Latex Math could not download required assets, aborting load.\n${e.message}`);
             throw e;
         }
 

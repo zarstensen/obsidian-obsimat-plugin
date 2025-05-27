@@ -27,7 +27,7 @@ from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin,
                                                       tan)
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
-from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.grammar.LmatLatexParser import LmatLatexParser
 
 theta = Symbol('\\theta')
 f = Function('f')
@@ -67,7 +67,7 @@ def _MatAdd(a, b):
 def _MatMul(a, b):
     return MatMul(a, b, evaluate=False)
 
-latex_parser = ObsimatLatexParser()
+latex_parser = LmatLatexParser()
 def parse_latex_lark(latex_str):
     return latex_parser.doparse(latex_str, {})
 

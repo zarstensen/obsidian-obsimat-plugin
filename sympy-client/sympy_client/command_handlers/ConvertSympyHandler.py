@@ -1,4 +1,4 @@
-from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.LmatEnvironment import LmatEnvironment
 from sympy_client.grammar.SympyParser import SympyParser
 from .CommandHandler import CommandHandler, CommandResult
 
@@ -17,7 +17,7 @@ class ConvertSympyResult(CommandResult):
 
 class ConvertSympyModeMessage(TypedDict):
     expression: str
-    environment: ObsimatEnvironment
+    environment: LmatEnvironment
 
 class ConvertSympyHandler(CommandHandler):
     def __init__(self, parser: SympyParser):

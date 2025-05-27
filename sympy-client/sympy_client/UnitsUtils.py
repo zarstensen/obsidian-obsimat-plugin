@@ -3,7 +3,6 @@ import sympy.physics.units as u
 from sympy.physics.units.quantities import Quantity 
 from sympy.physics.units.systems import SI
 from sympy.physics.units.unitsystem import UnitSystem
-import sympy.physics.units.systems as unit_systems
 
 # Substitute any symbols present in the sympy expression with the corresponding sympy unit.
 # Also convert all non base units to base units where possible.

@@ -1,5 +1,5 @@
-from sympy_client.ObsimatEnvironment import ObsimatEnvironment
-from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
+from sympy_client.LmatEnvironment import LmatEnvironment
+from sympy_client.LmatEnvironmentUtils import LmatEnvironmentUtils
 from .SympyParser import SympyParser
 from copy import deepcopy
 from sympy import *
@@ -7,8 +7,8 @@ from sympy import *
 # The CachedSymbolSubstitutor class is responsible for caching parsed values from the given environments symbols and variables fields.
 class CachedSymbolSubstitutor:
     # Construct a SubstitutionCache which will look for variables and symbols in the given environment, and parse them with the given parser.
-    def __init__(self, environment: ObsimatEnvironment, latex_parser: SympyParser):
-        self._environment: ObsimatEnvironment = environment
+    def __init__(self, environment: LmatEnvironment, latex_parser: SympyParser):
+        self._environment: LmatEnvironment = environment
         self._latex_parser = latex_parser
         self._cached_substitutions = {}
     
@@ -33,6 +33,6 @@ class CachedSymbolSubstitutor:
         return variable_value
     
     def _cache_new_symbol(self, symbol_name: str):
-        symbol_value = ObsimatEnvironmentUtils.create_sympy_symbol(symbol_name, self._environment)
+        symbol_value = LmatEnvironmentUtils.create_sympy_symbol(symbol_name, self._environment)
         self._cached_substitutions[symbol_name] = symbol_value
         return symbol_value

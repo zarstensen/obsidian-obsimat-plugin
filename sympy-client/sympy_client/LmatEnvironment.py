@@ -4,9 +4,9 @@ class FunctionDef(TypedDict):
     args: list[str]
     expr: str
 
-## The ObsimatEnvironment type represents a dictionary
-## parsed from a json encoded ObsimatEnvironment typescript class.
-class ObsimatEnvironment(TypedDict):
+## The LmatEnvironment type represents a dictionary
+## parsed from a json encoded LmatEnvironment typescript class.
+class LmatEnvironment(TypedDict):
     symbols: dict[str, list[str]]
     variables: dict[str, str]
     functions: dict[str, FunctionDef]

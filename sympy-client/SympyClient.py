@@ -1,5 +1,5 @@
-from sympy_client.ObsimatClient import ObsimatClient
-from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.LatexMathClient import LatexMathClient
+from sympy_client.grammar.LmatLatexParser import LmatLatexParser
 from sympy_client.command_handlers.EvalHandler import EvalHandler
 from sympy_client.command_handlers.EvalfHandler import EvalfHandler
 from sympy_client.command_handlers.ExpandHandler import ExpandHandler
@@ -19,9 +19,9 @@ if len(sys.argv) < 2:
 
 port = int(sys.argv[1])
 
-latex_parser = ObsimatLatexParser()
+latex_parser = LmatLatexParser()
 
-client = ObsimatClient()
+client = LatexMathClient()
 
 client.register_handler("eval", EvalHandler(latex_parser))
 client.register_handler("evalf", EvalfHandler(latex_parser))

@@ -43,7 +43,7 @@ export default class LatexMathPlugin extends Plugin {
             new Notice("Error\n" + truncatedError);
         });
         
-        this.registerMarkdownCodeBlockProcessor("latex-math", this.renderLmatCodeBlock.bind(this));
+        this.registerMarkdownCodeBlockProcessor("lmat", this.renderLmatCodeBlock.bind(this));
 
         // Add commands
 

@@ -49,6 +49,9 @@ def substitute_units(sympy_expr, excluded_symbols: list[Symbol], unit_system: Un
 # attempt to automatically convert the units in the given sympy expression.
 # this convertion method prioritizes as few units as possible raised to the lowest power possible (or lowest root possible).
 def auto_convert(sympy_expr, unit_system: UnitSystem):
+    if unit_system is None:
+        unit_system = SI
+    
     if isinstance(sympy_expr, MatrixBase):
         converted_matrix = Matrix.zeros(*sympy_expr.shape)
         for index, value in enumerate(sympy_expr):

@@ -33,10 +33,10 @@ class ObsimatEnvironmentUtils:
     # Also convert all non base units to base units where possible.
     @staticmethod
     def substitute_units(sympy_expr, environment: ObsimatEnvironment):
-        if 'units_system' not in environment:
+        if 'unit_system' not in environment:
             return sympy_expr
         
-        unit_system_id_str = environment['units_system']
+        unit_system_id_str = environment['unit_system']
         
         unit_system = UnitSystem.get_unit_system(unit_system_id_str)
         

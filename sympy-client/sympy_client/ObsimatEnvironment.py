@@ -11,7 +11,7 @@ class ObsimatEnvironment(TypedDict):
     variables: dict[str, str]
     functions: dict[str, FunctionDef]
 
-    units_system: str
+    unit_system: str
     excluded_symbols: list[str]
 
     domain: str

@@ -1,0 +1,25 @@
+// Based on sympy's original greek_symbols.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/greek_symbols.lark
+
+ALPHA: "\\alpha"
+BETA: "\\beta"
+GAMMA: "\\gamma"
+EPSILON: "\\epsilon" |  "\\varepsilon"
+ZETA: "\\zeta"
+ETA: "\\eta"
+THETA: "\\theta" | "\\vartheta"
+IOTA: "\\iota"
+KAPPA: "\\kappa"
+LAMBDA: "\\lambda"
+MU: "\\mu"
+NU: "\\nu"
+XI: "\\xi"
+RHO: "\\rho" | "\\varrho"
+TAU: "\\tau"
+UPSILON: "\\upsilon"
+PHI: "\\phi" | "\\varphi"
+CHI: "\\chi"
+PSI: "\\psi"
+OMEGA: "\\omega"
+
+GREEK_SYMBOL: ALPHA | BETA | GAMMA | EPSILON | ZETA | ETA | THETA | IOTA | KAPPA
+    | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA

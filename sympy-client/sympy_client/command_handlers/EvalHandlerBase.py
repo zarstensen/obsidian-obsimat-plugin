@@ -1,19 +1,18 @@
-from .CommandHandler import CommandResult, CommandHandler
-from typing import Any, TypedDict
+from abc import ABC, abstractmethod
+from copy import deepcopy
+from typing import TypedDict, override
+
+from sympy import *
+from sympy.core.operations import AssocOp, LatticeOp
+from sympy.core.relational import Relational
 from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
-from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
-from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.ObsimatEnvironmentUtils import ObsimatEnvironmentUtils
 from sympy_client.ObsimatPrinter import obsimat_latex
 
-from copy import deepcopy
-from sympy import *
-from sympy.core.relational import Relational
-from sympy.core.operations import LatticeOp, AssocOp
-from typing import Any, override
+from .CommandHandler import CommandHandler, CommandResult
 
-from abc import ABC, abstractmethod
 
 class EvalResult(CommandResult, ABC):
     def __init__(self, sympy_expr: Expr, expr_lines: list[int] | None):
@@ -28,7 +27,7 @@ class EvalResult(CommandResult, ABC):
         if self.expr_lines is not None:
             metadata = dict(
                 start_line = self.expr_lines[0],
-                end_line = self.expr_lines[1]
+                end_line = self.expr_lines[1] if self.expr_lines[1] is not None else self.expr_lines[0]
             )
         
         return CommandResult.result(obsimat_latex(self.sympy_expr), metadata=metadata)

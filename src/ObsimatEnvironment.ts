@@ -6,28 +6,9 @@ import * as toml from "toml";
 // it contains information about symbol assumptions, variable definitions, units, and solution domains.
 export class ObsimatEnvironment {
 
-    // symbols is a map of a symbols name and a list of all the assumptions,
-    // which sympy will take into account when evaluating any expression, containing this symbol.
-    public symbols: { [symbol: string]: string[] } | undefined;
-    // variables is a map of variable names and their corresponding substitutable values.
-    // these values should be substituted into any expression before evaluation.
-    public variables: { [variable: string]: string } | undefined;
-
-    public functions: { [func: string]: { args: string[], expr: string } } | undefined;
-
-    // the unit system to use when converting between units.
-    // if left undefined, no unit conversion takes place.
-    public units_system: string | undefined;
-    // the excluded_symbols list specifies a list symbols which should not be converted to units.
-    // if left undefined, a default list of commonly excluded symbols will be used instead.
-    public excluded_symbols: string[] | undefined;
-    
-    // the domain is a sympy expression, evaluating to the default solution domain of any equation solutions.
-    public domain: string | undefined;
-
     public static fromCodeBlock(code_block: string | undefined, variables: { [variable: string]: string }, functions: { [func: string]: { args: string[], expr: string } }) {
         if(!code_block) {
-            return new ObsimatEnvironment(undefined, variables, functions);
+            return new ObsimatEnvironment({}, variables, functions);
         }
 
         const parsed_obsimat_block = toml.parse(code_block);
@@ -105,20 +86,32 @@ export class ObsimatEnvironment {
     private static readonly OBSIMAT_FUNCTION_DEF_REGEX = new RegExp(String.raw`\$${this.OBSIMAT_VARIABLE_REGEX.source}\((?<args>(?:[^=$]*?\s*))\)\s*:=\s*(?<expr>[^=$]*?)\s*\$`, 'g');
 
     private constructor(
-        symbols?: { [symbol: string]: string[] },
-        variables?: { [variable: string]: string },
-        functions?: { [func: string]: { args: string[], expr: string } },
-        units_system?: string,
-        excluded_symbols?: string[],
-        domain?: string
-    ) {
-        this.symbols = symbols;
-        this.variables = variables;
-        this.functions = functions;
-        this.units_system = units_system;
-        this.excluded_symbols = excluded_symbols;
-        this.domain = domain;
-    }
+        /**
+         * symbols is a map of a symbols name and a list of all the assumptions,
+         * which sympy will take into account when evaluating any expression, containing this symbol.
+         */
+        public symbols: { [symbol: string]: string[] } = {},
+        /**
+         * variables is a map of variable names and their corresponding substitutable values.
+         * these values should be substituted into any expression before evaluation.
+         */
+        public variables: { [variable: string]: string } = {},
+        public functions: { [func: string]: { args: string[], expr: string } } = {},
+        /**
+         * the unit system to use when converting between units.
+         * if left undefined, no unit conversion takes place.
+         */
+        public unit_system: string | undefined = undefined,
+        /**
+         * the excluded_symbols list specifies a list symbols which should not be converted to units.
+         * if left undefined, a default list of commonly excluded symbols will be used instead.
+         */
+        public excluded_symbols: string[] | undefined = undefined,
+        /**
+         * the domain is a sympy expression, evaluating to the default solution domain of any equation solutions.
+         */
+        public domain: string | undefined = undefined
+    ) { }
 
     // find all variable definitions in the given document interval,
     // and parse them into a variables map.

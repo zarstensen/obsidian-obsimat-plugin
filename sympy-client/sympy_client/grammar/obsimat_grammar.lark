@@ -1,165 +1,473 @@
-%ignore "\\middle"
+// Terminals are loosley based on sympy's original latex.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/latex.lark
+// grammar has been written from the ground up to support the faster lalr parser instead of earley.
+
+// ======== Core structure ========
+
+latex_string: relation | system_of_relations
+
+_rel_op: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
+_align: _ALIGN | _LATEX_NEWLINE
+relation: (_align? _rel_op)? expression (_rel_op expression)* (_rel_op _align?)?
+
+// an expression is a sum of terms
+expression: (_align? (ADD|SUB))? term ((ADD|SUB) term)*
+
+// a term is a series of products of factors separated by product operators.
+term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (_align? (ADD|SUB))? implicit_multiplication)*
+
+// factors with no operator between them are implicitly multiplied together.
+?implicit_multiplication: _align? _factor (_align? _factor)* _align?
+
+// a factor is either a number, a constant, a symbol, or a function.
+// here exponentiation, fractions, binomials are loosly seen as functions.
+_factor: exponentiation_with_unit
+    | _base_factor
+    | unit
+ 
+ _factor_no_unit: exponentiation_no_unit
+    | _base_factor
+
+_base_factor: substitute_symbol
+    | _function
+    | _number
+    | _matrix_notation
+    | parenthesees_expression
+    | brackets_expression
+    | braces_expression
+
+?exponentiation_with_unit: exponentiation_no_unit
+    | unit _CARET function_special_arg -> exponentiation
+
+// groups a base factor and an exponent factor to be evaluated in an exponentation.
+exponentiation_no_unit: _base_factor _CARET function_special_arg -> exponentiation
+    | _base_factor _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
+
+// various rules for grouping expressions surrounded by delimiters.
+?parenthesees_expression: _L_PAREN expression _R_PAREN
+?braces_expression: _L_BRACE expression _R_BRACE
+?brackets_expression: _L_BRACKET expression _R_BRACKET
+
+// ======== Symbols ========
+
+substitute_symbol: symbol
+symbol: indexed_symbol | _non_indexed_symbol
+
+single_letter_symbol: SINGLE_LETTER_SYMBOL -> symbol
+multi_letter_symbol: MULTI_LETTER_SYMBOL -> symbol
+
+// a formatted symbol is any symbol surrounded with a latex command which changes it visually.
+// this could for example be \mathit
+formatted_symbol: CMD_FORMAT brace_surrounded_text [PRIMES]
+_non_indexed_symbol: single_letter_symbol | multi_letter_symbol | formatted_symbol
+
+indexed_symbol: _non_indexed_symbol _UNDERSCORE (single_letter_symbol | _digit | brace_surrounded_text) [PRIMES]
+
+// all the rules here should return the NAME (as in a str) of the symbol to be created
+// the symbol rule is responsible for eactually creating the symbol and optionally substituting its value.
+
+// this rule optionally tries to create a unit, instead of a symbol, if bunits are used.
+// otherwise this is the same as the symbol rule.
+unit: _L_BRACE _non_indexed_symbol _R_BRACE
+
+// ======== Numbers ========
+
+// groups any value which evaluates to a number.
+_number: _numeric_number | _digit
+// groups any value which evaluates to a number, and can be passed as an argument, without surrounding it with braces.
+// it may be a bit counter intuitive, but here pi (and other constants) are essentially seen as a "_digit".
+_digit: _numeric_digit | _constant
+
+_constant: CONST_PI | CONST_EULER | CONST_IMAGINARY | CONST_INFINITY
+
+_numeric_digit: NUMERIC_DIGIT
+_numeric_number: NUMERIC_NUMBER
+
+// ======== Functions ========
+
+undefined_function: UNDEFINED_FUNC_START list_of_expressions _R_PAREN
+
+_function: _delimited_function
+    | _named_function
+    | _series_function
+    | integral
+    | sqrt
+    | conjugate
+    | frac
+    | binom
+    | factorial
+    | derivative
+    | derivative_prime
+
+_named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions | _matrix_functions
+
+// this rule matches a singular argument to a function.
+// if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
+ // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
+
+// matches a special kind of argument, defined by the fact that fractions and binomials can be passed without surrounding them with braces.
+?function_special_arg: braces_expression | parenthesees_expression | _named_function | _delimited_function | frac | binom | single_letter_symbol | _digit
+
+
+// named functions
+
+_func_template{func_name}: func_name [_CARET function_special_arg] _factor_no_unit
+
+// trigonometric functions
+
+trig_function: _func_template{FUNC_SIN}
+    | _func_template{FUNC_COS}
+    | _func_template{FUNC_TAN}
+    | _func_template{FUNC_CSC}
+    | _func_template{FUNC_SEC}
+    | _func_template{FUNC_COT}
+    | _func_template{FUNC_ASIN}
+    | _func_template{FUNC_ACOS}
+    | _func_template{FUNC_ATAN}
+    | _func_template{FUNC_ACSC}
+    | _func_template{FUNC_ASEC}
+    | _func_template{FUNC_ACOT}
+    | _func_template{FUNC_SINH}
+    | _func_template{FUNC_COSH}
+    | _func_template{FUNC_TANH}
+    | _func_template{FUNC_ASINH}
+    | _func_template{FUNC_ACOSH}
+    | _func_template{FUNC_ATANH}
+
+_log: log_implicit_base
+    | log_explicit_base
+
+log_implicit_base: _func_template{FUNC_LOG}
+    | _func_template{FUNC_LN}
+    | _func_template{FUNC_LG}
+ 
+ // TODO: both orderings should be allowed, where caret is also to the left of the log.
+log_explicit_base: FUNC_LOG _UNDERSCORE function_special_arg [_CARET function_special_arg] _factor_no_unit
+    | FUNC_LOG _CARET function_special_arg _UNDERSCORE function_special_arg _factor_no_unit -> log_explicit_base_exponent_first
+
+exponential: _func_template{_FUNC_EXP}
+
+factorial: _factor_no_unit _BANG
+
+derivative_prime: _factor_no_unit PRIMES
+
+sign: _L_BRACE (ADD|SUB) _R_BRACE
+    | ADD
+    | SUB
+
+limit: _FUNC_LIMIT _UNDERSCORE _L_BRACE symbol _LIM_APPROACH_SYMBOL _base_factor [_CARET sign] _R_BRACE _factor_no_unit
+
+_series_template_start_iter_first{series_name}: series_name _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE _CARET function_special_arg _factor_no_unit
+_series_template_end_iter_first{series_name}: series_name _CARET function_special_arg _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE _factor_no_unit
+
+_series_function: sum | product
+
+sum: _series_template_start_iter_first{_FUNC_SUM} -> sum_start_iter_first
+    | _series_template_end_iter_first{_FUNC_SUM} -> sum_end_iter_first
+
+
+product: _series_template_start_iter_first{_FUNC_PRODUCT} -> product_start_iter_first
+    | _series_template_end_iter_first{_FUNC_PRODUCT} -> product_end_iter_first
+    
+// filter functions
+
+_filter_functions: min | max
+
+list_of_expressions: expression (_COMMA expression)*
+
+min: _FUNC_MIN _L_PAREN list_of_expressions _R_PAREN
+max: _FUNC_MAX _L_PAREN list_of_expressions _R_PAREN
+
+// delimited functions
+_delimited_function: abs | norm | inner_product | floor | ceil
+
+%declare _INNER_PRODUCT_SEPARATOR
+inner_product: _L_ANGLE expression _INNER_PRODUCT_SEPARATOR expression _R_ANGLE
+abs: _L_BAR expression _R_BAR
+norm: _L_DOUBLE_BAR expression _R_DOUBLE_BAR
+floor: _L_FLOOR expression _R_FLOOR
+ceil: _L_CEIL expression _R_CEIL
+sqrt: _FUNC_SQRT [brackets_expression] (braces_expression|single_letter_symbol|_digit)
+conjugate: _FUNC_CONJUGATE (braces_expression|single_letter_symbol|_digit)
+
+// match a single argument in a list of latex style arguments (that is \command{arg1}{arg2}...{argN})
+_multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
+// terminals signifying the delimiters and end of multiple arguments in a latex style argument list.
+// due to lalr's limited lookahead, a custom post lexer needs to insert this token when parsing.
+%declare _MULTIARG_DELIMITER
+%declare _MULTIARG_EOS
+
+// core functions
+frac: _FUNC_FRAC _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULTIARG_EOS
+binom: _FUNC_BINOM _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULTIARG_EOS
+
+diff_symbol_exponent: symbol [_CARET function_special_arg]
+diff_symbol_arg_list: (_DIFFERENTIAL_SYMBOL diff_symbol_exponent)+
+
+// need to have a post lex which recognises _FUNC_DERIVATIVE and then replaces any single letter symbol which matches _DIFFERENTIAL_SYMBOL with _DIFFERENTIAL_SYMBOL
+derivative: _FUNC_DERIVATIVE expression _R_BRACE _L_BRACE diff_symbol_arg_list _R_BRACE -> derivative_func_first
+    |   _FUNC_DERIVATIVE _R_BRACE _L_BRACE diff_symbol_arg_list _R_BRACE _factor_no_unit -> derivative_symbols_first
+
+integral: _FUNC_INTEGRAL [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_no_bounds
+    | _FUNC_INTEGRAL _UNDERSCORE function_special_arg _CARET function_special_arg [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_lower_bound_first
+    | _FUNC_INTEGRAL _CARET function_special_arg _UNDERSCORE function_special_arg [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_upper_bound_first
+
+// ======== Matrices ========
+
+// det_matrix is differentiated from the other matrices, as this one evaluates to the determinant value, which is a scalar and not a matrix.
+// TODO: different name for these?
+_matrix_notation: _matrix_type | det_matrix
+_matrix_type: matrix | array_matrix
+
+// _matrix_col_delim: _ALIGN
+// matrix_row_delim: _LATEX_NEWLINE -> matrix_like_delim
+
+matrix_row_delim: MATRIX_ROW_DELIM -> matrix_like_delim
+matrix_body: matrix_row_delim? expression ((_MATRIX_COL_DELIM|matrix_row_delim) expression)* matrix_row_delim?
+matrix: CMD_BEGIN_MATRIX matrix_body CMD_END_MATRIX _MATRIX_ENV_END
+array_matrix: CMD_BEGIN_ARRAY ARRAY_ENV_OPTIONS matrix_body CMD_END_ARRAY _MATRIX_ENV_END
+det_matrix: CMD_BEGIN_VMATRIX matrix_body CMD_END_VMATRIX _MATRIX_ENV_END
+
+// ======== Matrices functions ========
+
+_matrix_functions: determinant | trace | adjugate | rref | gradient | hessian | jacobian
+
+determinant: _func_template{_FUNC_MATRIX_DETERMINANT}
+trace: _func_template{_FUNC_MATRIX_TRACE}
+adjugate: _func_template{_FUNC_MATRIX_ADJUGATE}
+rref: _func_template{_FUNC_MATRIX_RREF}
+
+gradient: _func_template{_FUNC_GRADIENT}
+hessian: _func_template{_FUNC_HESSIAN}
+jacobian: _func_template{_FUNC_JACOBIAN}
+
+// ======== System of relations ========
+
+%declare _EXPR_DELIM
+system_of_relations_expr: relation
+system_of_relations_delim: _EXPR_DELIM -> matrix_like_delim
+_system_of_relations_body: system_of_relations_delim? system_of_relations_expr (system_of_relations_delim system_of_relations_expr)* system_of_relations_delim?
+system_of_relations: _CMD_BEGIN_ALIGN _system_of_relations_body _CMD_END_ALIGN
+    | _CMD_BEGIN_CASES _system_of_relations_body _CMD_END_CASES
+
+// ======== Miscellaneous rules ========
+
+// TODO: i dont see a reason why this priority should change anything, but it does so its here now.
+NON_BRACE_TEXT.-1: /[^{}]+/
+!brace_surrounded_text: _L_BRACE NON_BRACE_TEXT? (brace_surrounded_text NON_BRACE_TEXT?)*  _R_BRACE
+
+// ================ Terminals ================
 
 // ignore escaped whitespace in latex code
 %ignore /(?<!\\)\\ /
 
-// ignore any \math* formatting commands.
-// keep \mathit for multi letter variables
-%ignore /\\math(?!it\b)\w*(?={)/
+_WS: /[\s\t\n\r]+/
+%ignore _WS
 
-// add option to have multi letter symbols, without surrounding them with \mathit
-ext_multi_letter_symbol: /[a-zA-Z]{2,}(?:_{[a-zA-Z0-9]+?}|_[a-zA-Z0-9])?/
-%extend _atomic_expr: ext_multi_letter_symbol
+%ignore "\\," | "\\thinspace" | "\\:" | "\\medspace" | "\\;" | "\\thickspace"
+%ignore "\\quad" | "\\qquad"
+%ignore "\\!" | "\\negthinspace" | "\\negmedspace" | "\\negthickspace"
+%ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
+%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\(" | "\\=" | "\\middle"
 
-// fix function calls
-%override exponential: FUNC_EXP _expression_func
+%ignore "\\left" | "\\right"
+%ignore "\\limits" | "\\nolimits"
+%ignore "\\displaystyle"
 
-%override log: FUNC_LOG _expression_func
-    | FUNC_LN _expression_func
-    | FUNC_LG _expression_func
-    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression_func
-    | FUNC_LOG UNDERSCORE group_curly_parentheses _expression_func
+// basic binary operators
+ADD: "+"
+SUB: "-"
+MUL: "*"
+DIV: "/" | "\\over"
+
+// basic common operators
+_CMD_TIMES: "\\times"
+_CMD_CDOT:  "\\cdot"
+_CMD_DIV:   "\\div"
+_CMD_BAR: "\\bar"
+_CMD_OVERLINE: "\\overline"
+_CMD_INNER_PRODUCT_SEPARATOR: _BAR | _COMMA
+
+// tokens with distinct left and right symbols
+_L_ANGLE: "\\langle" | "<"
+_R_ANGLE: "\\rangle" | ">"
+_L_BRACE: "{"
+_R_BRACE: "}"
+L_BRACE_LITERAL: "\\{"
+R_BRACE_LITERAL: "\\}"
+_L_BRACKET: "["
+_R_BRACKET: "]"
+_L_CEIL: "\\lceil"
+_R_CEIL: "\\rceil"
+_L_FLOOR: "\\lfloor"
+_R_FLOOR: "\\rfloor"
+_L_PAREN: "("
+_R_PAREN: ")"
+_L_BAR: _BAR
+%declare _R_BAR
+_L_DOUBLE_BAR: _DOUBLE_BAR
+%declare _R_DOUBLE_BAR
+
+_L_DELIMITER: _L_ANGLE | L_BRACE_LITERAL | _L_BRACKET | _L_CEIL | _L_FLOOR | _L_PAREN
+_R_DELIMITER: _R_ANGLE | R_BRACE_LITERAL | _R_BRACKET | _R_CEIL | _R_FLOOR | _R_PAREN
+
+// limit, integral, sum, and product symbols
+_FUNC_LIMIT:  "\\lim"
+_LIM_APPROACH_SYMBOL: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
+_FUNC_INTEGRAL:  "\\int" | "\\intop"
+_FUNC_SUM:  "\\sum"
+_FUNC_PRODUCT: "\\prod"
+
+// common functions
+_FUNC_EXP:  "\\exp"
+FUNC_LOG:  "\\log"
+FUNC_LN:   "\\ln"
+FUNC_LG:   "\\lg"
+_FUNC_MIN: "\\min"
+_FUNC_MAX: "\\max"
+_FUNC_CONJUGATE: _CMD_OVERLINE | _CMD_BAR
+
+// multiarg functions
+
+_FUNC_FRAC: /\\[dtcs]?frac/ | "\\nicefrac"
+_FUNC_BINOM: /\\[dt]?binom/
+
+_FUNC_DERIVATIVE: _FUNC_FRAC _WS? _L_BRACE _WS? _DIFFERENTIAL_SYMBOL
+
+_FUNC_OVERLINE: "\\overline"
+
+// trigonometric functions
+FUNC_SIN:  "\\sin"
+FUNC_COS:  "\\cos"
+FUNC_TAN:  "\\tan"
+FUNC_CSC:  "\\csc"
+FUNC_SEC:  "\\sec"
+FUNC_COT:  "\\cot"
+
+// inverse trigonometric functions
+FUNC_ASIN: "\\arcsin"
+FUNC_ACOS: "\\arccos"
+FUNC_ATAN: "\\arctan"
+FUNC_ACSC: "\\arccsc"
+FUNC_ASEC: "\\arcsec"
+FUNC_ACOT: "\\arccot"
+
+// hyperbolic trigonometric functions
+FUNC_SINH: "\\sinh"
+FUNC_COSH: "\\cosh"
+FUNC_TANH: "\\tanh"
+FUNC_ASINH: "\\arsinh"
+FUNC_ACOSH: "\\arcosh"
+FUNC_ATANH: "\\artanh"
+
+_FUNC_SQRT: "\\sqrt"
+
+// matrix functions
+
+_FUNC_MATRIX_DETERMINANT: "\\det"
+_FUNC_MATRIX_TRACE: CMD_OPERATOR _WS? _L_BRACE _WS? "trace" _WS? _R_BRACE
+_FUNC_MATRIX_ADJUGATE: CMD_OPERATOR _WS? _L_BRACE _WS? "adjugate" _WS? _R_BRACE
+_FUNC_MATRIX_RREF: CMD_OPERATOR _WS? _L_BRACE _WS? "rref" _WS? _R_BRACE
+
+// linear alg functions.
+
+_FUNC_GRADIENT: "\\nabla"
+_FUNC_HESSIAN: CMD_MATRIX_FORMAT _WS? _L_BRACE _WS? "H" _WS? _R_BRACE
+_FUNC_JACOBIAN: CMD_MATRIX_FORMAT _WS? _L_BRACE _WS? "J" _WS? _R_BRACE
+
+// TODO: use a bit more elaborate regex here, so more complex strings are allowed in the index.
+UNDEFINED_FUNC_START: (SINGLE_LETTER_SYMBOL|MULTI_LETTER_SYMBOL) (_WS? _UNDERSCORE _WS? _L_BRACE /\s*[^{}]+\s*/ _R_BRACE)? _L_PAREN
+
+// mathematical constants
+CONST_PI: "\\pi"
+CONST_EULER: "e"
+CONST_IMAGINARY: "i"
+CONST_INFINITY: "\\infty"
+
+CMD_MATH: /\\math\w+/
+CMD_BOLD_FORMAT: "\\pmb"
+
+CMD_FORMAT: CMD_MATH | CMD_BOLD_FORMAT
+
+// mathrm is also included here so operatorname does not have to be used everywhere.
+CMD_OPERATOR: "\\operatorname" | "\\mathrm"
+CMD_MATRIX_FORMAT: "\\mathbf"
+
+_BANG: "!"
+_BAR: "|" | "\\mid"
+_DOUBLE_BAR: "||" | /\\mid\s*\\mid/ | "\\Vert"
+_DOT: "."
+_CARET: "^"
+_COMMA: ","
+_UNDERSCORE: "_"
+
+// relational symbols
+EQUAL: "="
+NOT_EQUAL: "\\neq" | "\\ne"
+LT: "<"
+LTE: LT EQUAL | "\\leq" | "\\leqslant" // | "\\le" removed because it collides with \\left
+GT: ">"
+GTE: GT EQUAL | "\\geq" | "\\ge" | "\\geqslant"
+
+OPERATOR_DIV: _CMD_DIV | DIV
+OPERATOR_MUL: MUL | _CMD_TIMES | _CMD_CDOT
+
+%import .greek_symbols.GREEK_SYMBOL
+
+_DELTA_DIFFERENTIAL_SYMBOL: "\\delta"
+_UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
+// TODO: this priority should ideally not be here.
+_DIFFERENTIAL_SYMBOL.1: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _DELTA_DIFFERENTIAL_SYMBOL
 
 
-// Fix all these functions being WAY too greedy with what they considered arguments.
-// before the latex string \\sin(a) - b could be parsed to sin(a-b), this prevents that. 
-%override sin: FUNC_SIN _expression_func
-%override cos: FUNC_COS _expression_func
-%override tan: FUNC_TAN _expression_func
-%override csc: FUNC_CSC _expression_func
-%override sec: FUNC_SEC _expression_func
-%override cot: FUNC_COT _expression_func
+// should this just be \w?
+LATIN_SYMBOL: /[a-zA-Z]/
+LATIN_SYMBOL_WITH_PRIMTES: LATIN_SYMBOL PRIMES
+MULTI_LETTER_LATIN_SYMBOL: /[a-zA-Z]{2,}'*/
+GREEK_SYMBOL_WITH_PRIMES: GREEK_SYMBOL PRIMES
 
-%override sin_power: FUNC_SIN CARET _expression_func _expression_func
-%override cos_power: FUNC_COS CARET _expression_func _expression_func
-%override tan_power: FUNC_TAN CARET _expression_func _expression_func
-%override csc_power: FUNC_CSC CARET _expression_func _expression_func
-%override sec_power: FUNC_SEC CARET _expression_func _expression_func
-%override cot_power: FUNC_COT CARET _expression_func _expression_func
+SINGLE_LETTER_SYMBOL: LATIN_SYMBOL | GREEK_SYMBOL
 
-%override sinh: FUNC_SINH _expression_func
-%override cosh: FUNC_COSH _expression_func
-%override tanh: FUNC_TANH _expression_func
+MULTI_LETTER_SYMBOL: LATIN_SYMBOL_WITH_PRIMTES | GREEK_SYMBOL_WITH_PRIMES | MULTI_LETTER_LATIN_SYMBOL
 
-%override arcsin: FUNC_ARCSIN _expression_func
-%override arccos: FUNC_ARCCOS _expression_func
-%override arctan: FUNC_ARCTAN _expression_func
-%override arccsc: FUNC_ARCCSC _expression_func
-%override arcsec: FUNC_ARCSEC _expression_func
-%override arccot: FUNC_ARCCOT _expression_func
+%import common.DIGIT -> NUMERIC_DIGIT
 
-%override asinh: FUNC_ARSINH _expression_func
-%override acosh: FUNC_ARCOSH _expression_func
-%override atanh: FUNC_ARTANH _expression_func
+NUMERIC_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* _DOT NUMERIC_DIGIT+
 
-// fix implicit multiplication not working in cases after explicit multiplication,
-// functions, or matricies.
+PRIMES: "'"+
 
+ADJOINT_TRANSPOSE_EXPONENT: /(\\prime|\\ast|'|\*)/
+ADJOINT_TRANSPOSE_EXPONENTS: /{(\\prime|\\ast|'|\*|\s)+}/
 
-whitespace: /\s+/
+CMD_BEGIN: "\\begin" _WS? _L_BRACE
+// TODO: this is not going to be used?
+CMD_END: "\\end" _WS? _L_BRACE
 
-// need to override the whole thing here, as the first part of the rule needed to be modified,
-// and fixing it with an extension would lead to an ambigiouity whenever this case was encountered. 
-%override adjacent_expressions.1: _expression_power whitespace _expression_mul
-    | number _expression_mul
-    | group_round_parentheses (group_round_parentheses | _one_letter_symbol)
-    | _function _function
-    | fraction _expression_mul
+// matrices
 
-%extend mul: _expression_mul MUL_SYMBOL adjacent_expressions
-// %extend div: _expression_mul MUL_SYMBOL adjacent_expressions
+ARRAY_ENV: "array"
+MATRIX_ENV: /([bp]?(?:small)?)matrix/
+VMATRIX_ENV: /v(small)?matrix/
 
-// add mathematical constants
-PI: "\\pi"
-EULER: "e"
-TAU: "\\tau"
-IMAGINARY_CONSTANT: "i" // note: this is already present as CMD_IMAGINARY_UNIT, but it is prioritized way too low, so it is also added as a constant.
+%declare _MATRIX_ENV_END
 
-MATH_CONSTANTS: PI | EULER | TAU | IMAGINARY_CONSTANT
+CMD_BEGIN_MATRIX: CMD_BEGIN _WS? MATRIX_ENV _WS? _R_BRACE
+CMD_END_MATRIX: CMD_END _WS? MATRIX_ENV _WS? _R_BRACE
 
-math_constant.1: MATH_CONSTANTS
-%extend _atomic_expr: math_constant 
+CMD_BEGIN_VMATRIX: CMD_BEGIN _WS? VMATRIX_ENV _WS? _R_BRACE
+CMD_END_VMATRIX: CMD_END _WS? VMATRIX_ENV _WS? _R_BRACE
 
-// add the standard matrix norm function
-NORM: "\\Vert" | "\\lVert" | "\\rVert"
-matrix_norm: NORM _expression NORM
-%extend _function: matrix_norm
+CMD_BEGIN_ARRAY: ("\\left" _WS? _L_DELIMITER)? _WS? CMD_BEGIN _WS? ARRAY_ENV _WS? _R_BRACE
+ARRAY_ENV_OPTIONS: _L_BRACE (/[clr|\s]+/)? _R_BRACE
+CMD_END_ARRAY: CMD_END _WS? ARRAY_ENV _WS? _R_BRACE _WS? ("\\right" _WS? _R_DELIMITER)?
 
-INNER_PRODUCT_CENTER: BAR | ","
+%declare _MATRIX_COL_DELIM
+%declare MATRIX_ROW_DELIM
 
-// add the standard matrix inner product function
-matrix_inner_product.1: CMD_LANGLE _expression INNER_PRODUCT_CENTER _expression CMD_RANGLE
-%extend _function: matrix_inner_product
-// remove the physics inner product...
-%override inner_product: /a^/
+_ALIGN: "&"
+_LATEX_NEWLINE: "\\\\"
 
-// add gradient operator
-GRADIENT: "\\nabla"
-gradient: GRADIENT _expression_func
-%extend _function: gradient
-
-// add hessian operator
-HESSIAN: "\\mathbf{H}"
-hessian: HESSIAN _expression_func
-%extend _function: hessian
-
-// add jacobian operator
-JACOBIAN: "\\mathbf{J}"
-jacobian: JACOBIAN _expression_func
-%extend _function: jacobian
-
-// add rref operator
-RREF: "\\mathrm{rref}"
-rref: RREF _expression_func
-%extend _function: rref
-
-// add quick hand notation for differentiating expressions
-// e.g. (x^2)' -> 2x
-%override matrix_prime: matrix PRIMES
-quick_derivative: group_round_parentheses PRIMES
-%extend _function: quick_derivative
-
-// ==== multi expression environments ====
-ALIGN_ENV: L_BRACE "align" R_BRACE
-CASES_ENV: L_BRACE "cases" R_BRACE 
-
-CMD_BEGIN_ALIGN: CMD_BEGIN ALIGN_ENV
-CMD_BEGIN_CASES: CMD_BEGIN CASES_ENV
-CMD_END_ALIGN: CMD_END ALIGN_ENV
-CMD_END_CASES: CMD_END CASES_ENV
-
-system_of_expressions: CMD_BEGIN_ALIGN _system_of_expressions_body CMD_END_ALIGN | CMD_BEGIN_CASES _system_of_expressions_body CMD_END_CASES
-// the body should contain any latex parsable string separated by \\ character groups.
-_system_of_expressions_body: system_of_expressions_expr (MATRIX_ROW_DELIM system_of_expressions_expr)* (MATRIX_ROW_DELIM)?
-
-system_of_expressions_expr: latex_string
-
-%extend latex_string: system_of_expressions
-
-// Partial relations, that is relations which are missing a left or right side
-// eg. = 5, 25 < and so on...
-
-// enable aligning around relations, its the lesser of two evils,
-// as we cannot simply ignore the '&' because they are relevant for matricies,
-// but supporting them in all expressions would be too large of a refactor of sympy's grammar file.
-align_rel{relation}: MATRIX_COL_DELIM* relation MATRIX_COL_DELIM*
-_partial_rel{relation}: align_rel{relation} _expression | _expression align_rel{relation}
-
-partial_relation: _partial_rel{EQUAL} | _partial_rel{NOT_EQUAL} | _partial_rel{LT} | _partial_rel{LTE} | _partial_rel{GT} | _partial_rel{GTE}
-%extend latex_string: partial_relation
-
-_complete_rel{relation}: _expression align_rel{relation} _expression
-
-%override eq: _complete_rel{EQUAL}
-%override ne: _complete_rel{NOT_EQUAL}
-%override lt: _complete_rel{LT}
-%override lte: _complete_rel{LTE}
-%override gt: _complete_rel{GT}
-%override gte: _complete_rel{GTE}
-
-// chained relations
-// that is eg. a = b = c, or a < b < c and so on...
-_chained_relation{relation}: (_relation | chained_relation | partial_relation) relation _expression
-chained_relation: _chained_relation{EQUAL} | _chained_relation{NOT_EQUAL} | _chained_relation{LT} | _chained_relation{LTE} | _chained_relation{GT} | _chained_relation{GTE}
-
-%extend latex_string: chained_relation
+// system of relations
+_CMD_BEGIN_ALIGN: CMD_BEGIN _WS? "align" _WS? _R_BRACE
+_CMD_BEGIN_CASES: CMD_BEGIN _WS? "cases" _WS? _R_BRACE
+_CMD_END_ALIGN: CMD_END _WS? "align" _WS? _R_BRACE
+_CMD_END_CASES: CMD_END _WS? "cases" _WS? _R_BRACE

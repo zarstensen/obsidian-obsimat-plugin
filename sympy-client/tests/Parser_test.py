@@ -1,11 +1,26 @@
+from sympy import *
 from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
-from sympy import *
 
 class TestParse:
     parser = ObsimatLatexParser()
-    
+
+    def test_basic(self):
+        a, b, c = symbols('a b c')
+        # result = self.parser.doparse(r'-a i + b \pi + e + \frac{{a}}{b} + {a}^{b} \cdot f(a 25^2 symbol^{yaysymbol}) - \frac{50 - 70}5^{-99} - \frac{{km}}{{h}} \over \sin x + \sqrt[5]{x}')
+        result = self.parser.doparse(r'-a i \cdot (5 + 7)^c + b')
+        assert result == -a * I * (5 + 7) ** c + b
+
+    def test_trig_funcs(self):
+        x, y, abc = symbols('x y abc')
+        assert self.parser.doparse(r'\sin x') == sin(x)
+        assert self.parser.doparse(r'\sin^y x') == sin(x)**y
+        assert simplify(self.parser.doparse(r'\frac{\sin(abc)}{\cos {abc}}')) == tan(abc)
+        assert self.parser.doparse(r'\arctan{abc}') == atan(abc)
+        assert self.parser.doparse(r'\arcosh y') == acosh(y)
+        
+
     def test_relations(self):
         x, y, z = symbols("x y z")
         assert self.parser.doparse(r"x=y") == Eq(x, y)
@@ -50,6 +65,11 @@ class TestParse:
         assert self.parser.doparse(r"a b c") == a * b * c
         assert self.parser.doparse(r"a b \cdot c") == a * b * c
         assert self.parser.doparse(r"a \cdot b c") == a * b * c
+        
+        # indexed_symbols
+        x1, x2 = symbols('x_{1} x_{2}')
+        
+        assert self.parser.doparse(r"x_{1} x_{2}") == x1 * x2
         
         # functions 
         assert self.parser.doparse(r"b \sin(a)") == sin(a) * b
@@ -99,7 +119,7 @@ class TestParse:
         f, x = symbols("f x")
         
         assert self.parser.doparse("f (x)") == f * x
-        assert self.parser.doparse("f(x)") == Function(f)(x)
+        assert self.parser.doparse("f(x)") == Function('f')(x)
     
     def test_partial_relations(self):
         x, y = symbols("x y")
@@ -135,7 +155,7 @@ class TestParse:
 
         assert result.get_expr(2) == Eq(z, x + 2 * y / x)
         assert result.get_location(2).line == 5
-        assert result.get_location(2).end_line == 5
+        assert result.get_location(2).end_line == None
 
 
         result = self.parser.doparse(r"""
@@ -178,8 +198,19 @@ i & 2 i
         
         assert result.doit() == Matrix([[5, - 5 * I], [5 * I, 5]])	
         
-        
     def test_symbols(self):
+        s_a = Symbol("variable")
+        s_b = Symbol("v")
+        s_c = Symbol("a_{1}")
+        s_d = Symbol(r"\mathrm{X}")
+        s_e = Symbol(r"\pmb{M}_{some label i;j}")
+        s_f = Symbol(r"\alpha_{very_{indexed_{variable}}}")
+        
+        result = self.parser.doparse(r"variable + v \cdot a_1 + \sqrt{\pmb{M}_{some label i;j}^{\alpha_{very_{indexed_{variable}}}}} + \mathrm{X}^{-1}")
+        
+        assert result == s_a + s_b * s_c + sqrt(s_e**s_f) + s_d**-1
+
+    def test_symbol_definitions(self):
         result = self.parser.doparse(r"x", { "symbols": { "x": [ "real" ] } })
         assert result == symbols("x", real=True)
         
@@ -197,6 +228,15 @@ i & 2 i
         
         assert result == x + y + y
     
+    def test_brace_units(self):
+        import sympy.physics.units as u
+        x, a, b = symbols('x a b')
+        
+        assert self.parser.doparse(r"{a + b}^2 + {s}^2") == u.second**2 + (a + b)**2
+
+        result = self.parser.doparse(r"{km} + \sin{x} + \frac{a}{{J}} + b")
+        assert result == u.km + sin(x) + a / u.joule + b
+
     def test_hessian(self):
         result = self.parser.doparse(r"\mathbf{H}(x^2 + y^2)")
         

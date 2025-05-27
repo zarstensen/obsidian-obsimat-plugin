@@ -1,61 +1,201 @@
+import os
+import re as regex
+from typing import Callable, Iterator
+
+from lark import Lark, Token, Tree
+from lark.lark import PostLex
+from lark.lexer import TerminalDef
+from sympy import *
 from sympy_client.ObsimatEnvironment import ObsimatEnvironment
-from .ObsimatLarkTransformer import ObsimatLarkTransformer
-from .SympyParser import SympyParser
+
 from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
 from .FunctionStore import FunctionStore
+from .SympyParser import SympyParser
+from .transformers.ObsimatLarkTransformer import ObsimatLarkTransformer
 
-from sympy import *
-import sympy.parsing.latex.lark as sympy_lark
-from lark import Tree, Lark
-import os
-from tempfile import TemporaryDirectory
-import shutil
 
+# Represents a scope to be handled by the ScopePostLexer.
+# This class provides a series of terminals pairs which define the start and end of this scope.
+# 
+# The replace_tokens dict is a dict between a terminal type, and either:
+# - A string representing the new type of this token, the value is preserved.
+# - A list of TerminalDef, which (going from left to right) replaces the given terminal type, if its pattern matches its value.
+class LexerScope:
+    def __init__(self, 
+                    scope_pairs: list[tuple[regex.Pattern, regex.Pattern|Callable[[regex.Match[str]], regex.Pattern]]] = [],
+                    replace_tokens: dict[str, str|list[TerminalDef]] = {}
+                ):
+        self.scope_pairs = scope_pairs
+        self.replace_tokens = replace_tokens
+    
+    def token_handler(self, token_stream: Iterator[Token], _scope_start_token: Token) -> Iterator[Token]:
+        for t in token_stream:
+            # try to replace the token
+            if t.type in self.replace_tokens:
+                if isinstance(self.replace_tokens[t.type], str):
+                    yield Token(self.replace_tokens[t.type], t.value)
+                    continue
+                
+                for replace_token in self.replace_tokens[t.type]:
+                    if regex.fullmatch(replace_token.pattern.to_regexp(), t.value):
+                        yield Token(str(replace_token), t.value)
+                        break
+                else:
+                    # no tokens could replace it anyways, so just return the original one.
+                    yield t
+            else:
+                yield t
+
+class MultiArgScope(LexerScope):
+    def __init__(self, arg_count: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.arg_count = arg_count
+    
+    def token_handler(self, token_stream: Iterator[Token], scope_start_token: Token) -> Iterator[Token]:
+        for _ in range(1, self.arg_count):
+            yield next(super().token_handler(token_stream, scope_start_token))
+            yield Token("_MULTIARG_DELIMITER", "")
+        yield next(super().token_handler(token_stream, scope_start_token))
+        yield Token("_MULTIARG_EOS", "")
+
+class MatrixScope(LexerScope):
+    def token_handler(self, token_stream: Iterator[Token], scope_start_token: Token) -> Iterator[Token]:
+        ignore_regex = r'(\\left\s*.|\\right\s*.|\s)'
+        expected_end_token_type = scope_start_token.type.replace('BEGIN', 'END')
+        expected_end_token_value = regex.sub(ignore_regex, '', scope_start_token.value).replace('\\begin', '\\end')
+        for token in super().token_handler(token_stream, scope_start_token):
+            yield token
+            if token.type == expected_end_token_type and regex.sub(ignore_regex, '', token.value) == expected_end_token_value:
+                yield Token('_MATRIX_ENV_END', '')
+
+# The ScopePostLexer aims to provide context to the lalr parser during tokenization.
+# It does this by recognizing pairs of terminals, which define a scope.
+# Inside this scope, terminals can be specified which should be replaced by other terminals,
+# or optionally a custom token handler can be given, for more complex operations.
+class ScopePostLexer(PostLex):
+        
+    # setup scopes using the terminals defined in the given parser.
+    def initialize_scopes(self, parser: Lark):
+        self.scopes = [
+            # Scope for inner products,
+            # is here so we dont go into the abs scope below.
+            LexerScope(
+                scope_pairs=[
+                    ("_L_ANGLE", "_R_ANGLE")
+                ],
+                replace_tokens={
+                    "_L_BAR": "_INNER_PRODUCT_SEPARATOR",
+                    "_COMMA": "_INNER_PRODUCT_SEPARATOR"
+                }
+            ),
+            # Scope for pairing up '|' characters for abs rules.
+            LexerScope(
+                scope_pairs=[
+                    ("_L_BAR", "_R_BAR"),
+                    ("_L_DOUBLE_BAR", "_R_DOUBLE_BAR")
+                ],
+                replace_tokens={
+                    "_L_BAR": "_R_BAR",
+                    "_L_DOUBLE_BAR": "_R_DOUBLE_BAR",
+                }
+            ),
+            # Scope for latex commands which require multiple arguments,
+            # that is \command{arg1}{arg2}...{argN}.
+            MultiArgScope(
+                arg_count=2,
+                scope_pairs=[
+                    ("_FUNC_FRAC", "_MULTIARG_EOS"),
+                    ("_FUNC_BINOM", "_MULTIARG_EOS")
+                ]
+            ),
+            # Scope for functions which require the _DIFFERENTIAL_SYMBOL be prioritized over symbols.
+            LexerScope(
+                scope_pairs=[
+                    ("_FUNC_DERIVATIVE", "_R_BRACE"),
+                    ("_FUNC_INT", "_DIFFERENTIAL_SYMBOL")
+                ],
+                replace_tokens={
+                    "SINGLE_LETTER_SYMBOL": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
+                    "FORMATTED_SYMBOLS": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
+                }
+            ),
+            MatrixScope(
+                scope_pairs=[
+                    ("CMD_BEGIN_MATRIX", "_MATRIX_ENV_END"),
+                    ("CMD_BEGIN_ARRAY", "_MATRIX_ENV_END"),
+                    ("CMD_BEGIN_VMATRIX", "_MATRIX_ENV_END")
+                ],
+                replace_tokens={
+                    "_ALIGN": "_MATRIX_COL_DELIM",
+                    "_LATEX_NEWLINE": "MATRIX_ROW_DELIM"
+                }
+            ),
+            LexerScope(
+                scope_pairs = [
+                    ("_CMD_BEGIN_ALIGN", "_CMD_END_ALIGN"),
+                    ("_CMD_BEGIN_CASES", "_CMD_END_CASES")
+                ],
+                replace_tokens={
+                    "_LATEX_NEWLINE": "_EXPR_DELIM"
+                }
+            ),
+            # General scope for L R token pairs.
+            # This makes sure stuff like |(|x|)| does not get parsed as "|(|", "x" and "|)|" but instead as "|(|x|)|"
+            LexerScope(
+                scope_pairs=[("_?L_(.*)", lambda match : f"_?R_{match.groups()[0]}")]
+            )
+        ]
+        
+    def process(self, stream: Iterator[Token]) -> Iterator[Token]:
+        yield from self._process_scope(stream, LexerScope(), None, None)
+            
+    def _process_scope(self, stream, scope: LexerScope, scope_begin_token: Token | None, scope_end_terminal: str | None):
+        for token in scope.token_handler(stream, scope_begin_token):
+            yield token
+            
+            # check if we are ourselves at an end terminal
+            # if we are, go out of the scope.
+            if scope_end_terminal is not None and regex.fullmatch(scope_end_terminal, token.type):
+                break
+            
+            # check if the token starts a scope
+            for new_scope in self.scopes:
+                for scope_pair in new_scope.scope_pairs:
+                    match = regex.fullmatch(scope_pair[0], token.type)
+                    if match:
+                        end_terminal = scope_pair[1] if isinstance(scope_pair[1], str) else scope_pair[1](match)
+                        yield from self._process_scope(stream, new_scope, token, end_terminal)
+                        break # do not consider other scopes
+                # do not continue if the inner loop was broken out of.
+                else:
+                    continue
+                break
 
 ## The ObsimatLatexParser is responsible for parsing a latex string in the context of an ObsimatEnvironment.
-## It also extends many functionalities of the sympy LarkLaTeXParser,
-## to make it more suitable for general purpose mathematics.
 class ObsimatLatexParser(SympyParser):
 
     def __init__(self, grammar_file: str = None):
-        # append the given grammar file to the end of sympys grammar file,
-        # and give it to the super constructor.
-        # that way we can extend sympys grammar with our own rules and terminals.
         if grammar_file is None:
             grammar_file = os.path.join(
                 os.path.dirname(__file__), "obsimat_grammar.lark"
             )
-
-        with TemporaryDirectory() as temp_dir:
-            for file in os.listdir(
-                os.path.join(os.path.dirname(sympy_lark.__file__), "grammar")
-            ):
-                if file.endswith(".lark"):
-                    shutil.copy(
-                        os.path.join(
-                            os.path.dirname(sympy_lark.__file__), "grammar", file
-                        ),
-                        temp_dir,
-                    )
-
-            with open(os.path.join(temp_dir, "latex.lark"), "a") as f:
-                with open(grammar_file, "r") as custom_grammar:
-                    f.write("\n" + custom_grammar.read())
-
-            # initialize a lark parser with the same settings as LarkLaTeXParser,
-            # but with propagating positions enabled.
-            self.parser = Lark.open(
-                os.path.join(temp_dir, "latex.lark"),
-                rel_to=temp_dir,
-                parser="earley",
-                start="latex_string",
-                lexer="auto",
-                ambiguity="explicit",
-                debug=True,
-                propagate_positions=True,
-                maybe_placeholders=False,
-                keep_all_tokens=True,
-            )
+        
+        post_lexer = ScopePostLexer()
+        
+        self.parser = Lark.open(
+            grammar_file,
+            rel_to=os.path.dirname(grammar_file),
+            parser="lalr",
+            start="latex_string",
+            lexer="contextual",
+            debug=False,
+            cache=True,
+            propagate_positions=True,
+            maybe_placeholders=True,
+            postlex=post_lexer
+        )
+        
+        post_lexer.initialize_scopes(self.parser)
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
     def doparse(self, latex_str: str, environment: ObsimatEnvironment = {}):

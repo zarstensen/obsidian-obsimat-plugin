@@ -1,11 +1,11 @@
-from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
-from sympy_client.command_handlers.EvalHandler import *
+from sympy import *
+from sympy_client.command_handlers.ApartHandler import *
 from sympy_client.command_handlers.EvalfHandler import *
+from sympy_client.command_handlers.EvalHandler import *
 from sympy_client.command_handlers.ExpandHandler import *
 from sympy_client.command_handlers.FactorHandler import *
-from sympy_client.command_handlers.ApartHandler import *
+from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
 
-from sympy import *
 
 ## Tests the evaluate mode.
 class TestEvaluate:
@@ -31,7 +31,7 @@ class TestEvaluate:
         
         result = handler.handle({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}})
 
-        assert result.sympy_expr.rhs == 2 * Matrix([[1], [1]])
+        assert result.sympy_expr == 2 * Matrix([[1], [1]])
         
                 
     def test_matrix_multi_line(self):
@@ -40,11 +40,12 @@ class TestEvaluate:
         2
         \cdot 
         \begin{bmatrix} 
-        1 \\ 1
+        1 & 2 \\
+        3 & 4
         \end{bmatrix}
         """, "environment": {}})
         
-        assert result.sympy_expr.rhs == 2 * Matrix([[1], [1]])
+        assert result.sympy_expr == 2 * Matrix([[1, 2], [3, 4]])
         
     def test_matrix_normal(self):
         handler = EvalHandler(self.parser)
@@ -160,7 +161,7 @@ class TestEvaluate:
                 }
             }
         })
-        assert result.sympy_expr.rhs == Matrix([11])
+        assert result.sympy_expr == Matrix([11])
 
         result = handler.handle({
             "expression": r"\sin{abc}",
@@ -173,11 +174,11 @@ class TestEvaluate:
         assert result.sympy_expr == sin(1)
 
         result = handler.handle({
-            "expression": r"\sqrt{ val_{sub} + val_2^val_{three}}",
+            "expression": r"\sqrt{ val_{sub} + val_{2}^{val_{three}}}",
             "environment": {
                 "variables": {
                     "val_{sub}": "7",
-                    "val_2": "3",
+                    "val_{2}": "3",
                     "val_{three}": "2"
                 }
             }
@@ -272,7 +273,7 @@ class TestEvaluate:
                 }
             }
         })
-        assert result.sympy_expr.rhs == Matrix([[125]])
+        assert result.sympy_expr == Matrix([[125]])
     
     def test_hessian(self):
         handler = EvalHandler(self.parser)
@@ -283,7 +284,7 @@ class TestEvaluate:
             "expression": r"\mathbf{H}(y x^5 + \sin(y))",
             "environment": {}
         })
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr == Matrix([
                                                 [20 * x**3 * y,     5 * x ** 4],
                                                 [5 * x ** 4,        - sin(y)]
                                                 ])
@@ -300,7 +301,7 @@ class TestEvaluate:
             }
         })
         
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr == Matrix([
             [- 1 / x**2,    0,      0],
             [0,             E**y,   0],
             [0,             0,      0]
@@ -316,7 +317,7 @@ class TestEvaluate:
             "expression": r"\mathbf{J}(\begin{bmatrix} x^2 \\ y \\ x * y \end{bmatrix})",
             "environment": {}
         })
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr == Matrix([
             [2 * x, 0],
             [0,     1],
             [y,     x]
@@ -334,7 +335,7 @@ class TestEvaluate:
             }
         })
         
-        assert result.sympy_expr.rhs == Matrix([
+        assert result.sympy_expr == Matrix([
             [1 / x,             0,              0],
             [0,                 cos(y),         0],
             [-sin(x) * sin(y),  cos(x) * cos(y),0]

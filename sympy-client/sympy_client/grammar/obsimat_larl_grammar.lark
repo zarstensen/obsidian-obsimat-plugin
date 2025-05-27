@@ -20,22 +20,26 @@ term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (_align? (ADD|SUB))? 
 
 // a factor is either a number, a constant, a symbol, or a function.
 // here exponentiation, fractions, binomials are loosly seen as functions.
-_factor: _factor_no_unit
+_factor: exponentiation_with_unit
+    | _base_factor
     | unit
  
- _factor_no_unit: exponentiation
+ _factor_no_unit: exponentiation_no_unit
     | _base_factor
 
-_base_factor: parenthesees_expression
-    | brackets_expression
-    | braces_expression
+_base_factor: symbol
     | _function
     | _number
-    | symbol
     | _matrix_notation
+    | parenthesees_expression
+    | brackets_expression
+    | braces_expression
+
+?exponentiation_with_unit: exponentiation_no_unit
+    | unit _CARET function_special_arg -> exponentiation
 
 // groups a base factor and an exponent factor to be evaluated in an exponentation.
-exponentiation: _base_factor _CARET function_special_arg
+exponentiation_no_unit: _base_factor _CARET function_special_arg -> exponentiation
     | _base_factor _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
 
 // various rules for grouping expressions surrounded by delimiters.
@@ -62,8 +66,6 @@ indexed_symbol: _non_indexed_symbol _UNDERSCORE (single_letter_symbol | _digit |
 // this rule optionally tries to create a unit, instead of a symbol, if bunits are used.
 // otherwise this is the same as the symbol rule.
 unit: _L_BRACE _non_indexed_symbol _R_BRACE
-
-_symbol_like: symbol | unit
 
 // ======== Numbers ========
 

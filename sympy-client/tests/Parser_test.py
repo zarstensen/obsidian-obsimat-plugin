@@ -236,10 +236,12 @@ i & 2 i
     def test_brace_units(self):
         import sympy.physics.units as u
         x, a, b = symbols('x a b')
-        result = self.parser.doparse(r"{km} + \sin{x} + \frac{a}{{J}} + b")
         
+        assert self.parser.doparse(r"{a + b}^2 + {s}^2") == u.second**2 + (a + b)**2
+
+        result = self.parser.doparse(r"{km} + \sin{x} + \frac{a}{{J}} + b")
         assert result == u.km + sin(x) + a / u.joule + b
-    
+
     def test_hessian(self):
         result = self.parser.doparse(r"\mathbf{H}(x^2 + y^2)")
         

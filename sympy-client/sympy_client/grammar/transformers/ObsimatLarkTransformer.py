@@ -189,8 +189,10 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         
         if unit is not None:
             return unit
-        else:
+        elif isinstance(unit, Symbol):
             return unit_symbol
+        else:
+            return self.symbol(unit_symbol)
     
     @v_args(inline=True)
     def matrix_body(self, *body: Expr | Token):

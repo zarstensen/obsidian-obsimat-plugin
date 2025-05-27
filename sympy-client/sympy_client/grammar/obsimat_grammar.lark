@@ -1,4 +1,4 @@
-// Terminals are largely based on sympy's original latex.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/latex.lark
+// Terminals are loosley based on sympy's original latex.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/latex.lark
 // grammar has been written from the ground up to support the faster lalr parser instead of earley.
 
 // ======== Core structure ========
@@ -57,7 +57,7 @@ multi_letter_symbol: MULTI_LETTER_SYMBOL -> symbol
 
 // a formatted symbol is any symbol surrounded with a latex command which changes it visually.
 // this could for example be \mathit
-formatted_symbol: (CMD_MATH|CMD_BOLD_FORMAT) brace_surrounded_text [PRIMES]
+formatted_symbol: CMD_FORMAT brace_surrounded_text [PRIMES]
 _non_indexed_symbol: single_letter_symbol | multi_letter_symbol | formatted_symbol
 
 indexed_symbol: _non_indexed_symbol _UNDERSCORE (single_letter_symbol | _digit | brace_surrounded_text) [PRIMES]
@@ -120,18 +120,18 @@ trig_function: _func_template{FUNC_SIN}
     | _func_template{FUNC_CSC}
     | _func_template{FUNC_SEC}
     | _func_template{FUNC_COT}
-    | _func_template{FUNC_ARCSIN}
-    | _func_template{FUNC_ARCCOS}
-    | _func_template{FUNC_ARCTAN}
-    | _func_template{FUNC_ARCCSC}
-    | _func_template{FUNC_ARCSEC}
-    | _func_template{FUNC_ARCCOT}
+    | _func_template{FUNC_ASIN}
+    | _func_template{FUNC_ACOS}
+    | _func_template{FUNC_ATAN}
+    | _func_template{FUNC_ACSC}
+    | _func_template{FUNC_ASEC}
+    | _func_template{FUNC_ACOT}
     | _func_template{FUNC_SINH}
     | _func_template{FUNC_COSH}
     | _func_template{FUNC_TANH}
-    | _func_template{FUNC_ARSINH}
-    | _func_template{FUNC_ARCOSH}
-    | _func_template{FUNC_ARTANH}
+    | _func_template{FUNC_ASINH}
+    | _func_template{FUNC_ACOSH}
+    | _func_template{FUNC_ATANH}
 
 _log: log_implicit_base
     | log_explicit_base
@@ -260,6 +260,7 @@ NON_BRACE_TEXT.-1: /[^{}]+/
 // ignore escaped whitespace in latex code
 %ignore /(?<!\\)\\ /
 
+_WS: /[\s\t\n\r]+/
 %ignore _WS
 
 %ignore "\\," | "\\thinspace" | "\\:" | "\\medspace" | "\\;" | "\\thickspace"
@@ -343,20 +344,20 @@ FUNC_SEC:  "\\sec"
 FUNC_COT:  "\\cot"
 
 // inverse trigonometric functions
-FUNC_ARCSIN: "\\arcsin"
-FUNC_ARCCOS: "\\arccos"
-FUNC_ARCTAN: "\\arctan"
-FUNC_ARCCSC: "\\arccsc"
-FUNC_ARCSEC: "\\arcsec"
-FUNC_ARCCOT: "\\arccot"
+FUNC_ASIN: "\\arcsin"
+FUNC_ACOS: "\\arccos"
+FUNC_ATAN: "\\arctan"
+FUNC_ACSC: "\\arccsc"
+FUNC_ASEC: "\\arcsec"
+FUNC_ACOT: "\\arccot"
 
 // hyperbolic trigonometric functions
 FUNC_SINH: "\\sinh"
 FUNC_COSH: "\\cosh"
 FUNC_TANH: "\\tanh"
-FUNC_ARSINH: "\\arsinh"
-FUNC_ARCOSH: "\\arcosh"
-FUNC_ARTANH: "\\artanh"
+FUNC_ASINH: "\\arsinh"
+FUNC_ACOSH: "\\arcosh"
+FUNC_ATANH: "\\artanh"
 
 _FUNC_SQRT: "\\sqrt"
 
@@ -396,7 +397,6 @@ _BAR: "|" | "\\mid"
 _DOUBLE_BAR: "||" | /\\mid\s*\\mid/ | "\\Vert"
 _DOT: "."
 _CARET: "^"
-_COLON: ":"
 _COMMA: ","
 _UNDERSCORE: "_"
 
@@ -418,7 +418,6 @@ _UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
 // TODO: this priority should ideally not be here.
 _DIFFERENTIAL_SYMBOL.1: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _DELTA_DIFFERENTIAL_SYMBOL
 
-_WS: /[\s\t\n\r]+/
 
 // should this just be \w?
 LATIN_SYMBOL: /[a-zA-Z]/
@@ -434,16 +433,7 @@ MULTI_LETTER_SYMBOL: LATIN_SYMBOL_WITH_PRIMTES | GREEK_SYMBOL_WITH_PRIMES | MULT
 
 NUMERIC_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* _DOT NUMERIC_DIGIT+
 
-CMD_PRIME: "\\prime"
-CMD_ASTERISK: "\\ast"
-
 PRIMES: "'"+
-STARS: "*"+
-PRIMES_VIA_CMD: CMD_PRIME+
-STARS_VIA_CMD: CMD_ASTERISK+
-
-TRANSPOSE_EXPONENT: CMD_PRIME | "'"
-ADJOINT_EXPONENT: CMD_ASTERISK | "*"
 
 ADJOINT_TRANSPOSE_EXPONENT: /(\\prime|\\ast|'|\*)/
 ADJOINT_TRANSPOSE_EXPONENTS: /{(\\prime|\\ast|'|\*|\s)+}/
@@ -470,11 +460,11 @@ CMD_BEGIN_ARRAY: ("\\left" _WS? _L_DELIMITER)? _WS? CMD_BEGIN _WS? ARRAY_ENV _WS
 ARRAY_ENV_OPTIONS: _L_BRACE (/[clr|\s]+/)? _R_BRACE
 CMD_END_ARRAY: CMD_END _WS? ARRAY_ENV _WS? _R_BRACE _WS? ("\\right" _WS? _R_DELIMITER)?
 
-_ALIGN: "&"
-_LATEX_NEWLINE: "\\\\"
-
 %declare _MATRIX_COL_DELIM
 %declare MATRIX_ROW_DELIM
+
+_ALIGN: "&"
+_LATEX_NEWLINE: "\\\\"
 
 // system of relations
 _CMD_BEGIN_ALIGN: CMD_BEGIN _WS? "align" _WS? _R_BRACE

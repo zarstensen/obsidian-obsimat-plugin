@@ -12,7 +12,6 @@ class ObsimatEnvironment(TypedDict):
     functions: dict[str, FunctionDef]
 
     units_system: str
-    bracket_units: bool
     excluded_symbols: list[str]
 
     domain: str

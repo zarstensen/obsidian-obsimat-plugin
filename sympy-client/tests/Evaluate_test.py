@@ -1,11 +1,11 @@
-from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
-from sympy_client.command_handlers.EvalHandler import *
+from sympy import *
+from sympy_client.command_handlers.ApartHandler import *
 from sympy_client.command_handlers.EvalfHandler import *
+from sympy_client.command_handlers.EvalHandler import *
 from sympy_client.command_handlers.ExpandHandler import *
 from sympy_client.command_handlers.FactorHandler import *
-from sympy_client.command_handlers.ApartHandler import *
+from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
 
-from sympy import *
 
 ## Tests the evaluate mode.
 class TestEvaluate:

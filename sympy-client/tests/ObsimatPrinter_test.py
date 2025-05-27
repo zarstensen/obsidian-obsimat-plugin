@@ -1,7 +1,7 @@
+import sympy.physics.units as u
+from sympy import *
 from sympy_client.ObsimatPrinter import ObsimatPrinter
 
-from sympy import *
-import sympy.physics.units as u
 
 class TestObsimatPrinter:
     printer = ObsimatPrinter()

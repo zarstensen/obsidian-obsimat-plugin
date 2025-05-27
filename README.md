@@ -1,10 +1,8 @@
-# TODO: Rename to Silimat (or another name, i like this one though)
-# Names:
-# Silimat (obsidian is part of the silicate mineral group)
-# Volmat (obsidian is a volcanic glass)
-# Crymat (obsidian is a crystal)
-
 # Obsimat
+
+[![GitHub Release](https://img.shields.io/github/v/release/zarstensen/obsidian-obsimat-plugin?style=flat-square&color=blue)](https://github.com/zarstensen/obsidian-obsimat-plugin/releases/latest)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zarstensen/obsidian-obsimat-plugin/push.yml?style=flat-square&label=tests)
+
 
 **Obsimat** is an [Obsidian](https://obsidian.md/) plugin that enables the evaluation of LaTeX blocks with [Sympy](https://www.sympy.org).
 

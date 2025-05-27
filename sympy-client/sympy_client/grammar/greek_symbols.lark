@@ -1,24 +1,19 @@
 // Based on sympy's original greek_symbols.lark: https://github.com/sympy/sympy/blob/2e7baea39cd0d891433bdc2ef2222e445c381ca3/sympy/parsing/latex/lark/grammar/greek_symbols.lark
 
-// Greek symbols
-// TODO: Shouold we include the uppercase variants for the symbols where the uppercase variant doesn't have a separate meaning?
 ALPHA: "\\alpha"
 BETA: "\\beta"
 GAMMA: "\\gamma"
-DELTA: "\\delta" // TODO: Should this be included? Delta usually denotes other things.
 EPSILON: "\\epsilon" |  "\\varepsilon"
 ZETA: "\\zeta"
 ETA: "\\eta"
 THETA: "\\theta" | "\\vartheta"
-// TODO: Should I add iota to the list?
+IOTA: "\\iota"
 KAPPA: "\\kappa"
-LAMBDA: "\\lambda" // TODO: What about the uppercase variant?
+LAMBDA: "\\lambda"
 MU: "\\mu"
 NU: "\\nu"
 XI: "\\xi"
-// TODO: Should there be a separate note for transforming \pi into sympy.pi?
 RHO: "\\rho" | "\\varrho"
-// TODO: What should we do about sigma?
 TAU: "\\tau"
 UPSILON: "\\upsilon"
 PHI: "\\phi" | "\\varphi"
@@ -26,5 +21,5 @@ CHI: "\\chi"
 PSI: "\\psi"
 OMEGA: "\\omega"
 
-GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | KAPPA
+GREEK_SYMBOL: ALPHA | BETA | GAMMA | EPSILON | ZETA | ETA | THETA | IOTA | KAPPA
     | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA

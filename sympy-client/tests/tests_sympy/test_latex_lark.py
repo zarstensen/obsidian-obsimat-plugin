@@ -1,32 +1,36 @@
-from sympy.testing.pytest import XFAIL
-from sympy.external import import_module
+# This file is a combination of the following files form the sympy repo:
+# test_latex_lark.py: https://github.com/sympy/sympy/blob/da6d1f3cb324ad0bf74d123d85c390029be997ce/sympy/parsing/tests/test_latex_lark.py
+# test_latex.py: https://github.com/sympy/sympy/blob/da6d1f3cb324ad0bf74d123d85c390029be997ce/sympy/parsing/tests/test_latex.py
+# 
+# This is here to ensure feature parity(ish) with their latex parser.
+# some tests have been slightly modified or diabled, due to fundamental differences in the parsers functionality (multi letter symbols is an exmaple of this)
 
+from sympy import (Add, Expr, I, MatAdd, MatMul, Matrix, Mul, Trace, Transpose, expand,
+                   simplify)
+from sympy.abc import a, b, c, d, k, n, t, x, y, z
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative, Function
-from sympy.core.numbers import E, oo, Rational
+from sympy.core.numbers import E, Rational, oo
 from sympy.core.power import Pow
-from sympy.core.parameters import evaluate
-from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
+from sympy.core.relational import (Eq, Ge, GreaterThan, Gt, Le, LessThan, Lt,
+                                   Ne, StrictGreaterThan, StrictLessThan,
+                                   Unequality)
 from sympy.core.symbol import Symbol
+from sympy.external import import_module
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
-from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
-from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
+from sympy.functions.elementary.miscellaneous import Max, Min, root, sqrt
+from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin,
+                                                      tan)
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
-from sympy import Expr, Matrix, MatAdd, MatMul, Transpose, Trace
-from sympy import I, simplify, expand
-
-from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
-from sympy.physics.quantum import Bra, Ket, InnerProduct
-from sympy.abc import x, y, z, a, b, c, d, t, k, n
-
-from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
-
 from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+
+theta = Symbol('\\theta')
+f = Function('f')
 
 xy = Symbol('xy')
 
@@ -35,20 +39,25 @@ lark = import_module("lark")
 # disable tests if lark is not present
 disabled = lark is None
 
-# shorthand definitions that are only needed for the Lark LaTeX parser
-def _Min(*args):
-    return Min(*args, evaluate=False)
+# shorthand definitions
+def _Add(a, b):
+    return Add(a, b, evaluate=False)
 
 
-def _Max(*args):
-    return Max(*args, evaluate=False)
+def _Mul(a, b):
+    return Mul(a, b, evaluate=False)
 
 
-def _log(a, b=E):
-    if b == E:
-        return log(a, evaluate=False)
-    else:
-        return log(a, b, evaluate=False)
+def _Pow(a, b):
+    return Pow(a, b, evaluate=False)
+
+
+def _Conjugate(a):
+    return conjugate(a, evaluate=False)
+
+
+def _Abs(a):
+    return Abs(a, evaluate=False)
 
 
 def _MatAdd(a, b):

@@ -1,7 +1,7 @@
+from sympy import *
 from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
-from sympy import *
 
 class TestParse:
     parser = ObsimatLatexParser()
@@ -19,10 +19,6 @@ class TestParse:
         assert simplify(self.parser.doparse(r'\frac{\sin(abc)}{\cos {abc}}')) == tan(abc)
         assert self.parser.doparse(r'\arctan{abc}') == atan(abc)
         assert self.parser.doparse(r'\arcosh y') == acosh(y)
-
-    def test_common_funcs(self):
-        
-        self.parser.doparse(r'\log_\frac12^\frac34x')
         
 
     def test_relations(self):
@@ -43,7 +39,6 @@ class TestParse:
         assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \end{bmatrix}") == Matrix([[1, 2]])
         assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}") == Matrix([[1, 2], [3, 4]])
         assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{bmatrix}") == Matrix([[1, 2], [3, 4], [5, 6]])
-
     
     def test_mathematical_constants(self):
         

@@ -20,7 +20,6 @@ export class ObsimatEnvironment {
             variables,
             functions,
             parsed_obsimat_block.units?.system,
-            parsed_obsimat_block.units?.bunits,
             parsed_obsimat_block.units?.exclude,
             parsed_obsimat_block.domain?.domain
         );
@@ -103,7 +102,6 @@ export class ObsimatEnvironment {
          * if left undefined, no unit conversion takes place.
          */
         public unit_system: string | undefined = undefined,
-        public bracket_units: boolean = false,
         /**
          * the excluded_symbols list specifies a list symbols which should not be converted to units.
          * if left undefined, a default list of commonly excluded symbols will be used instead.

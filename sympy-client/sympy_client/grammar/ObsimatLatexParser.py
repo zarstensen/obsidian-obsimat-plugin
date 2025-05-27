@@ -168,7 +168,7 @@ class ObsimatLatexParser(SympyParser):
         # that way we can extend sympys grammar with our own rules and terminals.
         if grammar_file is None:
             grammar_file = os.path.join(
-                os.path.dirname(__file__), "obsimat_larl_grammar.lark"
+                os.path.dirname(__file__), "obsimat_grammar.lark"
             )
 
         # initialize a lark parser with the same settings as LarkLaTeXParser,
@@ -182,7 +182,7 @@ class ObsimatLatexParser(SympyParser):
             parser="lalr",
             start="latex_string",
             lexer="contextual",
-            debug=True,
+            debug=False,
             cache=True,
             propagate_positions=True,
             maybe_placeholders=True,

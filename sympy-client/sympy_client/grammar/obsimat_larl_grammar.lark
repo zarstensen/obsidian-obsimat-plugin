@@ -49,7 +49,7 @@ exponentiation_no_unit: _base_factor _CARET function_special_arg -> exponentiati
 
 // ======== Symbols ========
 
-?substitute_symbol: symbol
+substitute_symbol: symbol
 symbol: indexed_symbol | _non_indexed_symbol
 
 single_letter_symbol: SINGLE_LETTER_SYMBOL -> symbol

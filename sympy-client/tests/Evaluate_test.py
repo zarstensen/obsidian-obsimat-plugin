@@ -161,7 +161,7 @@ class TestEvaluate:
                 }
             }
         })
-        assert result.sympy_expr.rhs == Matrix([11])
+        assert result.sympy_expr == Matrix([11])
 
         result = handler.handle({
             "expression": r"\sin{abc}",
@@ -174,11 +174,11 @@ class TestEvaluate:
         assert result.sympy_expr == sin(1)
 
         result = handler.handle({
-            "expression": r"\sqrt{ val_{sub} + val_2^val_{three}}",
+            "expression": r"\sqrt{ val_{sub} + val_{2}^{val_{three}}}",
             "environment": {
                 "variables": {
                     "val_{sub}": "7",
-                    "val_2": "3",
+                    "val_{2}": "3",
                     "val_{three}": "2"
                 }
             }
@@ -273,7 +273,7 @@ class TestEvaluate:
                 }
             }
         })
-        assert result.sympy_expr.rhs == Matrix([[125]])
+        assert result.sympy_expr == Matrix([[125]])
     
     def test_hessian(self):
         handler = EvalHandler(self.parser)

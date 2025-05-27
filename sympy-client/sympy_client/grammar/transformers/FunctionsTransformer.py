@@ -11,9 +11,6 @@ class FunctionsTransformer(Transformer):
     def _MULTIARG_FUNC_ARG_DELIMITER(self,_):
         return Discard
     
-    def undefined_function(self, func_name:str, func_args: Expr):
-        return Function(func_name[:-1])(*func_args)
-    
     def trig_function(self, func_token: Token, exponent: Expr | None, arg: Expr):
         # TODO: should this use the type instead of the value?
         func_name = func_token.value

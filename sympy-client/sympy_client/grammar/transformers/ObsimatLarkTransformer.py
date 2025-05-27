@@ -149,6 +149,24 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         return Symbol(''.join(map(str,symbol_strings)))
     
     @v_args(inline=True)
+    def substitute_symbol(self, symbol: Symbol):
+        substituted_value = self._symbol_substitutor.get_symbol_substitution(str(symbol))
+        
+        if substituted_value is not None:
+            return substituted_value
+        else:
+            return symbol
+    
+    @v_args(inline=True)
+    def undefined_function(self, func_name: Token, func_args: Iterator[Expr]):
+        func_name = func_name.value[:-1] # remove the starting parenthesees
+        # TODO: workaround for now, the function store should be based on strings and not symbols.
+        if Symbol(func_name) in self._function_store:
+            return self._function_store[Symbol(func_name)].call(*func_args)
+        else:
+            return Function(func_name)(*func_args)
+    
+    @v_args(inline=True)
     def indexed_symbol(self, symbol: Expr, index: Expr | str, primes: str | None):
         primes = '' if primes is None else primes
         indexed_text = str(index)

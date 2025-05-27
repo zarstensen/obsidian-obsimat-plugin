@@ -189,8 +189,6 @@ class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         
         if unit is not None:
             return unit
-        elif isinstance(unit, Symbol):
-            return unit_symbol
         else:
             return self.symbol(unit_symbol)
     

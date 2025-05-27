@@ -27,7 +27,7 @@ _factor: exponentiation_with_unit
  _factor_no_unit: exponentiation_no_unit
     | _base_factor
 
-_base_factor: symbol
+_base_factor: substitute_symbol
     | _function
     | _number
     | _matrix_notation
@@ -49,14 +49,16 @@ exponentiation_no_unit: _base_factor _CARET function_special_arg -> exponentiati
 
 // ======== Symbols ========
 
+?substitute_symbol: symbol
 symbol: indexed_symbol | _non_indexed_symbol
 
 single_letter_symbol: SINGLE_LETTER_SYMBOL -> symbol
+multi_letter_symbol: MULTI_LETTER_SYMBOL -> symbol
 
 // a formatted symbol is any symbol surrounded with a latex command which changes it visually.
 // this could for example be \mathit
 formatted_symbol: (CMD_MATH|CMD_BOLD_FORMAT) brace_surrounded_text [PRIMES]
-_non_indexed_symbol: single_letter_symbol | MULTI_LETTER_SYMBOL | formatted_symbol
+_non_indexed_symbol: single_letter_symbol | multi_letter_symbol | formatted_symbol
 
 indexed_symbol: _non_indexed_symbol _UNDERSCORE (single_letter_symbol | _digit | brace_surrounded_text) [PRIMES]
 

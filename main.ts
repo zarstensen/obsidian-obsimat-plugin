@@ -48,14 +48,14 @@ export default class ObsiMatPlugin extends Plugin {
         // Add commands
 
         this.addObsimatCommands(new Map([
-            [ new EvaluateCommand("eval"), 'Evaluate LaTeX Expression (Sympy)' ],
-            [ new EvaluateCommand("evalf"), 'Evalf LaTeX Expression (Sympy)' ],
-            [ new EvaluateCommand("expand"), 'Expand LaTeX Expression (Sympy)' ],
-            [ new EvaluateCommand("factor"), 'Factor LaTeX Expression (Sympy)' ],
-            [ new EvaluateCommand("apart"), 'Partial Fraction Decomposition On LaTeX Expression (Sympy)' ],
-            [ new SolveCommand(), 'Solve LaTeX Expression (Sympy)' ],
-            [ new SympyConvertCommand(), 'Convert LaTeX Expression To Sympy' ],
-            [ new UnitConvertCommand(), 'Convert Units in LaTeX Expression' ]
+            [ new EvaluateCommand("eval"), 'Evaluate LaTeX expression' ],
+            [ new EvaluateCommand("evalf"), 'Evalf LaTeX expression' ],
+            [ new EvaluateCommand("expand"), 'Expand LaTeX expression' ],
+            [ new EvaluateCommand("factor"), 'Factor LaTeX expression' ],
+            [ new EvaluateCommand("apart"), 'Partial fraction decompose LaTeX expression' ],
+            [ new SolveCommand(), 'Solve LaTeX expression' ],
+            [ new SympyConvertCommand(), 'Convert LaTeX expression to Sympy' ],
+            [ new UnitConvertCommand(), 'Convert units in LaTeX expression' ]
         ]));
 
         // spawn sympy client

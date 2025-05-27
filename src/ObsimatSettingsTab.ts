@@ -14,7 +14,7 @@ export class ObsimatSettingsTab extends PluginSettingTab {
         this.containerEl.empty();
 
         new Setting(this.containerEl)
-            .setName('Developer Mode')
+            .setName('Developer mode')
             .setDesc('Use python source files and venv instead of bundled executable.\nReload Obsidian to apply.')
             .addToggle((toggle) => {
                 toggle.setValue(this.plugin.settings.dev_mode)

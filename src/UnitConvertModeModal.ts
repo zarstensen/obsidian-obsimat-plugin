@@ -11,11 +11,11 @@ export class UnitConvertModeModal extends Modal {
         });
 
         
-        this.setTitle("Convert Units");
+        this.setTitle("Convert units");
         
         // setup units input
         new Setting(this.contentEl)
-            .setName("Target Units")
+            .setName("Target units")
             .addText(text => {
                 text.onChange((value) => {
                     this.target_units = value.split(' ').filter(unit => unit.trim() !== '');

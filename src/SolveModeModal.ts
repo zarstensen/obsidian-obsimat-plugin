@@ -25,10 +25,10 @@ export class SolveModeModal extends Modal {
 
         // setup view
 
-        this.setTitle("Solve Equations");
+        this.setTitle("Solve equations");
         
         new Setting(this.contentEl)
-            .setName("Solution Domain")
+            .setName("Solution domain")
             .addText(text => {
                 text.setValue(this.domain);
                 text.onChange((value) => {

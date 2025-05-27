@@ -1,12 +1,12 @@
 import { App, Editor, MarkdownView, Notice } from "obsidian";
 import { SympyEvaluator } from "src/SympyEvaluator";
-import { IObsimatCommand } from "./IObsimatCommand";
+import { ILatexMathCommand } from "./ILatexMathCommand";
 import { EquationExtractor } from "src/EquationExtractor";
-import { ObsimatEnvironment } from "src/ObsimatEnvironment";
+import { LmatEnvironment } from "src/LmatEnvironment";
 import { SolveModeModal } from "src/SolveModeModal";
 import { formatLatex } from "src/FormatLatex";
 
-export class SolveCommand implements IObsimatCommand {
+export class SolveCommand implements ILatexMathCommand {
     readonly id: string = 'solve-latex-expression';
 
     async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
@@ -18,12 +18,12 @@ export class SolveCommand implements IObsimatCommand {
             return;
         }
 
-        const obsimat_env = ObsimatEnvironment.fromMarkdownView(app, view);
+        const lmat_env = LmatEnvironment.fromMarkdownView(app, view);
 
         // Send it to python.
         await evaluator.send("solve", {
             expression: equation.contents,
-            environment: obsimat_env
+            environment: lmat_env
         });
 
         let response = await evaluator.receive();
@@ -35,15 +35,15 @@ export class SolveCommand implements IObsimatCommand {
             const symbol_selector = new SolveModeModal(
                 response.result['symbols'],
                 response.result['equation_count'],
-                obsimat_env.domain ?? "",
+                lmat_env.domain ?? "",
                 app);
             symbol_selector.open();
             
             // wait for the solve configuration.
             const config = await symbol_selector.getSolveConfig();
-            obsimat_env.domain = config.domain;
+            lmat_env.domain = config.domain;
 
-            await evaluator.send("solve", { expression: equation.contents, environment: obsimat_env, symbols: [...config.symbols].map((symbol) => symbol.sympy_symbol) });
+            await evaluator.send("solve", { expression: equation.contents, environment: lmat_env, symbols: [...config.symbols].map((symbol) => symbol.sympy_symbol) });
 
             response = await evaluator.receive();
         }

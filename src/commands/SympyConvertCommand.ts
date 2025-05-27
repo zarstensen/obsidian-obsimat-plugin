@@ -1,10 +1,10 @@
 import { App, Editor, MarkdownView, Notice } from "obsidian";
 import { SympyEvaluator } from "src/SympyEvaluator";
-import { IObsimatCommand } from "./IObsimatCommand";
+import { ILatexMathCommand } from "./ILatexMathCommand";
 import { EquationExtractor } from "src/EquationExtractor";
-import { ObsimatEnvironment } from "src/ObsimatEnvironment";
+import { LmatEnvironment } from "src/LmatEnvironment";
 
-export class SympyConvertCommand implements IObsimatCommand {
+export class SympyConvertCommand implements ILatexMathCommand {
     readonly id: string = 'convert-to-sympy';
 
     async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
@@ -29,7 +29,7 @@ export class SympyConvertCommand implements IObsimatCommand {
 
         await evaluator.send("convert-sympy", {
             expression: equation.contents,
-            environment: ObsimatEnvironment.fromMarkdownView(app, view)
+            environment: LmatEnvironment.fromMarkdownView(app, view)
         });
 
         const response = await evaluator.receive();

@@ -1,12 +1,12 @@
 import { App, finishRenderMath, Modal, Notice, renderMath, Setting } from "obsidian";
 
-type ObsimatSymbol = { sympy_symbol: string, latex_symbol: string };
-type SolveConfig = { domain: string, symbols: ObsimatSymbol[] };
+type LatexMathSymbol = { sympy_symbol: string, latex_symbol: string };
+type SolveConfig = { domain: string, symbols: LatexMathSymbol[] };
 
 // The SymbolSelectorModal provides a modal dialog to select a single symbol from a list of symbols.
 // Once opened, the getSelectedSymbolAsync method can be awaited to get the selected symbol.
 export class SolveModeModal extends Modal {
-    constructor(symbols: ObsimatSymbol[],
+    constructor(symbols: LatexMathSymbol[],
         protected equation_count: number,
         protected domain: string,
         app: App)
@@ -77,11 +77,11 @@ export class SolveModeModal extends Modal {
     // returns a promise that resolves to the user selected solve configuration.
     public async getSolveConfig(): Promise<SolveConfig> { return this.solve_config_promise; }
 
-    protected getSelectedSymbols(): ObsimatSymbol[] {
+    protected getSelectedSymbols(): LatexMathSymbol[] {
         return [...this.symbol_selection].filter(([_, selected]) => selected).map(([symbol, _]) => symbol);
     }
 
-    private symbol_selection: Map<ObsimatSymbol, boolean> = new Map();
+    private symbol_selection: Map<LatexMathSymbol, boolean> = new Map();
 
     private solve_config_promise: Promise<SolveConfig>;
     private solve_config_resolve: (value: SolveConfig | PromiseLike<SolveConfig>) => void;

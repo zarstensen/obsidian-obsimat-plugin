@@ -7,8 +7,8 @@ from sympy.printing.latex import LatexPrinter
 
 
 # this is a bit scuffed, but since the Quantity class, and not the printer class, implements a _latex method,
-# the printer class prioritizes this over a potential _print_Quantity in the ObsimatPrinter.
-# this could probably be solved by renaming the _printmethod in ObsimatPrinter to _obsimat_latex f.ex.
+# the printer class prioritizes this over a potential _print_Quantity in the LmatLatexPrinter.
+# this could probably be solved by renaming the _printmethod in LmatLatexPrinter to _lmat_latex f.ex.
 def _quantity_latex(self, _printer):
     if self._latex_repr:
         return f"{{{self._latex_repr}}}"
@@ -19,7 +19,7 @@ def _quantity_latex(self, _printer):
 Quantity._latex = _quantity_latex
 
 # Convert a sympy expression to a formatted latex string.
-class ObsimatPrinter(LatexPrinter):
+class LmatLatexPrinter(LatexPrinter):
     
     def __init__(self, settings={}):
         # use \, instead of whitespace, to add spacing in rendered latex.
@@ -85,5 +85,5 @@ class ObsimatPrinter(LatexPrinter):
         
         return reduce(lambda x, y: x * y, constants, 1), reduce(lambda x, y: x * y, symbols, 1), reduce(lambda x, y: x * y, units, 1)
 
-def obsimat_latex(expr: Expr) -> str:
-    return ObsimatPrinter().doprint(expr)
+def lmat_latex(expr: Expr) -> str:
+    return LmatLatexPrinter().doprint(expr)

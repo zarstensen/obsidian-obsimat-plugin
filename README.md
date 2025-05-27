@@ -1,10 +1,12 @@
-# Obsimat
+<div align="center">
+  <h1 align="center">Latex Math</h1>
+</div>
 
-[![GitHub Release](https://img.shields.io/github/v/release/zarstensen/obsidian-obsimat-plugin?style=flat-square&color=blue)](https://github.com/zarstensen/obsidian-obsimat-plugin/releases/latest)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zarstensen/obsidian-obsimat-plugin/push.yml?style=flat-square&label=tests)
+[![GitHub Release](https://img.shields.io/github/v/release/zarstensen/obsidian-latex-math?style=flat-square&color=blue)](https://github.com/zarstensen/obsidian-latex-math/releases/latest)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zarstensen/obsidian-latex-math/push.yml?style=flat-square&label=tests)
 
 
-**Obsimat** is an [Obsidian](https://obsidian.md/) plugin that enables the evaluation of LaTeX blocks with [Sympy](https://www.sympy.org).
+**Latex Math** is an [Obsidian](https://obsidian.md/) plugin that enables the evaluation of LaTeX blocks with [Sympy](https://www.sympy.org).
 
 <!-- omit in toc -->
 ## Table of Contents
@@ -14,7 +16,7 @@
     - [Variants](#variants)
   - [Solve](#solve)
   - [Definitions](#definitions)
-  - [Obsimat Code Block](#obsimat-code-block)
+  - [LMat Code Block](#lmat-code-block)
     - [Symbol Assumptions](#symbol-assumptions)
     - [Units](#units)
     - [Solution Domain](#solution-domain)
@@ -30,7 +32,8 @@
 
 Evaluate a LaTeX math expressions with the `Evaluate LaTeX Expression` command.
 
-Obsimat supports various math operations, ranging from basic addition and multiplication to more complex operations such as integration and differentiation. In general, Obsimat will support any operation that Sympy's Lark LaTeX parser can parse. Furthermore, the Lark parser has been extended to support the following additional operations:
+**Latex Math** supports various math operations, ranging from basic addition and multiplication to more complex operations such as integration and differentiation.
+Below is a table overview of an extract of usable functions.
 
 | Operation                     | LaTeX                   | Rendered LaTeX         |
 | :---------------------------- | :---------------------- | :--------------------- |
@@ -49,16 +52,15 @@ Below is a table overview of the variants, as well as their function.
 
 | Command Name                        | Function                                                                                |
 | :---------------------------------- | :-------------------------------------------------------------------------------------- |
-| `Evalf LaTeX Expression`            | Evaluate LaTeX expression and convert it to floating point values instead of fractions. |
-| `Expand LaTeX Expression`           | Evaluate and expand LaTeX expression.                                                   |
-| `Factor LaTeX Expression`           | Evaluate and factor LaTeX expression.                                                   |
-| `Apart LaTeX Expression`            | Evaluate and perform partial fraction decomposition on LaTeX expression.                |
-| `Convert Units in LaTeX Expression` | Evaluate LaTeX expression and convert result to units provided by the user.             |
-
+| `Evalf LaTeX expression`            | Evaluate LaTeX expression and convert it to floating point values instead of fractions. |
+| `Expand LaTeX expression`           | Evaluate and expand LaTeX expression.                                                   |
+| `Factor LaTeX expression`           | Evaluate and factor LaTeX expression.                                                   |
+| `Apart LaTeX expression`            | Evaluate and perform partial fraction decomposition on LaTeX expression.                |
+| `Convert units in LaTeX expression` | Evaluate LaTeX expression and convert result to units provided by the user.             |
 
 ### Solve
 
-Solve LaTeX equations with the `Solve LaTeX Expression` command.
+Solve LaTeX equations with the `Solve LaTeX expression` command.
 
 If an equation has too many free variables to solve for all of them, a modal will pop up where you can pick which symbols to solve for. The solution domain can also be specified here [^1].
 
@@ -77,14 +79,13 @@ Whenever it is used after it has been defined, it will be replaced by its define
 > Only one definition can be present in a LaTeX block.
 >
 
-Definition persistence is based on the location they were defined inside the document, meaning f.ex. a variable cannot be used in the note above its LaTeX block definition. Furthermore, all Obsimat code blocks remove all definitions above themselves.
+Definition persistence is based on the location they were defined inside the document, meaning f.ex. a variable cannot be used in the note above its LaTeX block definition. Furthermore, all `lmat` code blocks remove all definitions above themselves.
 
 To remove a definition, leave the right hand of the `:=` operator blank.
 
 > [!NOTE]
 > **Variable Definition Example**
 >
-> 
 > Define a variable `x` with the value `\sqrt{99}`.
 >
 > `$x := \sqrt{99}$`
@@ -118,17 +119,17 @@ To remove a definition, leave the right hand of the `:=` operator blank.
 >
 > `f() :=`
 
-### Obsimat Code Block
+### LMat Code Block
 
-Obsimat code blocks define a math environment for which all expressions following the code block will be evaluated. The contents of an Obsimat code block make use of the [TOML](https://toml.io) config format.
+`lmat` code blocks define a math environment for which all expressions following the code block will be evaluated. The contents of an `lmat` code block make use of the [TOML](https://toml.io) config format.
 
-Each Obsimat code block functions as a complete reset, ignoring any previous variable definitions and Obsimat code blocks.
+Each `lmat` code block functions as a complete reset, ignoring any previous variable definitions and `lmat` code blocks.
 
 > [!NOTE]
-> **Obsimat Code Block Example**
+> **LMat Code Block Example**
 >
 > ````text
-> ```obsimat
+> ```lmat
 > [symbols]
 > x = [ "real", "positive" ]
 > y = [ "integer" ]
@@ -183,15 +184,15 @@ Convert a LaTeX block to Sympy Python code with the `Convert LaTeX Expression To
 
 ## Installing
 
-Download the plugin zip file from the [latest release](https://github.com/zarstensen/obsidian-obsimat-plugin/releases/latest), and extract it to your vault's plugin folder, commonly located at `.obsidian/plugins`, relative to your vault's path.
+Download the plugin zip file from the [latest release](https://github.com/zarstensen/obsidian-latex-math/releases/latest), and extract it to your vault's plugin folder, commonly located at `.obsidian/plugins`, relative to your vault's path.
 
 ### Linux
 
 If you receive an error upon plugin load on Linux, you might need to give execute permissions to the `SympyClient` file located in the plugin's installation directory.
 
-If this file is not present, please restart obsidian with the Obsimat plugin enabled. Obsimat should then download the file automatically.
+If this file is not present, please restart obsidian with the **Latex Math** plugin enabled. The file should then be downloaded automatically.
 
-Perform the following commands inside the Obsimat installation directory, to give `SympyClient` the necessary permissions:
+Perform the following commands inside the **Latex Math** installation directory, to give `SympyClient` the necessary permissions:
 
 - (Optional) Check execution permissions of `SympyClient`: 
   
@@ -205,12 +206,12 @@ Perform the following commands inside the Obsimat installation directory, to giv
 
 - (Optional) Perform step 1 to check if permissions have changed.
 
-- Reload Obsidian with Obsimat enabled. 
+- Reload Obsidian with **Latex Math** enabled. 
   No errors should pop up and the plugin should now work as expected
 
 ## Developing
 
-This section describes how to set up a development environment for Obsimat.
+This section describes how to set up a development environment for **Latex Math** .
 Make sure to have python and npm installed before continuing.
 
 Start of with running the `setup-dev-env` python script from the root directory.
@@ -221,9 +222,9 @@ python setup-dev-env.py
 
 This creates a virtual environment named `.venv` installed with all required dependencies. Furthermore, it sets up a git pre-push hook, which runs the entire test suite, before pushing.
 
-To use this development environment in Obsidian, go to the Obsimat settings in the vault this repo has been cloned to, and toggle the `Developer Mode` switch to on. Make sure to reload the vault after doing this.
+To use this development environment in Obsidian, go to the **Latex Math**  settings in the vault this repo has been cloned to, and toggle the `Developer Mode` switch to on. Make sure to reload the vault after doing this.
 
-Obsimat should now use the python source files and the created virtual environment, instead of the auto installed `SympyClient` binary.
+The plugin should now use the python source files and the created virtual environment, instead of the auto installed `SympyClient` binary.
 
 Any changes to the python source code requires reloading Obsidian to have any effect.
 

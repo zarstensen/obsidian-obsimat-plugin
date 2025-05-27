@@ -1,11 +1,11 @@
-import ObsiMatPlugin from 'main';
+import LatexMathPlugin from 'main';
 import { App, PluginSettingTab, Setting} from 'obsidian';
 
-// Settings tab for Obsimat plugin.
-export class ObsimatSettingsTab extends PluginSettingTab {
-    plugin: ObsiMatPlugin;
+// Settings tab for Latex Math plugin.
+export class LatexMathSettingsTab extends PluginSettingTab {
+    plugin: LatexMathPlugin;
 
-    constructor(app: App, plugin: ObsiMatPlugin) {
+    constructor(app: App, plugin: LatexMathPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }

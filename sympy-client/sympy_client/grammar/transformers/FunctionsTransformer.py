@@ -7,7 +7,7 @@ from sympy.tensor.array import derive_by_array
 
 
 # The FucntionsTransformer holds the implementation of various mathematical function rules,
-# defined in the obsimat latex grammar.
+# defined in the latex math grammar.
 @v_args(inline=True)
 class FunctionsTransformer(Transformer):
     

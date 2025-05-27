@@ -27,9 +27,9 @@ class ChainedRelation(And):
         args = LatticeOp._new_args_filter(args, And)
         return args
 
-# The ObsimatLarkTransofmer class provides functions for transforming
-# rules defined in obsimat_grammar.lark into sympy expressions.
-class ObsimatLarkTransformer(ConstantsTransformer, FunctionsTransformer):
+# The LatexMathLarkTransofmer class provides functions for transforming
+# rules defined in latex_math_grammar.lark into sympy expressions.
+class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
 
     class Delim(Enum):
         MatDelim = 1

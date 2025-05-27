@@ -1,10 +1,10 @@
 import sympy.physics.units as u
 from sympy import *
-from sympy_client.ObsimatPrinter import ObsimatPrinter
+from sympy_client.LmatLatexPrinter import LmatLatexPrinter
 
 
-class TestObsimatPrinter:
-    printer = ObsimatPrinter()
+class TestLmatPrinter:
+    printer = LmatLatexPrinter()
     
     def test_numeric_fraction(self):
         latex_str = self.printer.doprint(Rational(1, 2))

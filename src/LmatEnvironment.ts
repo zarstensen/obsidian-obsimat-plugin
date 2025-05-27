@@ -1,35 +1,35 @@
 import { App, Editor, EditorPosition, MarkdownView } from "obsidian";
 import * as toml from "toml";
 
-// The ObsimatEnvironment class represents an environment detailing how mathematical expressions,
+// The LmatEnvironment class represents an environment detailing how mathematical expressions,
 // should be evaluated.
 // it contains information about symbol assumptions, variable definitions, units, and solution domains.
-export class ObsimatEnvironment {
+export class LmatEnvironment {
 
     public static fromCodeBlock(code_block: string | undefined, variables: { [variable: string]: string }, functions: { [func: string]: { args: string[], expr: string } }) {
         if(!code_block) {
-            return new ObsimatEnvironment({}, variables, functions);
+            return new LmatEnvironment({}, variables, functions);
         }
 
-        const parsed_obsimat_block = toml.parse(code_block);
+        const parsed_lmat_block = toml.parse(code_block);
 
         // prioritize domain name over domain expression.
 
-        return new ObsimatEnvironment(
-            parsed_obsimat_block.symbols,
+        return new LmatEnvironment(
+            parsed_lmat_block.symbols,
             variables,
             functions,
-            parsed_obsimat_block.units?.system,
-            parsed_obsimat_block.units?.exclude,
-            parsed_obsimat_block.domain?.domain
+            parsed_lmat_block.units?.system,
+            parsed_lmat_block.units?.exclude,
+            parsed_lmat_block.domain?.domain
         );
     }
 
-    // construct an ObsimatEnvironment class from the given active document, and cursor position.
-    // this environment is constructed based on the closest obsimat code block to the cursor (ignoring any blocks after the cursor).
+    // construct an LmatEnvironment class from the given active document, and cursor position.
+    // this environment is constructed based on the closest lmat code block to the cursor (ignoring any blocks after the cursor).
     // variables are parsed from the text between the code block and the cursor.
-    public static fromMarkdownView(app: App, markdown_view: MarkdownView, position?: EditorPosition): ObsimatEnvironment {
-        // start by finding all obsimat code block.
+    public static fromMarkdownView(app: App, markdown_view: MarkdownView, position?: EditorPosition): LmatEnvironment {
+        // start by finding all lmat code blocks.
         position ??= markdown_view.editor.getCursor();
 
         if (!markdown_view.file) {
@@ -44,15 +44,15 @@ export class ObsimatEnvironment {
 
         const editor = markdown_view.editor;
 
-        // filter out any non obsimat code block sections
+        // filter out any non lmat code block sections
         sections = sections
             .filter((section) => section.type === "code")
             .filter((section) => {
                 const code_block_contents = editor.getRange(editor.offsetToPos(section.position.start.offset), editor.offsetToPos(section.position.end.offset));
-                return this.OBSIMAT_BLOCK_REGEX.test(code_block_contents);
+                return this.LMAT_BLOCK_REGEX.test(code_block_contents);
             });
         
-        // find the closest obsimat code block
+        // find the closest lmat code block
 
         let closest_section = undefined;
 
@@ -65,25 +65,25 @@ export class ObsimatEnvironment {
         }
 
         if(!closest_section) {
-            return new ObsimatEnvironment(undefined, this.parseVariables(editor.offsetToPos(0), position, editor), this.parseFunctions(editor.offsetToPos(0), position, editor));
+            return new LmatEnvironment(undefined, this.parseVariables(editor.offsetToPos(0), position, editor), this.parseFunctions(editor.offsetToPos(0), position, editor));
         }
 
-        // now generate obsimat environment based on section contents.
+        // now generate lmat environment based on section contents.
 
-        const obsimat_block = editor.getRange(editor.offsetToPos(closest_section.position.start.offset), editor.offsetToPos(closest_section.position.end.offset));
-        const obsimat_block_content = obsimat_block.match(this.OBSIMAT_BLOCK_REGEX)?.[1];
-        const obsimat_functions = this.parseFunctions(editor.offsetToPos(closest_section.position.end.offset), position, editor);
-        const obsimat_variables = this.parseVariables(editor.offsetToPos(closest_section.position.end.offset), position, editor);
+        const lmat_block = editor.getRange(editor.offsetToPos(closest_section.position.start.offset), editor.offsetToPos(closest_section.position.end.offset));
+        const lmat_block_content = lmat_block.match(this.LMAT_BLOCK_REGEX)?.[1];
+        const lmat_functions = this.parseFunctions(editor.offsetToPos(closest_section.position.end.offset), position, editor);
+        const lmat_variables = this.parseVariables(editor.offsetToPos(closest_section.position.end.offset), position, editor);
 
-        return ObsimatEnvironment.fromCodeBlock(obsimat_block_content, obsimat_variables, obsimat_functions);
+        return LmatEnvironment.fromCodeBlock(lmat_block_content, lmat_variables, lmat_functions);
     }
 
-    // regex for extracting the contents of an obsimat code block.
-    private static readonly OBSIMAT_BLOCK_REGEX = /^```obsimat\s*(?:\r\n|\r|\n)([\s\S]*?)```$/;
-    private static readonly OBSIMAT_VARIABLE_REGEX = /\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*/;
+    // regex for extracting the contents of an lmat code block.
+    private static readonly LMAT_BLOCK_REGEX = /^```lmat\s*(?:\r\n|\r|\n)([\s\S]*?)```$/;
+    private static readonly LMAT_VARIABLE_REGEX = /\s*(?:\\math\w*{(?<symbol_math_encapsulated>[^=\s$]*)}|(?<symbol>[^=\s$]*))\s*/;
     // regex for finding variable definitions in markdown code.
-    private static readonly OBSIMAT_VARIABLE_DEF_REGEX = new RegExp(String.raw`\$${this.OBSIMAT_VARIABLE_REGEX.source}:=\s*(?<value>[^=$]*?)\s*\$`, 'g');
-    private static readonly OBSIMAT_FUNCTION_DEF_REGEX = new RegExp(String.raw`\$${this.OBSIMAT_VARIABLE_REGEX.source}\((?<args>(?:[^=$]*?\s*))\)\s*:=\s*(?<expr>[^=$]*?)\s*\$`, 'g');
+    private static readonly LMAT_VARIABLE_DEF_REGEX = new RegExp(String.raw`\$${this.LMAT_VARIABLE_REGEX.source}:=\s*(?<value>[^=$]*?)\s*\$`, 'g');
+    private static readonly LMAT_FUNCTION_DEF_REGEX = new RegExp(String.raw`\$${this.LMAT_VARIABLE_REGEX.source}\((?<args>(?:[^=$]*?\s*))\)\s*:=\s*(?<expr>[^=$]*?)\s*\$`, 'g');
 
     private constructor(
         /**
@@ -119,7 +119,7 @@ export class ObsimatEnvironment {
         const variables: { [variable: string]: string } = {};
         
         const search_range = editor.getRange(from, to);
-        const variable_definitions = search_range.matchAll(this.OBSIMAT_VARIABLE_DEF_REGEX);
+        const variable_definitions = search_range.matchAll(this.LMAT_VARIABLE_DEF_REGEX);
 
         for(const var_def of variable_definitions) {
 
@@ -146,7 +146,7 @@ export class ObsimatEnvironment {
         const functions: { [func: string]: { args: string[], expr: string } } = {};
         
         const search_range = editor.getRange(from, to);
-        const function_definitions = search_range.matchAll(this.OBSIMAT_FUNCTION_DEF_REGEX);
+        const function_definitions = search_range.matchAll(this.LMAT_FUNCTION_DEF_REGEX);
 
         
         for(const func_def of function_definitions) {

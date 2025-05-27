@@ -6,12 +6,12 @@ from lark import Lark, Token, Tree
 from lark.lark import PostLex
 from lark.lexer import TerminalDef
 from sympy import *
-from sympy_client.ObsimatEnvironment import ObsimatEnvironment
+from sympy_client.LmatEnvironment import LmatEnvironment
 
 from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
 from .FunctionStore import FunctionStore
 from .SympyParser import SympyParser
-from .transformers.ObsimatLarkTransformer import ObsimatLarkTransformer
+from .transformers.LatexMathLarkTransformer import LatexMathLarkTransformer
 
 
 # Represents a scope to be handled by the ScopePostLexer.
@@ -171,13 +171,13 @@ class ScopePostLexer(PostLex):
                     continue
                 break
 
-## The ObsimatLatexParser is responsible for parsing a latex string in the context of an ObsimatEnvironment.
-class ObsimatLatexParser(SympyParser):
+## The LmatLatexParser is responsible for parsing a latex string in the context of an LmatEnvironment.
+class LmatLatexParser(SympyParser):
 
     def __init__(self, grammar_file: str = None):
         if grammar_file is None:
             grammar_file = os.path.join(
-                os.path.dirname(__file__), "obsimat_grammar.lark"
+                os.path.dirname(__file__), "latex_math_grammar.lark"
             )
         
         post_lexer = ScopePostLexer()
@@ -198,11 +198,11 @@ class ObsimatLatexParser(SympyParser):
         post_lexer.initialize_scopes(self.parser)
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
-    def doparse(self, latex_str: str, environment: ObsimatEnvironment = {}):
+    def doparse(self, latex_str: str, environment: LmatEnvironment = {}):
         symbol_substitutor = CachedSymbolSubstitutor(environment, self)
         function_store = FunctionStore(environment, self)
         
-        transformer = ObsimatLarkTransformer(symbol_substitutor, function_store)
+        transformer = LatexMathLarkTransformer(symbol_substitutor, function_store)
         parse_tree = self.parser.parse(latex_str)
         expr = transformer.transform(parse_tree)
         

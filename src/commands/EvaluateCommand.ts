@@ -1,11 +1,11 @@
 import { App, Editor, EditorPosition, MarkdownView, Notice } from "obsidian";
 import { SympyEvaluator } from "src/SympyEvaluator";
-import { IObsimatCommand } from "./IObsimatCommand";
+import { ILatexMathCommand } from "./ILatexMathCommand";
 import { EquationExtractor } from "src/EquationExtractor";
-import { ObsimatEnvironment } from "src/ObsimatEnvironment";
+import { LmatEnvironment } from "src/LmatEnvironment";
 import { formatLatex } from "src/FormatLatex";
 
-export class EvaluateCommand implements IObsimatCommand {
+export class EvaluateCommand implements ILatexMathCommand {
     readonly id: string;
 
     constructor(evaluate_mode: string) {
@@ -34,7 +34,7 @@ export class EvaluateCommand implements IObsimatCommand {
         }
 
         message.expression = equation.contents;
-        message.environment = ObsimatEnvironment.fromMarkdownView(app, view);
+        message.environment = LmatEnvironment.fromMarkdownView(app, view);
 
         // send it to python and wait for response.
         await evaluator.send(this.evaluate_mode, message);

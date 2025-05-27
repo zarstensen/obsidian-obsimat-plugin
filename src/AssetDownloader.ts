@@ -83,5 +83,5 @@ export class AssetDownloader {
     }
 
     private static readonly LATEST_VERSION_FILE = "latest_asset_version.json";
-    private static readonly ASSET_DOWNLOAD_URL = "https://github.com/zarstensen/obsidian-obsimat-plugin/releases/download/${VERSION}/obsidian-obsimat-plugin-${VERSION}-${PLATFORM}.zip";
+    private static readonly ASSET_DOWNLOAD_URL = "https://github.com/zarstensen/obsidian-latex-math/releases/download/${VERSION}/obsidian-latex-math-${VERSION}-${PLATFORM}.zip";
 }

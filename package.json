@@ -1,7 +1,7 @@
 {
-	"name": "obsimat",
+	"name": "latex-math",
 	"version": "0.5.1",
-	"description": "Evaluate, solve and do much more within LaTeX blocks using Sympy.",
+	"description": "Evaluate, solve and do much more with LaTeX blocks using Sympy.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

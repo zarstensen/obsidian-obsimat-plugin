@@ -1,10 +1,10 @@
 from sympy import *
-from sympy_client.grammar.ObsimatLatexParser import ObsimatLatexParser
+from sympy_client.grammar.LmatLatexParser import LmatLatexParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
 
 class TestParse:
-    parser = ObsimatLatexParser()
+    parser = LmatLatexParser()
 
     def test_basic(self):
         a, b, c = symbols('a b c')

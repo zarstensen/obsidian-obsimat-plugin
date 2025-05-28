@@ -41,7 +41,7 @@ export class EvaluateCommand implements ILatexMathCommand {
         const response = await evaluator.receive();
 
         const insert_pos: EditorPosition = editor.offsetToPos(equation.to);
-        const insert_content = " = " + response.result;
+        const insert_content = " = " + await formatLatex(response.result);
 
 
         // check if we have gotten a preferred insert position from SympyEvaluator,
@@ -52,7 +52,7 @@ export class EvaluateCommand implements ILatexMathCommand {
         }
 
         // insert result at the end of the equation.
-        editor.replaceRange(await formatLatex(insert_content), insert_pos);
+        editor.replaceRange(insert_content, insert_pos);
         editor.setCursor(editor.offsetToPos(editor.posToOffset(insert_pos) + insert_content.length));
     }
     

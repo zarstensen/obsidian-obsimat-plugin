@@ -57,22 +57,23 @@ jobs:
         shell: bash
         run: | 
           source .venv/bin/activate || . .venv/Scripts/activate
-            pyinstaller \
-            --onefile \
-            --paths ./sympy-client \
-            --collect-data sympy \
-            --add-data "./sympy-client/sympy_client/grammar/greek_symbols.lark:sympy_client/grammar" \
-            --add-data "./sympy-client/sympy_client/grammar/latex_math_grammar.lark:sympy_client/grammar" \
-            --add-data "./sympy-client/sympy_client/ggb_plot/geogebra.xml:sympy_client/ggb_plot" \
-            --name SympyClient-${{ matrix.os.rel_name }} \
-            sympy-client/SympyClient.py
+          pyinstaller \
+          --onefile \
+          --paths ./sympy-client \
+          --collect-data sympy \
+          --add-data "./sympy-client/sympy_client/grammar/greek_symbols.lark:sympy_client/grammar" \
+          --add-data "./sympy-client/sympy_client/grammar/latex_math_grammar.lark:sympy_client/grammar" \
+          --add-data "./sympy-client/sympy_client/ggb_plot/geogebra.xml:sympy_client/ggb_plot" \
+          --name SympyClient-${{ matrix.os.rel_name }} \
+          sympy-client/SympyClient.py
       - name: Rename Executable
         id: rename-executable
         shell: bash
         run: |
           ls
           ls dist
-          mv ./dist/{SympyClient-${{ matrix.os.rel_name }},SympyClient-${{ matrix.os.rel_name }}.*} ./dist/SympyClient-${{ matrix.os.rel_name }}.bin
+          mv ./dist/SympyClient-${{ matrix.os.rel_name }} ./dist/SympyClient-${{ matrix.os.rel_name }}.bin \
+          || mv ./dist/SympyClient-${{ matrix.os.rel_name }}.* ./dist/SympyClient-${{ matrix.os.rel_name }}.bin
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4

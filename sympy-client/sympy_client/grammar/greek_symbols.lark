@@ -3,6 +3,7 @@
 ALPHA: "\\alpha"
 BETA: "\\beta"
 GAMMA: "\\gamma"
+DELTA: "\\delta"
 EPSILON: "\\epsilon" |  "\\varepsilon"
 ZETA: "\\zeta"
 ETA: "\\eta"
@@ -21,5 +22,5 @@ CHI: "\\chi"
 PSI: "\\psi"
 OMEGA: "\\omega"
 
-GREEK_SYMBOL: ALPHA | BETA | GAMMA | EPSILON | ZETA | ETA | THETA | IOTA | KAPPA
+GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | IOTA | KAPPA
     | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA

@@ -5,4 +5,4 @@ regex~=2024.11
 pytest~=8.3
 pyinstaller~=6.13
 jsonpickle~=4.0
-setuptools~=79
+setuptools~=79.0

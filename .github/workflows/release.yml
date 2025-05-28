@@ -64,6 +64,7 @@ jobs:
             --add-data "./sympy-client/sympy_client/grammar/greek_symbols.lark:sympy_client/grammar" \
             --add-data "./sympy-client/sympy_client/grammar/latex_math_grammar.lark:sympy_client/grammar" \
             --add-data "./sympy-client/sympy_client/ggb_plot/geogebra.xml:sympy_client/ggb_plot" \
+            --name SympyClient-${{ matrix.os.rel_name }}.bin
             sympy-client/SympyClient.py
 
       - name: Upload Executable
@@ -71,8 +72,7 @@ jobs:
         with:
           name: SympyClient-${{ matrix.os.rel_name }}
           path: |
-            ./dist/SympyClient
-            ./dist/SympyClient.*
+            ./dist/SympyClient-${{ matrix.os.rel_name }}.bin
 
   plugin-build:
     runs-on: ubuntu-latest
@@ -88,26 +88,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18.x"
-
-      - name: Build Plugin
-        run: |
-          npm install
-          npm run build
       
       - name: Download Sympy Clients
         uses: actions/download-artifact@v4
         with:
           pattern: SympyClient-*
-          path: bin
-      
-      - name: Create Release Assets
+          path: ./bundle-bin
+
+      - name: Build Plugin
         run: |
-            mkdir rel-assets
-            for dir in bin/*/; do
-              cp main.js manifest.json styles.css "$dir"
-              rel_name=$(basename "$dir" | sed 's/SympyClient-//')
-              zip -r -j "./rel-assets/${{env.PLUGIN_NAME}}-${{ github.ref_name}}-${rel_name}.zip" "$dir"
-            done
+          npm install
+          npm run build
 
       - name: Create Release With Assets
         id: create-release-with-assets
@@ -124,7 +115,7 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            ./rel-assets/*
+            ./bundle-bin/*
             main.js
             manifest.json
             styles.css

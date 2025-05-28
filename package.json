@@ -1,6 +1,6 @@
 {
 	"name": "latex-math",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Evaluate, solve and do much more with LaTeX blocks using Sympy.",
 	"main": "main.js",
 	"scripts": {

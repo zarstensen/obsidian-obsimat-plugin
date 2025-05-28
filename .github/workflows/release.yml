@@ -71,6 +71,7 @@ jobs:
         shell: bash
         run: |
           ls
+          ls dir
           mv ./dist/SympyClient-${{ matrix.os.rel_name }}.* ./dist/SympyClient-${{ matrix.os.rel_name }}.bin
 
       - name: Upload Executable

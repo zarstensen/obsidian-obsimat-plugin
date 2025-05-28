@@ -121,7 +121,7 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            ./bundle-bin/*
+            ./bundle-bin/**/*.bin
             main.js
             manifest.json
             styles.css

@@ -107,7 +107,7 @@ jobs:
 
       - name: Build Plugin
         run: |
-          ls -r
+          ls -R
           npm install
           npm run build
 

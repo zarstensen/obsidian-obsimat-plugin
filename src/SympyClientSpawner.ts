@@ -26,7 +26,6 @@ export class ExecutableSpawner implements SympyClientSpawner{
             await this.asset_extractor.extractClients();
         }
 
-        // check if .bin file exists, if not i guess we do stuff.
         return spawn(this.asset_extractor.getClientPath(), [port.toString()]);
     }   
 }

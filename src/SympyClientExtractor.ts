@@ -2,9 +2,9 @@ import * as fsSync from "fs";
 import * as fs from "fs/promises";
 import path from "path";
 import { platform } from "os";
-import SympyClientWin from "../bundle-bin/SympyClient-win/SympyClient-win.bin"
-import SympyClientMacos from "../bundle-bin/SympyClient-macos/SympyClient-macos.bin"
-import SympyClientLinux from "../bundle-bin/SympyClient-linux/SympyClient-linux.bin"
+import SympyClientWin from "../bundle-bin/SympyClient-win/SympyClient-win.bin";
+import SympyClientMacos from "../bundle-bin/SympyClient-macos/SympyClient-macos.bin";
+import SympyClientLinux from "../bundle-bin/SympyClient-linux/SympyClient-linux.bin";
 
 
 // AssetExtractor is responsible for extracting and detecting already extracted sympy clients bundled with this plugin.. 
@@ -33,7 +33,6 @@ export class SympyClientExtractor {
 
     // extract all the bundled clients.
     public async extractClients() {
-
         await fs.mkdir(path.join(this.asset_dir, "bin"), { recursive: true });
 
         await fs.writeFile(this.getPlatformClientPath("win"), SympyClientWin);

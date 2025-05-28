@@ -1,7 +1,8 @@
 lark~=1.2
 websockets~=15.0
-sympy~=1.14.0
+sympy~=1.14
 regex~=2024.11
 pytest~=8.3
 pyinstaller~=6.13
 jsonpickle~=4.0
+setuptools~=79.0

@@ -1,8 +1,6 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import getPort from 'get-port';
-import { join } from 'path';
 import { ChildProcessWithoutNullStreams } from 'child_process';
-import { FileSystemAdapter, Vault } from 'obsidian';
 import { SympyClientSpawner } from './SympyClientSpawner';
 import { assert } from 'console';
 
@@ -12,7 +10,7 @@ export class SympyEvaluator {
     // Start the SympyEvaluator python process, and establish an connection to it.
     // vault_dir: the directory of the vault, which thsi plugin is installed in.
     // python_exec: the python executable to use to start the SympyEvaluator process.
-    public async initializeAsync(vault: Vault, plugin_dir: string, sympy_client_spawner: SympyClientSpawner): Promise<void> {
+    public async initializeAsync(sympy_client_spawner: SympyClientSpawner): Promise<void> {
         // Start by setting up the web socket server, so we can get a port to give to the python program.
         const server_port = await getPort();
 
@@ -20,14 +18,8 @@ export class SympyEvaluator {
             port: server_port
         });
 
-        if(!(vault.adapter instanceof FileSystemAdapter)) {
-            throw new Error(`Expected FileSystemAdapter, got ${vault.adapter}`);
-        }
-
-        const file_system_adapter: FileSystemAdapter = vault.adapter;
-
         // now start the python process
-        this.python_process = sympy_client_spawner.spawnClient(join(file_system_adapter.getBasePath(), plugin_dir), server_port);
+        this.python_process = await sympy_client_spawner.spawnClient(server_port);
         
         // setup output to be logged in the developer console
         this.python_process.stdout.on('data', (data) => {
@@ -45,8 +37,6 @@ export class SympyEvaluator {
 
         // wait for the process to establish an connection
         this.ws_python = await new Promise(this.resolveConnection.bind(this));
-
-
     }
 
     public async shutdown(): Promise<void> {

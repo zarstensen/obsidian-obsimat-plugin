@@ -8,7 +8,7 @@ import { EvaluateCommand } from 'src/commands/EvaluateCommand';
 import { SolveCommand } from 'src/commands/SolveCommand';
 import { SympyConvertCommand } from 'src/commands/SympyConvertCommand';
 import { UnitConvertCommand } from 'src/commands/UnitConvertCommand';
-import { AssetDownloader } from 'src/AssetDownloader';
+import { SympyClientExtractor } from 'src/SympyClientExtractor';
 import path from 'path';
 
 interface LatexMathPluginSettings {
@@ -23,6 +23,8 @@ export default class LatexMathPlugin extends Plugin {
     settings: LatexMathPluginSettings;
 
     async onload() {
+        console.log(`Loading Math Latex (${this.manifest.version})`);
+
         await this.loadSettings();
         this.addSettingTab(new LatexMathSettingsTab(this.app, this));
 
@@ -60,6 +62,10 @@ export default class LatexMathPlugin extends Plugin {
 
         // spawn sympy client
         this.spawn_sympy_client_promise = this.spawnSympyClient(this.manifest.dir);
+        this.spawn_sympy_client_promise.catch((err) => {
+            new Notice(`Latex Math could not start the Sympy client, aborting load.\n${err.message}`);
+            throw err;
+        });
     }
 
     // sets up the given map of commands as obsidian commands.
@@ -113,32 +119,18 @@ export default class LatexMathPlugin extends Plugin {
     // download all required assets for spawning a sympy client,
     // and spawns it at the given plugin_dir.
     private async spawnSympyClient(plugin_dir: string) {
-        // try to download binaries
-        const assetDownloader = new AssetDownloader(this.manifest.version);
-
         if(!(this.app.vault.adapter instanceof FileSystemAdapter)) {
             throw new Error(`Expected FileSystemAdapter, got ${this.app.vault.adapter}`);
         }
-
         const file_system_adapter: FileSystemAdapter = this.app.vault.adapter;
 
-        const asset_dir = path.join(file_system_adapter.getBasePath(), plugin_dir);
-
-        try {
-            if(!await assetDownloader.hasRequiredAssets(asset_dir)) {
-                new Notice("Latex Math is downloading some required assets, this may take a while...");
-                await assetDownloader.downloadAssets(asset_dir);
-                new Notice("Latex Math finished downloading the required assets, it is now usable.");
-            }
-        } catch (e) {
-            new Notice(`Latex Math could not download required assets, aborting load.\n${e.message}`);
-            throw e;
-        }
+        const full_plugin_dir = path.join(file_system_adapter.getBasePath(), plugin_dir);
+        const asset_extractor = new SympyClientExtractor(full_plugin_dir);
 
         // spawn sympy client process.
-        const sympy_client_spawner = this.settings.dev_mode ? new SourceCodeSpawner() : new ExecutableSpawner();
+        const sympy_client_spawner = this.settings.dev_mode ? new SourceCodeSpawner(full_plugin_dir) : new ExecutableSpawner(asset_extractor);
 
-        await this.sympy_evaluator.initializeAsync(this.app.vault, plugin_dir, sympy_client_spawner);
+        await this.sympy_evaluator.initializeAsync(sympy_client_spawner);
     }
 
     private sympy_evaluator: SympyEvaluator;

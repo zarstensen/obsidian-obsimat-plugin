@@ -52,6 +52,11 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
+      - name: Install UPX
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          install-only: true
+
       - name: Build Executable
         id: build-executable
         shell: bash
@@ -103,6 +108,7 @@ jobs:
 
       - name: Build Plugin
         run: |
+          ls -R
           npm install
           npm run build
 

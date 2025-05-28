@@ -41,7 +41,7 @@ const context = await esbuild.context({
 	outfile: "main.js",
 	minify: prod,
 	loader: {
-		".bin": "binary"
+		".bin": "base64"
 	},
 });
 

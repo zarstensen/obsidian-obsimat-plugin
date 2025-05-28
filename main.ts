@@ -125,7 +125,7 @@ export default class LatexMathPlugin extends Plugin {
         const file_system_adapter: FileSystemAdapter = this.app.vault.adapter;
 
         const full_plugin_dir = path.join(file_system_adapter.getBasePath(), plugin_dir);
-        const asset_extractor = new SympyClientExtractor(this.manifest.version, full_plugin_dir);
+        const asset_extractor = new SympyClientExtractor(full_plugin_dir);
 
         // spawn sympy client process.
         const sympy_client_spawner = this.settings.dev_mode ? new SourceCodeSpawner(full_plugin_dir) : new ExecutableSpawner(asset_extractor);

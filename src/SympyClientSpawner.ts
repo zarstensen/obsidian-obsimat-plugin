@@ -22,7 +22,7 @@ export class ExecutableSpawner implements SympyClientSpawner{
     constructor(private asset_extractor: SympyClientExtractor) {}
 
     public async spawnClient(port: number): Promise<ChildProcessWithoutNullStreams> {
-        if(!(await this.asset_extractor.hasRequiredClients())) {
+        if(!(await this.asset_extractor.hasBundledClients())) {
             await this.asset_extractor.extractClients();
         }
 

@@ -70,6 +70,7 @@ jobs:
         id: rename-executable
         shell: bash
         run: |
+          ls
           mv ./dist/SympyClient-${{ matrix.os.rel_name }}.* ./dist/SympyClient-${{ matrix.os.rel_name }}.bin
 
       - name: Upload Executable

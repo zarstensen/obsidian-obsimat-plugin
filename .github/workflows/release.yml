@@ -72,8 +72,8 @@ jobs:
         run: |
           ls
           ls dist
-          mv ./dist/SympyClient-${{ matrix.os.rel_name }} ./dist/SympyClient-${{ matrix.os.rel_name }}.bin \
-          || mv ./dist/SympyClient-${{ matrix.os.rel_name }}.exe ./dist/SympyClient-${{ matrix.os.rel_name }}.bin
+          mv ./dist/SympyClient-${{ matrix.os.rel_name }}.exe ./dist/SympyClient-${{ matrix.os.rel_name }}.bin \
+          || mv ./dist/SympyClient-${{ matrix.os.rel_name }} ./dist/SympyClient-${{ matrix.os.rel_name }}.bin
           ls
           ls dist
 

@@ -14,15 +14,13 @@
 
 ![demo](readme-assets/LatexMathDemo.gif)
 *`Evaluate LaTeX expression` is bound to  `Alt + B` in the above demo. 
-In general, all demo Gifs will make use of the [recommended hotkeys](#recommended-hotkeys). [^demo-gif-plugins]*
+In general, all demo Gifs will make use of the [recommended hotkeys](#command-list). [^demo-gif-plugins]*
 [^demo-gif-plugins]: All demo Gif's were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
 
 ## Usage
 Start out by placing the cursor inside any math block. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)). **Latex Math** will now parse the latex math, evaluate the equation, and insert the result at the end of the math block.
 
-Take a look at the [command list](#command-list) a brief overview of what this plugin can do, or go look at the [features](#features) list, for a more in depth guide of this plugin's advanced features.
-
-Furthermore, check out the [recommended hotkeys](#recommended-hotkeys) for this plugin, to speed up your workflow.
+Take a look at the [command list](#command-list) a brief overview of what this plugin can do, or go look at the [features](#features) list, for a more in depth walkthrough of this plugin's advanced features.
 
 If you are a linux user, make sure to read the [Linux](#linux) subsection of the [Installing](#installing) section to ensure this plugin runs correctly.
 
@@ -31,7 +29,6 @@ If you are a linux user, make sure to read the [Linux](#linux) subsection of the
 
 - [Usage](#usage)
 - [Command List](#command-list)
-- [Recommended Hotkeys](#recommended-hotkeys)
 - [Features](#features)
   - [Evaluate](#evaluate)
   - [Solve](#solve)
@@ -46,29 +43,18 @@ If you are a linux user, make sure to read the [Linux](#linux) subsection of the
 
 ## Command List
 
-| Command                                     | Recommended Hotkey     | Usage                                                                                                                      |
-| ------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Evaluate LaTeX expression                   | `Alt + B`              | Evaluate the right most expression (if in a relation) and simplify the result.                                             |       
-| Evalf LaTeX expression                      | `Alt + F`              | Evaluate expression and output decimal numbers instead of fractions in the result.                                         |       
-| Expand LaTeX expression                     | `Alt + E`              | Evaluate expression and expand the result as much as possible.                                                             |       
-| Factor LaTeX expression                     |                        | Evaluate expression and factorize the result as much as possible.                                                          |       
-| Partial fraction decompose LaTeX expression |                        | Evaluate expression and perform partial fraction decomposition on the result.                                              |       
-| Solve LaTeX expression                      | `Alt + L` or <br/> `Alt + S` | Solve a single equation or a system of equations. Output the result in a new math block below the current one.             |       
-| Convert units in LaTeX expression           | `Alt + U`              | Try to convert the units in the right most expression to the user supplied one.                                            |       
-| Convert LaTeX expression to Sympy.          |                        | Convert entire expression to its equivalent Sympy code, and insert the result in a codeblock below the current math block. |       
+Below is a table of all the commands this plugin provides, along with a brief description of what it does and optionally a recommended hotkey.
 
-## Recommended Hotkeys
-
-Below is a table of the recommended hotkeys to use for some commonly used commands.
-
-| Command                           | Hotkey                 |
-| --------------------------------- | ---------------------- |
-| Evaluate LaTeX expression         | `Alt + B`              |
-| Evalf LaTeX expression            | `Alt + F`              |
-| Expand LaTeX expression           | `Alt + E`              |
-| Solve LaTeX expression            | `Alt + L` or `Alt + S` |
-| Convert units in LaTeX expression | `Alt + U`              |
-
+| Command                                     | Recommended Hotkey | Usage                                                                                                                      |
+| ------------------------------------------- | :----------------: | -------------------------------------------------------------------------------------------------------------------------- |
+| Evaluate LaTeX expression                   |     `Alt + B`      | Evaluate the right most expression (if in a relation) and simplify the result.                                             |
+| Evalf LaTeX expression                      |     `Alt + F`      | Evaluate expression and output decimal numbers instead of fractions in the result.                                         |
+| Expand LaTeX expression                     |     `Alt + E`      | Evaluate expression and expand the result as much as possible.                                                             |
+| Factor LaTeX expression                     |                    | Evaluate expression and factorize the result as much as possible.                                                          |
+| Partial fraction decompose LaTeX expression |                    | Evaluate expression and perform partial fraction decomposition on the result.                                              |
+| Solve LaTeX expression                      |     `Alt + L`      | Solve a single equation or a system of equations. Output the result in a new math block below the current one.             |
+| Convert units in LaTeX expression           |     `Alt + U`      | Try to convert the units in the right most expression to the user supplied one.                                            |
+| Convert LaTeX expression to Sympy.          |                    | Convert entire expression to its equivalent Sympy code, and insert the result in a codeblock below the current math block. |
 
 ## Features
 

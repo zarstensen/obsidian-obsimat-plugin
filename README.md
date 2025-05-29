@@ -12,17 +12,18 @@
 
 **Latex Math** is an [Obsidian](https://obsidian.md/) plugin which adds mathematical evaluation of LaTeX math blocks to your notes, using [Sympy](https://www.sympy.org).
 
-![demo](readme-assets/LatexMathDemo.gif)
-*`Evaluate LaTeX expression` is bound to  `Alt + B` in the above demo. 
+![demo](readme-assets/frontpage-demo.gif)
+*`Evaluate LaTeX expression` is bound to  `Alt + B` in the above demo.
 In general, all demo Gifs will make use of the [recommended hotkeys](#command-list). [^demo-gif-plugins]*
 [^demo-gif-plugins]: All demo Gif's were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
 
 ## Usage
+
 Start out by placing the cursor inside any math block. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)). **Latex Math** will now parse the latex math, evaluate the equation, and insert the result at the end of the math block.
 
 Take a look at the [command list](#command-list) a brief overview of what this plugin can do, or go look at the [features](#features) list, for a more in depth walkthrough of this plugin's advanced features.
 
-If you are a linux user, make sure to read the [Linux](#linux) subsection of the [Installing](#installing) section to ensure this plugin runs correctly.
+If you are a Linux user, make sure to read the [Linux](#linux) subsection of the [Installing](#installing) section to ensure this plugin runs correctly.
 
 <!-- omit in toc -->
 ## Table of Contents
@@ -59,12 +60,22 @@ Below is a table of all the commands this plugin provides, along with a brief de
 ## Features
 
 ### Evaluate
-### Solve
-### Variable and Function Definitions
-### Unit Support
-### Symbol Assumptions
-### Convert To Sympy Code
 
+Evaluate equations in various ways using the evaluate command suite. The computed output varies, depending on the chosen command.
+
+The entire evaluate suite consists of the following commands: `Evaluate LaTeX expression`, `Evalf LaTeX expression`, `Expand LaTeX expression`, `Factor LaTeX expression` and `Partial fraction decompose LaTeX expression`.
+
+![demo](readme-assets/evaluate-demo.gif)
+
+### Solve
+
+### Variable and Function Definitions
+
+### Unit Support
+
+### Symbol Assumptions
+
+### Convert To Sympy Code
 
 ## Installing
 
@@ -78,25 +89,25 @@ If this file is not present, please restart obsidian with the **Latex Math** plu
 
 Perform the following commands inside the **Latex Math** installation directory, to give `SympyClient` the necessary permissions:
 
-- (Optional) Check execution permissions of `SympyClient`: 
+- (Optional) Check execution permissions of `SympyClient`:
   
   `ls -l SympyClient`
   
   Something like `-rw-r--r--...` means no execute permission.
 
-- Give execution permissions to `Sympyclient` (This will give every user access to execute `SympyClient`): 
+- Give execution permissions to `Sympyclient` (This will give every user access to execute `SympyClient`):
   
   `chmod +x /path/to/SympyClient`
 
 - (Optional) Perform step 1 to check if permissions have changed.
 
-- Reload Obsidian with **Latex Math** enabled. 
-  No errors should pop up and the plugin should now work as expected
+- Reload Obsidian with **Latex Math** enabled.
+  No errors should pop up, and the plugin should now work as expected
 
 ## Developing
 
 This section describes how to set up a development environment for **Latex Math**.
-Make sure to have python and npm installed before continuing.
+Make sure to have python and NPM installed before continuing.
 
 Start of with running the `setup-dev-env` python script from the root directory.
 
@@ -113,10 +124,9 @@ The plugin should now use the python source files and the created virtual enviro
 Any changes to the python source code requires reloading Obsidian to have any effect.
 
 > [!CAUTION]
-> If you are using vscode, make sure to add `push` as an entry to `git.commandsToLog` in vscode (user or workspace), if you want to see the output of the push hook if it fails.
+> If you are using VS Code, make sure to add `push` as an entry to `git.commandsToLog` in VS Code (user or workspace), if you want to see the output of the push hook if it fails.
 
 ## License
 
 See [LICENSE](LICENSE)
 
-[^1]: Solution domain is only accounted for in single equations. For systems of equations, restrict the solution domain by using symbols defined with assumptions.

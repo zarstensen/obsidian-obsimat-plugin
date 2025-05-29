@@ -17,10 +17,21 @@
 In general, all demo Gifs will make use of the [recommended hotkeys](#recommended-hotkeys). [^demo-gif-plugins]*
 [^demo-gif-plugins]: All demo Gif's were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
 
+## Usage
+Start out by placing the cursor inside any math block. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)). **Latex Math** will now parse the latex math, evaluate the equation, and insert the result at the end of the math block.
+
+Take a look at the [command list](#command-list) a brief overview of what this plugin can do, or go look at the [features](#features) list, for a more in depth guide of this plugin's advanced features.
+
+Furthermore, check out the [recommended hotkeys](#recommended-hotkeys) for this plugin, to speed up your workflow.
+
+If you are a linux user, make sure to read the [Linux](#linux) subsection of the [Installing](#installing) section to ensure this plugin runs correctly.
+
 <!-- omit in toc -->
 ## Table of Contents
 
 - [Usage](#usage)
+- [Command List](#command-list)
+- [Recommended Hotkeys](#recommended-hotkeys)
 - [Features](#features)
   - [Evaluate](#evaluate)
   - [Solve](#solve)
@@ -28,23 +39,23 @@ In general, all demo Gifs will make use of the [recommended hotkeys](#recommende
   - [Unit Support](#unit-support)
   - [Symbol Assumptions](#symbol-assumptions)
   - [Convert To Sympy Code](#convert-to-sympy-code)
-- [Recommended Hotkeys](#recommended-hotkeys)
-- [Command List](#command-list)
 - [Installing](#installing)
   - [Linux](#linux)
 - [Developing](#developing)
 - [License](#license)
 
-## Usage
-Start out by placing the cursor inside any mathblock. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)).
-## Features
+## Command List
 
-### Evaluate
-### Solve
-### Variable and Function Definitions
-### Unit Support
-### Symbol Assumptions
-### Convert To Sympy Code
+| Command                                     | Recommended Hotkey     | Usage                                                                                                                      |
+| ------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Evaluate LaTeX expression                   | `Alt + B`              | Evaluate the right most expression (if in a relation) and simplify the result.                                             |       
+| Evalf LaTeX expression                      | `Alt + F`              | Evaluate expression and output decimal numbers instead of fractions in the result.                                         |       
+| Expand LaTeX expression                     | `Alt + E`              | Evaluate expression and expand the result as much as possible.                                                             |       
+| Factor LaTeX expression                     |                        | Evaluate expression and factorize the result as much as possible.                                                          |       
+| Partial fraction decompose LaTeX expression |                        | Evaluate expression and perform partial fraction decomposition on the result.                                              |       
+| Solve LaTeX expression                      | `Alt + L` or `Alt + S` | Solve a single equation or a system of equations. Output the result in a new math block below the current one.             |       
+| Convert units in LaTeX expression           | `Alt + U`              | Try to convert the units in the right most expression to the user supplied one.                                            |       
+| Convert LaTeX expression to Sympy.          |                        | Convert entire expression to its equivalent Sympy code, and insert the result in a codeblock below the current math block. |       
 
 ## Recommended Hotkeys
 
@@ -58,18 +69,15 @@ Below is a table of the recommended hotkeys to use for some commonly used comman
 | Solve LaTeX expression            | `Alt + L` or `Alt + S` |
 | Convert units in LaTeX expression | `Alt + U`              |
 
-## Command List
 
-| Command                                     | Usage                                                                                                                      |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Evaluate LaTeX expression                   | Evaluate the right most expression (if in a relation) and simplify the result.                                             |
-| Evalf LaTeX expression                      | Evaluate expression and output decimal numbers instead of fractions in the result.                                         |
-| Expand LaTeX expression                     | Evaluate expression and expand the result as much as possible.                                                             |
-| Factor LaTeX expression                     | Evaluate expression and factorize the result as much as possible.                                                          |
-| Partial fraction decompose LaTeX expression | Evaluate expression and perform partial fraction decomposition on the result.                                              |
-| Solve LaTeX expression                      | Solve a single equation or a system of equations. Output the result in a new math block below the current one.             |
-| Convert units in LaTeX expression           | Try to convert the units in the right most expression to the user supplied one.                                            |
-| Convert LaTeX expression to Sympy.          | Convert entire expression to its equivalent Sympy code, and insert the result in a codeblock below the current math block. |
+## Features
+
+### Evaluate
+### Solve
+### Variable and Function Definitions
+### Unit Support
+### Symbol Assumptions
+### Convert To Sympy Code
 
 
 ## Installing

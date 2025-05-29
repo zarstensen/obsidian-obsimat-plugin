@@ -34,7 +34,8 @@ class LmatEnvironmentUtils:
     @staticmethod
     def substitute_units(sympy_expr, environment: LmatEnvironment):
         if 'unit_system' not in environment:
-            return sympy_expr
+            # still perform auto convert, but with default unit system instead.
+            return UnitsUtils.auto_convert(sympy_expr)
         
         unit_system_id_str = environment['unit_system']
         

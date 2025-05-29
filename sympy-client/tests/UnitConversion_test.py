@@ -78,4 +78,8 @@ class TestUnitConversion:
         result = handler.handle({"expression": r"\sqrt{ s^2 }", "environment": { "unit_system": "MKS" }})
 
         assert result.sympy_expr.rhs == units.second
-        
+
+    def test_brace_units(self):
+        handler = EvalHandler(self.parser)
+        result = handler.handle({"expression": r"\frac{{kg}\,{m}^{2}}{{s}^2}", "environment": {}})
+        assert result.sympy_expr.rhs == units.joule

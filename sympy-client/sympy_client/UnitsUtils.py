@@ -1,4 +1,4 @@
-from sympy import Add, Matrix, MatrixBase, Symbol
+from sympy import Add, Matrix, MatrixBase, Symbol, Rel, Expr
 import sympy.physics.units as u
 from sympy.physics.units.quantities import Quantity 
 from sympy.physics.units.systems import SI
@@ -47,16 +47,16 @@ def substitute_units(sympy_expr, excluded_symbols: list[Symbol], unit_system: Un
 
 # attempt to automatically convert the units in the given sympy expression.
 # this convertion method prioritizes as few units as possible raised to the lowest power possible (or lowest root possible).
-def auto_convert(sympy_expr, unit_system: UnitSystem):
-    if unit_system is None:
-        unit_system = SI
-    
+def auto_convert(sympy_expr, unit_system: UnitSystem = SI):    
     if isinstance(sympy_expr, MatrixBase):
         converted_matrix = Matrix.zeros(*sympy_expr.shape)
         for index, value in enumerate(sympy_expr):
             converted_matrix[index] = auto_convert(value, unit_system)
         
         return converted_matrix
+    # relationals and non sympy objects should not be auto converted
+    elif isinstance(sympy_expr, Rel) or not isinstance(sympy_expr, Expr):
+        return sympy_expr
     
     if not isinstance(sympy_expr, Add):
         sympy_expr = [sympy_expr]
@@ -67,6 +67,11 @@ def auto_convert(sympy_expr, unit_system: UnitSystem):
     
     for expr in sympy_expr:
         curr_complexity = get_unit_complexity(expr)
+        
+        # unit complexity cannot be determined for expression for some reason.
+        if curr_complexity is None:
+            converted_expressions.append(expr)
+            continue
         
         # Conver to using all base units of system.
         for units in [ unit_system._base_units, *unit_system.get_units_non_prefixed() ]:
@@ -96,14 +101,18 @@ def str_to_unit(unit_str) -> Quantity | None:
 # get the 'complexity' of a unit.
 # complexity is defined as the sum of all units raised power (or 1/power if 0 < power < 1).
 def get_unit_complexity(expression):
-        complexity = 0
-        
-        for val, pow in expression.as_powers_dict().items():
-            if isinstance(val, Quantity):
-                
-                if 0 < abs(pow) < 1:
-                    pow = 1 / pow
-                
-                complexity += abs(pow)
-                
-        return complexity
+    
+    if not hasattr(expression, 'as_powers_dict'):
+        return None
+    
+    complexity = 0
+    
+    for val, pow in expression.as_powers_dict().items():
+        if isinstance(val, Quantity):
+            
+            if 0 < abs(pow) < 1:
+                pow = 1 / pow
+            
+            complexity += abs(pow)
+            
+    return complexity

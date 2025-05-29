@@ -53,7 +53,7 @@ If you are a linux user, make sure to read the [Linux](#linux) subsection of the
 | Expand LaTeX expression                     | `Alt + E`              | Evaluate expression and expand the result as much as possible.                                                             |       
 | Factor LaTeX expression                     |                        | Evaluate expression and factorize the result as much as possible.                                                          |       
 | Partial fraction decompose LaTeX expression |                        | Evaluate expression and perform partial fraction decomposition on the result.                                              |       
-| Solve LaTeX expression                      | `Alt + L` or `Alt + S` | Solve a single equation or a system of equations. Output the result in a new math block below the current one.             |       
+| Solve LaTeX expression                      | `Alt + L` or <br/> `Alt + S` | Solve a single equation or a system of equations. Output the result in a new math block below the current one.             |       
 | Convert units in LaTeX expression           | `Alt + U`              | Try to convert the units in the right most expression to the user supplied one.                                            |       
 | Convert LaTeX expression to Sympy.          |                        | Convert entire expression to its equivalent Sympy code, and insert the result in a codeblock below the current math block. |       
 

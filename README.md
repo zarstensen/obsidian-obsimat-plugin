@@ -1,186 +1,76 @@
 <div align="center">
-  <h1 align="center">Latex Math</h1>
+  
+  <h1 align="center">
+  Latex Math
+
+  <a>[![GitHub Release](https://img.shields.io/github/v/release/zarstensen/obsidian-latex-math?style=flat-square&color=blue)](https://github.com/zarstensen/obsidian-latex-math/releases/latest) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zarstensen/obsidian-latex-math/push.yml?style=flat-square&label=tests)
+  </a>
+
+  </h1>
+
 </div>
 
-[![GitHub Release](https://img.shields.io/github/v/release/zarstensen/obsidian-latex-math?style=flat-square&color=blue)](https://github.com/zarstensen/obsidian-latex-math/releases/latest)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zarstensen/obsidian-latex-math/push.yml?style=flat-square&label=tests)
+**Latex Math** is an [Obsidian](https://obsidian.md/) plugin which adds mathematical evaluation of LaTeX math blocks to your notes, using [Sympy](https://www.sympy.org).
 
-
-**Latex Math** is an [Obsidian](https://obsidian.md/) plugin that enables the evaluation of LaTeX blocks with [Sympy](https://www.sympy.org).
+![demo](readme-assets/LatexMathDemo.gif)
+*`Evaluate LaTeX expression` is bound to  `Alt + B` in the above demo. 
+In general, all demo Gifs will make use of the [recommended hotkeys](#recommended-hotkeys). [^demo-gif-plugins]*
+[^demo-gif-plugins]: All demo Gif's were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
 
 <!-- omit in toc -->
 ## Table of Contents
 
 - [Usage](#usage)
+- [Features](#features)
   - [Evaluate](#evaluate)
-    - [Variants](#variants)
   - [Solve](#solve)
-  - [Definitions](#definitions)
-  - [LMat Code Block](#lmat-code-block)
-    - [Symbol Assumptions](#symbol-assumptions)
-    - [Units](#units)
-    - [Solution Domain](#solution-domain)
-  - [Sympy Conversion](#sympy-conversion)
+  - [Variable and Function Definitions](#variable-and-function-definitions)
+  - [Unit Support](#unit-support)
+  - [Symbol Assumptions](#symbol-assumptions)
+  - [Convert To Sympy Code](#convert-to-sympy-code)
+- [Recommended Hotkeys](#recommended-hotkeys)
+- [Command List](#command-list)
 - [Installing](#installing)
   - [Linux](#linux)
 - [Developing](#developing)
 - [License](#license)
 
 ## Usage
+Start out by placing the cursor inside any mathblock. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)).
+## Features
 
 ### Evaluate
-
-Evaluate a LaTeX math expressions with the `Evaluate LaTeX Expression` command.
-
-**Latex Math** supports various math operations, ranging from basic addition and multiplication to more complex operations such as integration and differentiation.
-Below is a table overview of an extract of usable functions.
-
-| Operation                     | LaTeX                   | Rendered LaTeX         |
-| :---------------------------- | :---------------------- | :--------------------- |
-| Inner product of vectors      | `\langle x , y \rangle` | $\langle x, y \rangle$ |
-| Norm of a single vector       | `\Vert x \Vert`         | $\Vert x \Vert$        |
-| Quick differentiation         | `(x)''...`              | $(x)''^{\cdots}$       |
-| Gradient vector of expression | `\nabla(x)`             | $\nabla(x)$            |
-| Hessian matrix of expression  | `\mathbf{H}(x)`         | $\mathbf{H}(x)$        |
-| Jacobi matrix of expression   | `\mathbf{J}(x)`         | $\mathbf{J}(x)$        |
-| rref of matrix                | `\mathrm{rref}(x)`      | $\mathrm{rref}(x)$     |
-
-#### Variants
-
-The evaluate command has a series of variants, which all evaluates a given LaTeX expression, and then proceed to rewrite the result in some way.
-Below is a table overview of the variants, as well as their function.
-
-| Command Name                        | Function                                                                                |
-| :---------------------------------- | :-------------------------------------------------------------------------------------- |
-| `Evalf LaTeX expression`            | Evaluate LaTeX expression and convert it to floating point values instead of fractions. |
-| `Expand LaTeX expression`           | Evaluate and expand LaTeX expression.                                                   |
-| `Factor LaTeX expression`           | Evaluate and factor LaTeX expression.                                                   |
-| `Apart LaTeX expression`            | Evaluate and perform partial fraction decomposition on LaTeX expression.                |
-| `Convert units in LaTeX expression` | Evaluate LaTeX expression and convert result to units provided by the user.             |
-
 ### Solve
+### Variable and Function Definitions
+### Unit Support
+### Symbol Assumptions
+### Convert To Sympy Code
 
-Solve LaTeX equations with the `Solve LaTeX expression` command.
+## Recommended Hotkeys
 
-If an equation has too many free variables to solve for all of them, a modal will pop up where you can pick which symbols to solve for. The solution domain can also be specified here [^1].
+Below is a table of the recommended hotkeys to use for some commonly used commands.
 
-To solve a system of equations, place each equation on a new line inside either a `\begin{cases}` or `\begin{align}` LaTeX environment, and execute the solve command.
+| Command                           | Hotkey                 |
+| --------------------------------- | ---------------------- |
+| Evaluate LaTeX expression         | `Alt + B`              |
+| Evalf LaTeX expression            | `Alt + F`              |
+| Expand LaTeX expression           | `Alt + E`              |
+| Solve LaTeX expression            | `Alt + L` or `Alt + S` |
+| Convert units in LaTeX expression | `Alt + U`              |
 
-If an expression with no relation is solved, it is assumed it is set equal to 0.
-For example, `a^2 + b` would be interpreted as `a^2 + b = 0`.
+## Command List
 
-### Definitions
+| Command                                     | Usage                                                                                                                      |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Evaluate LaTeX expression                   | Evaluate the right most expression (if in a relation) and simplify the result.                                             |
+| Evalf LaTeX expression                      | Evaluate expression and output decimal numbers instead of fractions in the result.                                         |
+| Expand LaTeX expression                     | Evaluate expression and expand the result as much as possible.                                                             |
+| Factor LaTeX expression                     | Evaluate expression and factorize the result as much as possible.                                                          |
+| Partial fraction decompose LaTeX expression | Evaluate expression and perform partial fraction decomposition on the result.                                              |
+| Solve LaTeX expression                      | Solve a single equation or a system of equations. Output the result in a new math block below the current one.             |
+| Convert units in LaTeX expression           | Try to convert the units in the right most expression to the user supplied one.                                            |
+| Convert LaTeX expression to Sympy.          | Convert entire expression to its equivalent Sympy code, and insert the result in a codeblock below the current math block. |
 
-Define variables or functions inside LaTeX blocks with the `:=` operator.
-The left-hand side specifies the name of the variable / function and its parameters, and the right-hand side its value / body.
-Whenever it is used after it has been defined, it will be replaced by its defined expression.
-
-> [!IMPORTANT]
-> Only one definition can be present in a LaTeX block.
->
-
-Definition persistence is based on the location they were defined inside the document, meaning f.ex. a variable cannot be used in the note above its LaTeX block definition. Furthermore, all `lmat` code blocks remove all definitions above themselves.
-
-To remove a definition, leave the right hand of the `:=` operator blank.
-
-> [!NOTE]
-> **Variable Definition Example**
->
-> Define a variable `x` with the value `\sqrt{99}`.
->
-> `$x := \sqrt{99}$`
->
-> Define a variable `y` dependent on the value of `x`.
->
-> `$y := x^2$`
->
-> Evaluate an expression containing the above variables after they have been defined.
->
-> `$x^2 + y$` evaluates to 198
->
-> Undefine previously defined variable `x`
->
-> `x :=`
-
-> [!NOTE]
-> **Function Definition Example**
->
-> 
-> Define a function `f(x)` with the body `x^2`.
->
-> `$f(x) := x^2$`
->
->
-> Evaluate an expression containing the above function after they have been defined.
->
-> `$f(3) + f(4)$` evaluates to 25
->
-> Undefine previously defined function `f`
->
-> `f() :=`
-
-### LMat Code Block
-
-`lmat` code blocks define a math environment for which all expressions following the code block will be evaluated. The contents of an `lmat` code block make use of the [TOML](https://toml.io) config format.
-
-Each `lmat` code block functions as a complete reset, ignoring any previous variable definitions and `lmat` code blocks.
-
-> [!NOTE]
-> **LMat Code Block Example**
->
-> ````text
-> ```lmat
-> [symbols]
-> x = [ "real", "positive" ]
-> y = [ "integer" ]
->
-> [units]
-> system = "SI"
-> exclude = [ "g" ]
->
->
-> [domain]
-> domain="Reals"
-> ```
-> ````
->
-> The below expressions will be evaluated to the following in this environment:
->
-> | Expression                                     | Operation | Result                     |
-> | :--------------------------------------------- | :-------- | :------------------------- |
-> | $x^2=2$                                        | Solve     | $\sqrt{2}$                 |
-> | $30 \frac{kg \ m}{s^2}$                        | Evaluate  | $30 N$                     |
-> | `\begin{cases} x + y = 1 \\ x = y \end{cases}` | Solve     | $False$                    |
->
-
-#### Symbol Assumptions
-
-[Sympy Assumptions](https://docs.sympy.org/latest/guides/assumptions.html) can be specified for specific symbols in the `symbols` table.
-
-This is done by setting the symbol name as a key in the `symbols` table, equal to a list of assumptions for this symbol.
-
-#### Units
-
-Unit conversion can be enabled and configured in the `units` table.
-
-The `system` key specifies which unit system to use, when converting between units.
-Possible values include `SI`, `MKS`, `MKSA` and `Natural system`.
-If left blank, no unit conversion will be done.
-
-The `exclude` key specifies a list of symbols, which should not be interpreted as units.
-An example of this being useful could be *g* which is often used as a symbol for earths gravitational acceleration, but will be interpreted as *grams* when units are enabled.
-
-#### Solution Domain
-
-The `domain` key in the `domain` table specifies the default domain to restrict single equation solutions to.
-
-The value should be a sympify'able Python expression that evaluates to a [sympy set](https://docs.sympy.org/latest/modules/sets.html).
-
-If not specified, the default domain is the complex set.
-
-### Sympy Conversion
-
-Convert a LaTeX block to Sympy Python code with the `Convert LaTeX Expression To Sympy` command.
 
 ## Installing
 
@@ -211,7 +101,7 @@ Perform the following commands inside the **Latex Math** installation directory,
 
 ## Developing
 
-This section describes how to set up a development environment for **Latex Math** .
+This section describes how to set up a development environment for **Latex Math**.
 Make sure to have python and npm installed before continuing.
 
 Start of with running the `setup-dev-env` python script from the root directory.

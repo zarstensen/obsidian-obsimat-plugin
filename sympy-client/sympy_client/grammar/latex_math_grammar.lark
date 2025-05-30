@@ -3,7 +3,7 @@
 
 // ======== Core structure ========
 
-latex_string: relation | system_of_relations
+?latex_string: relation | system_of_relations
 
 _rel_op: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
 _align: _ALIGN | _LATEX_NEWLINE

@@ -66,12 +66,8 @@ class EvalHandlerBase(CommandHandler, ABC):
 
         # store expression before units are converted and it is evaluated,
         # so we can display this intermediate step in the result.
-        before_evaluate = deepcopy(sympy_expr)
+
         sympy_expr = LmatEnvironmentUtils.substitute_units(sympy_expr, message['environment'])
-
         sympy_expr = self.evaluate(sympy_expr, message)
-
-        if sympy_expr != before_evaluate:
-            sympy_expr = Eq(before_evaluate, sympy_expr, evaluate=False)
-            
+  
         return EvalResult(sympy_expr, expr_lines)

@@ -206,8 +206,4 @@ class LmatLatexParser(SympyParser):
         parse_tree = self.parser.parse(latex_str)
         expr = transformer.transform(parse_tree)
         
-        # choose the highest prioritized ambiguity.
-        if isinstance(expr, Tree):
-            expr = expr.children[0]
-        
         return expr

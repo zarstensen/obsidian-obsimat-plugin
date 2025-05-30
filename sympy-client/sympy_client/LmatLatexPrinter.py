@@ -45,8 +45,9 @@ class LmatLatexPrinter(LatexPrinter):
         
         const_value = None
         
-        if num_const == S.One:
+        if num_const == S.One or num_const == S.NegativeOne:
             den_sym *= den_const
+            num_sym *= num_const
         else:
             const_value = num_const / den_const
             
@@ -75,7 +76,7 @@ class LmatLatexPrinter(LatexPrinter):
         
         if expr.is_Mul:
             args = expr.args
-        elif isinstance(expr, Quantity) or expr.is_number:
+        elif isinstance(expr, Quantity) or isinstance(expr, Pow) or expr.is_number:
             args = [ expr ]
         else:
             return (1, expr, 1)

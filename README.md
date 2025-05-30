@@ -95,6 +95,9 @@ Latex Math automatically handles conversions between units, constants and their 
 
 ### Convert To Sympy Code
 
+Quickly convert latex to sympy code to perform more advanced computations using the `Convert LaTeX expression to Sympy` command.
+This will insert a python code block containing the equivalent Sympy code of the selected math block.
+
 ## Installing
 
 Download the plugin zip file from the [latest release](https://github.com/zarstensen/obsidian-latex-math/releases/latest), and extract it to your vault's plugin folder, commonly located at `.obsidian/plugins`, relative to your vault's path.

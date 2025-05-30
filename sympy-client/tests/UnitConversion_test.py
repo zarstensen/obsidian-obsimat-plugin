@@ -46,9 +46,6 @@ class TestUnitConversion:
         result = handler.handle({"expression": "10 {gee}", "target_units": ["m", "s"], "environment": {}})
         assert result.sympy_expr - 98.06650 * units.meter / (units.seconds**2) < 1e-15 * units.meter / units.seconds**2
         
-        result = handler.handle({"expression": "{gee}", "target_units": ["m", "s"], "environment": {}})
-        print(result)
-        
     def test_solve_conversion(self):
         handler = SolveHandler(self.parser)
         result = handler.handle({"expression": "2 x = 50 kg", "environment": { "unit_system": "SI" }})

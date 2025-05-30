@@ -81,8 +81,6 @@ class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         if relation_type is not None:
             relations.append(self._create_relation(prev_expr, Dummy(), relation_type))
         
-        print(relations)
-        
         if len(relations) == 1:
             return relations[0]
         else:

@@ -40,6 +40,8 @@ If you are a Linux user, make sure to read the [Linux](#linux) subsection of the
 - [Installing](#installing)
   - [Linux](#linux)
 - [Developing](#developing)
+  - [Developing the Sympy Client](#developing-the-sympy-client)
+  - [Developing the Obsidian Plugin](#developing-the-obsidian-plugin)
 - [License](#license)
 
 ## Command List
@@ -93,6 +95,21 @@ Latex Math automatically handles conversions between units, constants and their 
 
 ### Symbol Assumptions
 
+Use an `lmat` code block to tell **Latex Math** about various assumptions it may make about specific symbols. This is used to further simplify expressions, such as roots, or limit the solution domain of equations. By default, all symbols are assumed to be complex numbers.
+
+`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions Latex Math should make, under the `symbols` table. See below for an example.
+
+> [!TIP]
+> **Example**
+> 
+> ```lmat
+> [symbols]
+> x = [ "real", "positive" ]
+> y = [ "integer" ]
+> ```
+
+See the [sympy documentation](https://docs.sympy.org/latest/guides/assumptions.html#id28) for a list of possible assumptions.
+
 ### Convert To Sympy Code
 
 Quickly convert latex to sympy code to perform more advanced computations using the `Convert LaTeX expression to Sympy` command.
@@ -104,21 +121,19 @@ Download the plugin zip file from the [latest release](https://github.com/zarste
 
 ### Linux
 
-If you receive an error upon plugin load on Linux, you might need to give execute permissions to the `SympyClient` file located in the plugin's installation directory.
+If you receive an error upon plugin load on Linux, you might need to give execute permissions to the `SympyClient-linux.bin` file located in the plugin's installation directory.
 
-If this file is not present, please restart obsidian with the **Latex Math** plugin enabled. The file should then be downloaded automatically.
+Perform the following commands inside the **Latex Math** installation directory, to give the necessary permissions:
 
-Perform the following commands inside the **Latex Math** installation directory, to give `SympyClient` the necessary permissions:
-
-- (Optional) Check execution permissions of `SympyClient`:
+- (Optional) Check execution permissions of `SympyClient-linux.bin`:
   
-  `ls -l SympyClient`
+  `ls -l ./bin/SympyClient-linux.bin`
   
   Something like `-rw-r--r--...` means no execute permission.
 
-- Give execution permissions to `Sympyclient` (This will give every user access to execute `SympyClient`):
+- Give execution permissions to `Sympyclient-linux.bin` (This will give every user access to execute `SympyClient-linux.bin`):
   
-  `chmod +x /path/to/SympyClient`
+  `chmod +x ./bin/SympyClient-linux.bin`
 
 - (Optional) Perform step 1 to check if permissions have changed.
 
@@ -128,7 +143,9 @@ Perform the following commands inside the **Latex Math** installation directory,
 ## Developing
 
 This section describes how to set up a development environment for **Latex Math**.
-Make sure to have python and NPM installed before continuing.
+Make sure to have python (for sympy client development) and / or NPM (for obsidian plugin development) installed before continuing.
+
+### Developing the Sympy Client
 
 Start of with running the `setup-dev-env` python script from the root directory.
 
@@ -146,6 +163,15 @@ Any changes to the python source code requires reloading Obsidian to have any ef
 
 > [!CAUTION]
 > If you are using VS Code, make sure to add `push` as an entry to `git.commandsToLog` in VS Code (user or workspace), if you want to see the output of the push hook if it fails.
+
+### Developing the Obsidian Plugin
+
+Start out by downloading the [`bundle-bin.zip`](https://github.com/zarstensen/obsidian-latex-math/releases/latest) file from the latest release, and extract it in the root directory.
+
+Now run `npm -i` still in the root directory.
+
+To start auto building the project on any source code change, run `npm run dev`.
+To perform a one time production ready build, run `npm run dev`.
 
 ## License
 

@@ -18,6 +18,9 @@ class TestLmatPrinter:
     def test_fraction_with_units(self):
         latex_str = self.printer.doprint((5 * u.km) / (u.hour))
         self._assert_str_equal(r'5 \, \frac{{km}}{{hour}}',latex_str)
+        
+        latex_str = self.printer.doprint(9.82 * u.m / u.s**2)
+        self._assert_str_equal(r'9.82 \, \frac{{m}}{{s}^{2}}',latex_str)
     
     def test_fraction_with_symbols_and_units(self):
         a, b = symbols("a b")
@@ -25,6 +28,11 @@ class TestLmatPrinter:
         # TODO: this string is not parsable by the new parser, {s}^{2} is not recognized.
         # also the output should probably be {{s}}^2
         self._assert_str_equal(r'\frac{7}{3} \, \frac{a^{2}}{b} \, \frac{{J}}{{s}^{2}}',latex_str)
+    
+    def test_fraction_with_constant_numerator(self):
+        a, b = symbols("a b")
+        latex_str = self.printer.doprint(-a / (2 * b))
+        self._assert_str_equal(r'-\frac{a}{2 \, b}',latex_str)
     
     def test_not_to_be_formatted_fraction(self):
         a, b = symbols("a b")

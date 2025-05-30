@@ -13,7 +13,7 @@ builder.create(venv_dir)
 print("Installing venv dependencies")
 
 pip_executable = os.path.join(venv_dir, venv_bin_folder, "pip.exe")
-subprocess.check_call([pip_executable, "install", "-r", "requirements.txt"])
+subprocess.check_call([pip_executable, "install", "-r", "requirements.txt", "-r", "requirements-dev.txt"])
 
 print("Creating hook symlinks")
 

@@ -16,17 +16,6 @@ from ..SystemOfExpr import SystemOfExpr
 from .ConstantsTransformer import ConstantsTransformer
 from .FunctionsTransformer import FunctionsTransformer
 
-
-# Specialized And class, which does not change the order,
-# or remove equal expressions during construction.
-class ChainedRelation(And):
-    
-    @classmethod
-    def _new_args_filter(cls, args):
-        args = BooleanFunction.binary_check_and_simplify(*args)
-        args = LatticeOp._new_args_filter(args, And)
-        return args
-
 # The LatexMathLarkTransofmer class provides functions for transforming
 # rules defined in latex_math_grammar.lark into sympy expressions.
 class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
@@ -65,7 +54,8 @@ class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
             # location data is needed for system_of_expressions handler.
             return (children[0], meta)
 
-    def relation(self, tokens: list[Expr|Token]) -> ChainedRelation | Expr:
+    @v_args(meta=True)
+    def relation(self, meta, tokens: list[Expr|Token]) -> SystemOfExpr | Expr:
         if len(tokens) == 1:
             return tokens[0]
 
@@ -91,12 +81,10 @@ class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
         if relation_type is not None:
             relations.append(self._create_relation(prev_expr, Dummy(), relation_type))
         
-        print(relations)
-        
         if len(relations) == 1:
             return relations[0]
         else:
-            return ChainedRelation(*relations, evaluate=False)
+            return SystemOfExpr([(relation, meta) for relation in relations])
 
     def expression(self, tokens: list[Expr|Token]) -> Expr:
         # construct a sum between the given sympy expressions,

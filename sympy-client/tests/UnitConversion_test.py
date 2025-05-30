@@ -15,33 +15,39 @@ class TestUnitConversion:
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": "kg * m / s^2", "environment": { "unit_system": "SI" }})
 
-        assert result.sympy_expr.rhs == units.newton
+        assert result.sympy_expr == units.newton
         
     def test_single_term_to_base_units(self):
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": "J / m * s^2", "environment": { "unit_system": "SI" }})
         
-        assert result.sympy_expr.rhs == units.kilogram * units.meter
+        assert result.sympy_expr == units.kilogram * units.meter
     
     
     def test_multiple_terms(self):
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": "J / m * s^2 + kg * m / s^2", "environment": { "unit_system": "SI" }})
         
-        assert result.sympy_expr.rhs == units.kilogram * units.meter + units.newton
+        assert result.sympy_expr == units.kilogram * units.meter + units.newton
     
     def test_excluded_units(self):
         J = symbols("J")
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": "J * kg * m / s^2", "environment": { "unit_system": "SI", "excluded_symbols": ["J"] }})
         
-        assert result.sympy_expr.rhs == J * units.newton
+        assert result.sympy_expr == J * units.newton
       
     def test_explicit_conversion(self):
         handler = ConvertUnitsHandler(self.parser)
         result = handler.handle({"expression": "7.2 * km / h", "target_units": ["m", "s"], "environment": {}})
         
-        assert result.sympy_expr.rhs == 2.0 * units.meter / units.second
+        assert result.sympy_expr == 2.0 * units.meter / units.second
+        
+        result = handler.handle({"expression": "10 {gee}", "target_units": ["m", "s"], "environment": {}})
+        assert result.sympy_expr - 98.06650 * units.meter / (units.seconds**2) < 1e-15 * units.meter / units.seconds**2
+        
+        result = handler.handle({"expression": "{gee}", "target_units": ["m", "s"], "environment": {}})
+        print(result)
         
     def test_solve_conversion(self):
         handler = SolveHandler(self.parser)
@@ -63,7 +69,7 @@ class TestUnitConversion:
             "environment": {"unit_system": "SI"}
         })
         
-        assert result.sympy_expr.rhs == Matrix([units.kilometer**2, 2 * units.second, 3000 * units.joule])
+        assert result.sympy_expr == Matrix([units.kilometer**2, 2 * units.second, 3000 * units.joule])
         
     def test_units_not_in_system(self):
         A = symbols('A')
@@ -77,14 +83,15 @@ class TestUnitConversion:
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": r"\sqrt{ s^2 }", "environment": { "unit_system": "MKS" }})
 
-        assert result.sympy_expr.rhs == units.second
+        assert result.sympy_expr == units.second
 
     def test_brace_units(self):
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": r"\frac{{kg}\,{m}^{2}}{{s}^2}", "environment": {}})
-        assert result.sympy_expr.rhs == units.joule
+        assert result.sympy_expr == units.joule
         
     def test_physical_constants(self):
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": r"5 {gee} \cdot (10 {minutes})^2", "environment": {}})
-        assert result.sympy_expr.rhs == 17651970.0 * units.meters
+        assert result.sympy_expr == 17651970.0 * units.meters
+        

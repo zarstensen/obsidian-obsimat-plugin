@@ -4,6 +4,7 @@ import sympy.physics.units.definitions.unit_definitions as unit_definitions
 from sympy.physics.units.quantities import Quantity, PhysicalConstant
 from sympy.physics.units.systems import SI
 from sympy.physics.units.unitsystem import UnitSystem
+from copy import copy
 
 # Maps an alias to its corresponding Quantity object.
 UNIT_ALIAS_MAP = {}
@@ -119,7 +120,9 @@ def str_to_unit(unit_str: str) -> Quantity | None:
     if unit_str not in UNIT_ALIAS_MAP:
         return None
     else:
-        return UNIT_ALIAS_MAP[unit_str]
+        unit = copy(UNIT_ALIAS_MAP[unit_str])
+        unit._latex_repr = unit_str
+        return unit
 
 
 # get the 'complexity' of a unit.

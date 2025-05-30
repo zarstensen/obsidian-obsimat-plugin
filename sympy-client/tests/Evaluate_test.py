@@ -195,36 +195,36 @@ class TestEvaluate:
         })
         
         x, y = symbols("x y")
-        assert result.sympy_expr.rhs == Matrix([[y * (2 * x + y), x * (2 * y + x)]])
+        assert result.sympy_expr == Matrix([[y * (2 * x + y), x * (2 * y + x)]])
     
     def test_evalf(self):
         handler = EvalfHandler(self.parser)
         result = handler.handle({"expression": "5/2", "environment": {}})
-        assert result.sympy_expr.rhs == 2.5
+        assert result.sympy_expr == 2.5
 
     def test_expand(self):
         handler = ExpandHandler(self.parser)
         result = handler.handle({"expression": "(a + b)^2", "environment": {}})
         a, b = symbols("a b")
-        assert result.sympy_expr.rhs == a**2 + 2 * a * b + b**2
+        assert result.sympy_expr == a**2 + 2 * a * b + b**2
 
     def test_factor(self):
         handler = FactorHandler(self.parser)
         result = handler.handle({"expression": "x^3 - 10x^2 + 3x + 54", "environment": {}})
         x = symbols("x")
-        assert result.sympy_expr.rhs == (x - 9) * (x - 3) * (x + 2)
+        assert result.sympy_expr == (x - 9) * (x - 3) * (x + 2)
 
     def test_apart(self):
         handler = ApartHandler(self.parser)
         result = handler.handle({"expression": r"\frac{8x + 7}{x^2 + x - 2}", "environment": {}})
         x = symbols("x")
-        assert result.sympy_expr.rhs == 3 / (x + 2) + 5 / (x - 1)
+        assert result.sympy_expr == 3 / (x + 2) + 5 / (x - 1)
 
     def test_quick_derivative(self):
         handler = ExpandHandler(self.parser)
         result = handler.handle({"expression": "(x^5 + 3x^4 + 2x + 5)'''", "environment": {}})
         x = symbols("x")
-        assert result.sympy_expr.rhs == 60 * x**2 + 72 * x
+        assert result.sympy_expr == 60 * x**2 + 72 * x
 
     def test_function(self):
         handler = EvalHandler(self.parser)

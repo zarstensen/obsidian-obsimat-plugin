@@ -34,7 +34,7 @@ If you are a Linux user, make sure to read the [Linux](#linux) subsection of the
   - [Evaluate](#evaluate)
   - [Solve](#solve)
   - [Variable and Function Definitions](#variable-and-function-definitions)
-  - [Unit Support](#unit-support)
+  - [Units and Physical Constants](#units-and-physical-constants)
   - [Symbol Assumptions](#symbol-assumptions)
   - [Convert To Sympy Code](#convert-to-sympy-code)
 - [Installing](#installing)
@@ -69,9 +69,27 @@ The entire evaluate suite consists of the following commands: `Evaluate LaTeX ex
 
 ### Solve
 
+Solve equations using the `Solve LaTeX expression` command.
+To solve a system of equations, place them in a `align` or `cases` environment separated by latex newlines (`\\\\`).
+
+The solution domain can be restricted for system of equations in the solve equation modal.
+Restrict the solution domain of a single equation with [symbol assumptions](#symbol-assumptions) on the free symbols.
+
+![demo](readme-assets/solve-demo.gif)
+
 ### Variable and Function Definitions
 
-### Unit Support
+Define values of symbols or functions using the `:=` operator.
+Only one symbol or function can be defined per math block.
+
+Definitions persistence are location based, any math block below a definition will make use of it, all others will ignore it. Furthermore, all definitions are reset after a `lmat` code block.
+
+To undefine a symbol or function, leave the right-hand side of the `:=` operator blank.
+
+### Units and Physical Constants
+
+Denote units or physical constants in equations by surrounding them with braces `{}`.
+Latex Math automatically handles conversions between units, constants and their various prefixes. See the [syntax](SYNTAX.md#unit-list) document for a list of supported units and physical constants.
 
 ### Symbol Assumptions
 

@@ -83,3 +83,8 @@ class TestUnitConversion:
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": r"\frac{{kg}\,{m}^{2}}{{s}^2}", "environment": {}})
         assert result.sympy_expr.rhs == units.joule
+        
+    def test_physical_constants(self):
+        handler = EvalHandler(self.parser)
+        result = handler.handle({"expression": r"5 {gee} \cdot (10 {minutes})^2", "environment": {}})
+        assert result.sympy_expr.rhs == 17651970.0 * units.meters

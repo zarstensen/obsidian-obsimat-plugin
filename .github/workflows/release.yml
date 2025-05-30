@@ -109,7 +109,7 @@ jobs:
       - name: Zip Plugin
         run: zip plugin.zip main.js styles.css manifest.json
       - name: Zip Bundle Bin
-        run: zip -j bundle-bin.zip bundle-bin/*
+        run: zip -jr bundle-bin.zip ./bundle-bin
 
       - name: Create Release With Assets
         id: create-release-with-assets

@@ -1,8 +1,43 @@
 from sympy import Add, Matrix, MatrixBase, Symbol, Rel, Expr
 import sympy.physics.units as u
-from sympy.physics.units.quantities import Quantity 
+import sympy.physics.units.definitions.unit_definitions as unit_definitions
+from sympy.physics.units.quantities import Quantity, PhysicalConstant
 from sympy.physics.units.systems import SI
 from sympy.physics.units.unitsystem import UnitSystem
+
+# Maps an alias to its corresponding Quantity object.
+UNIT_ALIAS_MAP = {}
+
+__defined_units_quantities = { unit_name: getattr(unit_definitions, unit_name) for unit_name in dir(unit_definitions) if isinstance(getattr(unit_definitions, unit_name), Quantity) }
+
+def __add_unit_aliases(str_units: list[tuple[str, Quantity]]):
+    for k, u in str_units:
+        if k not in UNIT_ALIAS_MAP:
+            UNIT_ALIAS_MAP[k] = u
+
+# add SI units
+__add_unit_aliases(( (str(unit), unit) for unit in SI._units))
+__add_unit_aliases(( (str(unit.abbrev), unit) for unit in SI._units))
+
+# add units specified in the defined_units module
+__add_unit_aliases(((key, unit)
+                for key, unit in __defined_units_quantities.items()
+                if not isinstance(unit, PhysicalConstant)))
+
+__add_unit_aliases(((str(unit.abbrev), unit)
+                for unit in __defined_units_quantities.values()
+                if not isinstance(unit, PhysicalConstant)))
+
+__add_unit_aliases(((key, unit)
+                for key, unit in __defined_units_quantities.items()
+                if isinstance(unit, PhysicalConstant)))
+
+__add_unit_aliases(((str(unit.abbrev), unit)
+                for unit in __defined_units_quantities.values()
+                if isinstance(unit, PhysicalConstant)))
+
+# add Latex Math specific unit aliases.
+__add_unit_aliases([ ( 'min', u.minute ) ])
 
 # Substitute any symbols present in the sympy expression with the corresponding sympy unit.
 # Also convert all non base units to base units where possible.
@@ -15,22 +50,14 @@ def substitute_units(sympy_expr, excluded_symbols: list[Symbol], unit_system: Un
         # attempt to replace the symbol with a corresponding unit.
         try:
             # find potential unit
-            found_units = u.find_unit(str(symbol))
+            unit = str_to_unit(str(symbol))
             
-            if len(found_units) <= 0:
+            if unit is None:
                 continue
-            
-            unit_str = found_units[0]
-            
-            if unit_str != str(symbol):
-                continue
-            
-            unit = getattr(u, unit_str)
             
             # check if the unit is in the passed unit system
             converted_units = u.convert_to(unit, unit_system._base_units)
             converted_units = (q for q in converted_units.as_terms()[1] if isinstance(q, Quantity))
-            
             
             for q in converted_units:
                 if q not in unit_system._base_units:
@@ -87,16 +114,13 @@ def auto_convert(sympy_expr, unit_system: UnitSystem = SI):
     return Add(*converted_expressions)
 
 # find sympy unit which has the given str representation.
-def str_to_unit(unit_str) -> Quantity | None:
+def str_to_unit(unit_str: str) -> Quantity | None:
     # attempt to replace the symbol with a corresponding unit.
-    try:
-        units = u.find_unit(unit_str)
-        if units[0] == unit_str:
-            return getattr(u, units[0])
-        else:
-            return None
-    except AttributeError:
+    if unit_str not in UNIT_ALIAS_MAP:
         return None
+    else:
+        return UNIT_ALIAS_MAP[unit_str]
+
 
 # get the 'complexity' of a unit.
 # complexity is defined as the sum of all units raised power (or 1/power if 0 < power < 1).

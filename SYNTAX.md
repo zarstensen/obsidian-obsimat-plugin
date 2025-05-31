@@ -79,7 +79,7 @@ Whilst this document should provide a good overview of the parser, one can alway
 
 ## Mathematical Constants
 
-The number of mathematical constants has intentionally been kept quite low, as their latex strings cannot be used as symbols. Furthermore, a symbol definition can always be made to emulate a constant in the current notebook.
+The number of mathematical constants has intentionally been kept sparse, as their latex strings cannot be used as symbols. Furthermore, a symbol definition can always be made to emulate a constant in the current notebook.
 
 Below is a table of all the mathematical constants the parser supports.
 

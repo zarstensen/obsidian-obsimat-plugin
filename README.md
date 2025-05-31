@@ -33,7 +33,7 @@ If you are a Linux user, make sure to read the [Linux](#linux) subsection of the
 - [Features](#features)
   - [Evaluate](#evaluate)
   - [Solve](#solve)
-  - [Variable and Function Definitions](#variable-and-function-definitions)
+  - [Symbol and Function Definitions](#symbol-and-function-definitions)
   - [Units and Physical Constants](#units-and-physical-constants)
   - [Symbol Assumptions](#symbol-assumptions)
   - [Convert To Sympy Code](#convert-to-sympy-code)
@@ -80,14 +80,16 @@ Restrict the solution domain of a single equation with [symbol assumptions](#sym
 
 [^lmat-solve-domain]: The default solution domain for systems of equations can be set via. the `domain` key in the `domain` table in an `lmat` environment.
 
+<!-- TODO: update this one so it has a set solution (sin for example with a periodic solution domain) -->
+
 ![demo](readme-assets/solve-demo.gif)
 
-### Variable and Function Definitions
+### Symbol and Function Definitions
 
 Define values of symbols or functions using the `:=` operator.
 Only one symbol or function can be defined per math block.
 
-Definitions persistence are location based, any math block below a definition will make use of it, all others will ignore it. Furthermore, all definitions are reset after a `lmat` code block.
+Definitions persistence are location based, any math block below a definition will make use of it, all others will ignore it. Furthermore, all definitions are reset after an `lmat` code block.
 
 To undefine a symbol or function, leave the right-hand side of the `:=` operator blank.
 
@@ -100,7 +102,7 @@ Latex Math automatically handles conversions between units, constants and their 
 
 Use an `lmat` code block to tell **Latex Math** about various assumptions it may make about specific symbols. This is used to further simplify expressions, such as roots, or limit the solution domain of equations. By default, all symbols are assumed to be complex numbers.
 
-`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions Latex Math should make, under the `symbols` table. Like definitions, `lmat` code blocks persistance is based on their location. See below for an example of a code block.
+`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions Latex Math should make, under the `symbols` table. Like definitions, an `lmat` code block's persistence is based on its location. See below for a simple example.
 
 > [!TIP]
 > **Example**
@@ -167,7 +169,7 @@ The plugin should now use the python source files and the created virtual enviro
 Any changes to the python source code requires reloading Obsidian to have any effect.
 
 > [!CAUTION]
-> If you are using VS Code, make sure to add `push` as an entry to `git.commandsToLog` in VS Code (user or workspace), if you want to see the output of the push hook if it fails.
+> If you are using VS Code as an ide, make sure to add `push` as an entry to `git.commandsToLog` in VS Code (user or workspace), if you want to see the output of the push hook if it fails.
 
 ### Developing the Obsidian Plugin
 
@@ -176,7 +178,7 @@ Start out by downloading the [`bundle-bin.zip`](https://github.com/zarstensen/ob
 Now run `npm -i` still in the root directory.
 
 To start auto building the project on any source code change, run `npm run dev`.
-To perform a one time production ready build, run `npm run dev`.
+To perform a one-time production ready build, run `npm run build`.
 
 ## License
 

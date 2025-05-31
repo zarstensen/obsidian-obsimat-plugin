@@ -1,11 +1,108 @@
 # Latex Math Syntax
 
-This document aims to provide an overview of what this plugin is capable of, in terms of parsing latex strings.
+This document aims to provide an overview of the latex parsing capabilites of this plugin. As a general note, the parser was designed with standard latex notation in mind, so as long as no complex formatting or esoteric math functions are used, it should be pretty straight forward to write latex code parsable by this plugin.
+
+Whilst this document should provide a good overview of the parser, one can always look at the grammar files for the concrete implementation.
+
+## Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [Expression Structure](#expression-structure)
+- [Symbols](#symbols)
+- [Mathematical Functions](#mathematical-functions)
+- [Mathematical Constants](#mathematical-constants)
+- [Units and Physical Constants](#units-and-physical-constants)
+  - [Supported Units](#supported-units)
+  - [Supported Physical Constants](#supported-physical-constants)
+
+
+## Expression Structure
+
+## Symbols
+
+| Type  | Latex String             |
+| :---- | :----------------------- |
+| greek | `\alpha` / `\beta` / `\gamma` / ... |
+| latin      | `a` / `x` / `symbol` / ... |
+| formatted      | `\mathrm{x}` / `\pmb{vector}` / `\mathit{whitespace symbol}` / ... |
+| indexed      | `x_y` / `\alpha_\gamma` / `\pmb{M}_{1;2}` / ... |
+
+## Mathematical Functions
+
+| Description              | Latex String                                                                           |
+| :----------------------- | :------------------------------------------------------------------------------------- |
+| sinus                    | `\sin`                                                                                 |
+| cosinus                  | `\cos`                                                                                 |
+| tangent                  | `\tan`                                                                                 |
+| secant                   | `\sec`                                                                                 |
+| cosecant                 | `\csc`                                                                                 |
+| cotangent                | `\cot`                                                                                 |
+| arcus sinus              | `\arcsin`                                                                              |
+| arcus cosinus            | `\arccos`                                                                              |
+| arcus tan                | `\arctan`                                                                              |
+| arcus secant             | `\arcsec`                                                                              |
+| arcus cosecant           | `\arccsc`                                                                              |
+| arcus cotangent          | `\arccot`                                                                              |
+| hyperbolic sinus         | `\sinh`                                                                                |
+| hyperbolic cosinus       | `\cosh`                                                                                |
+| hyperbolic tangent       | `\tanh`                                                                                |
+| hyperbolic arcus sinus   | `\arsinh`                                                                              |
+| hyperbolic arcus cosinus | `\arcosh`                                                                              |
+| hyperbolic arcus tangent | `\artanh`                                                                              |
+| log                      | `\log[base]?` / `\ln` / `\lg`                                                          |
+| exponential              | `\exp`                                                                                 |
+| factorial                | `!`                                                                                    |
+| limit                    | `\lim_{ . \to . }`                                                                     |
+| sum                      | `\sum_{ . = . }^.`                                                                     |
+| product                  | `\prod_{ . = . }^.`                                                                    |
+| minimum                  | `\min(. , . , ..., . )`                                                                |
+| maximum                  | `\max( . , . , ..., . )`                                                               |
+| standard inner product   | `\langle . \| . \rangle `                                                              |
+| numeric value            | `\| . \|`                                                                              |
+| norm                     | `\Vert . \Vert` / `\|\| . \|\|`                                                        |
+| floor                    | `\lfloor . \rfloor`                                                                    |
+| ceil                     | `\lceil . \rceil`                                                                      |
+| root                     | `\sqrt[index]?`                                                                        |
+| conjugate                | `\bar` / `\overline`                                                                   |
+| fraction                 | `\frac{ . }{ . }`                                                                      |
+| binomial                 | `\binom{ . }{ . }`                                                                     |
+| partial derivative       | `\frac{ d ... }{ d . d . ... }` / `\frac{ \partial }{ \partial . \partial . ... } ...` |
+| prime derivative         | `(...)'''...`                                                                          |
+| integral                 | `\int ... d .` / `\int_a^b ... d .`                                                    |
+| determinant              | `\det .` / `\begin{vmatrix} ... \end{vmatrix}`                                         |
+| trace                    | `\mathrm{trace} .` / `\operatorname{trace} .`                                          |
+| adjugate                 | `\mathrm{adjugate} .` / `\operatorname{adjugate} .`                                    |
+| reduced row echelon form | `\mathrm{rref} .` / `\operatorname{rref} .`                                            |
+| gradient                 | `\nabla ...`                                                                           |
+| hessian                  | `\mathbf{H} ...`                                                                       |
+| jacobian                 | `\mathbf{J} ...`                                                                       |
+
+## Mathematical Constants
+
+The number of mathematical constants has intentionally been kept quite low, as their latex strings cannot be used as symbols. Furthermore, a symbol definition can always be made to emulate a constant in the current notebook.
+
+Below is a table of all the mathematical constants the parser supports.
+
+
+| Name           | Latex String |
+| :------------- | :----------- |
+| pi             | `\pi`        |
+| euler          | `e`          |
+| imaginary unit | `i`          |
+| infinity       | `\infty`     |
+
+## Units and Physical Constants
+
+Units and physical constants are specified by surrounding them with braces `{}`. This, in general, is prioritized lower than braces being used as parentheses, or as argument delimiters to functions. This means that `\sin{km}` for example is parsed as sinus to the symbol km, and not the unit km. To get the unit km, it would have to be written like the following `\sin{{km}}`.
+
+The only case were this is not true, is for the base factor in exponentiations. For example here `{km}^2` is seen as kilometers squared. 
+
+The following sections provide an overview of all the supported units of the parser.
 
 ### Supported Units
 
 | Unit                     | Aliases                           |
-|:-------------------------|:----------------------------------|
+| :----------------------- | :-------------------------------- |
 | ampere                   | amperes<br/>A                     |
 | angstrom                 | angstroms                         |
 | angular_mil              | mil<br/>angular_mils              |
@@ -106,7 +203,7 @@ This document aims to provide an overview of what this plugin is capable of, in 
 ### Supported Physical Constants
 
 | Constant                    | Aliases                                               |
-|:----------------------------|:------------------------------------------------------|
+| :-------------------------- | :---------------------------------------------------- |
 | acceleration_due_to_gravity | gee<br/>gees                                          |
 | atomic_mass_constant        | amu<br/>atomic_mass_unit<br/>dalton<br/>Da<br/>amus   |
 | avogadro_constant           | avogadro                                              |

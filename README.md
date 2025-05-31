@@ -67,6 +67,7 @@ Evaluate equations in various ways using the evaluate command suite. The compute
 
 The entire evaluate suite consists of the following commands: `Evaluate LaTeX expression`, `Evalf LaTeX expression`, `Expand LaTeX expression`, `Factor LaTeX expression` and `Partial fraction decompose LaTeX expression`.
 
+<!-- TODO: update this one so it uses the newest version -->
 ![demo](readme-assets/evaluate-demo.gif)
 
 ### Solve
@@ -74,8 +75,10 @@ The entire evaluate suite consists of the following commands: `Evaluate LaTeX ex
 Solve equations using the `Solve LaTeX expression` command.
 To solve a system of equations, place them in a `align` or `cases` environment separated by latex newlines (`\\\\`).
 
-The solution domain can be restricted for system of equations in the solve equation modal.
+The solution domain can be restricted for system of equations in the solve equation modal, see the [relevant sympy documentation](https://docs.sympy.org/latest/modules/sets.html#module-sympy.sets.fancysets) for a list of possible values.[^lmat-solve-domain]
 Restrict the solution domain of a single equation with [symbol assumptions](#symbol-assumptions) on the free symbols.
+
+[^lmat-solve-domain]: The default solution domain for systems of equations can be set via. the `domain` key in the `domain` table in an `lmat` environment.
 
 ![demo](readme-assets/solve-demo.gif)
 
@@ -97,16 +100,18 @@ Latex Math automatically handles conversions between units, constants and their 
 
 Use an `lmat` code block to tell **Latex Math** about various assumptions it may make about specific symbols. This is used to further simplify expressions, such as roots, or limit the solution domain of equations. By default, all symbols are assumed to be complex numbers.
 
-`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions Latex Math should make, under the `symbols` table. See below for an example.
+`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions Latex Math should make, under the `symbols` table. Like definitions, `lmat` code blocks persistance is based on their location. See below for an example of a code block.
 
 > [!TIP]
 > **Example**
 > 
+> ````text
 > ```lmat
 > [symbols]
 > x = [ "real", "positive" ]
 > y = [ "integer" ]
 > ```
+> ````
 
 See the [sympy documentation](https://docs.sympy.org/latest/guides/assumptions.html#id28) for a list of possible assumptions.
 

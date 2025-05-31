@@ -15,6 +15,7 @@ MU: "\\mu"
 NU: "\\nu"
 XI: "\\xi"
 RHO: "\\rho" | "\\varrho"
+SIGMA: "\\sigma"
 TAU: "\\tau"
 UPSILON: "\\upsilon"
 PHI: "\\phi" | "\\varphi"
@@ -23,4 +24,4 @@ PSI: "\\psi"
 OMEGA: "\\omega"
 
 GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | IOTA | KAPPA
-    | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA
+    | LAMBDA | MU | NU | XI | RHO | SIGMA | TAU | UPSILON | PHI | CHI | PSI | OMEGA

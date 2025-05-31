@@ -38,7 +38,7 @@ class LexerScope:
                 
                 for replace_token in self.replace_tokens[t.type]:
                     if regex.fullmatch(replace_token.pattern.to_regexp(), t.value):
-                        yield Token(str(replace_token), t.value)
+                        yield Token(replace_token.name, t.value)
                         break
                 else:
                     # no tokens could replace it anyways, so just return the original one.
@@ -67,6 +67,21 @@ class MatrixScope(LexerScope):
             yield token
             if token.type == expected_end_token_type and regex.sub(ignore_regex, '', token.value) == expected_end_token_value:
                 yield Token('_MATRIX_ENV_END', '')
+
+class PartialDiffScope(LexerScope):
+    def token_handler(self, token_stream, _scope_start_token):
+        
+        for token in super().token_handler(token_stream, _scope_start_token):
+            yield token
+            if token.type == '_R_BRACE':
+                break
+        
+        next_token = next(super().token_handler(token_stream, _scope_start_token))
+        if next_token.type == '_L_BRACE':
+            yield Token('_DERIV_ARG_SEPARATOR', next_token.value)
+        else:
+            yield next_token
+    
 
 # The ScopePostLexer aims to provide context to the lalr parser during tokenization.
 # It does this by recognizing pairs of terminals, which define a scope.
@@ -109,10 +124,19 @@ class ScopePostLexer(PostLex):
                 ]
             ),
             # Scope for functions which require the _DIFFERENTIAL_SYMBOL be prioritized over symbols.
+            PartialDiffScope(
+                scope_pairs=[
+                    ("_FUNC_DERIVATIVE", "_R_BRACE")
+                ],
+                replace_tokens={
+                    "SINGLE_LETTER_SYMBOL": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
+                    "FORMATTED_SYMBOLS": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],
+                }
+            ),
             LexerScope(
                 scope_pairs=[
-                    ("_FUNC_DERIVATIVE", "_R_BRACE"),
-                    ("_FUNC_INT", "_DIFFERENTIAL_SYMBOL")
+                    ("_FUNC_INTEGRAL", "_DIFFERENTIAL_SYMBOL"),
+                    ("_DERIV_ARG_SEPARATOR", "_R_BRACE")
                 ],
                 replace_tokens={
                     "SINGLE_LETTER_SYMBOL": [ parser.get_terminal("_DIFFERENTIAL_SYMBOL") ],

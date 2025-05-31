@@ -242,40 +242,40 @@ POWER_EXPRESSION_PAIRS = [
 ]
 
 INTEGRAL_EXPRESSION_PAIRS = [
-    (r"\int x dx", Integral(x, x)),
-    (r"\int x \, dx", Integral(x, x)),
+    (r"\int x d x", Integral(x, x)),
+    (r"\int x \, d x", Integral(x, x)),
     (r"\int x d\theta", Integral(x, theta)),
-    (r"\int (x^2 - y)dx", Integral(x ** 2 - y, x)),
-    (r"\int x + a dx", Integral(x + a, x)),
-    (r"\int da", Integral(1, a)),
-    (r"\int_0^7 dx", Integral(1, (x, 0, 7))),
-    (r"\int\limits_{0}^{1} x dx", Integral(x, (x, 0, 1))),
-    (r"\int_a^b x dx", Integral(x, (x, a, b))),
-    (r"\int^b_a x dx", Integral(x, (x, a, b))),
-    (r"\int_{a}^b x dx", Integral(x, (x, a, b))),
-    (r"\int^{b}_a x dx", Integral(x, (x, a, b))),
-    (r"\int_{a}^{b} x dx", Integral(x, (x, a, b))),
-    (r"\int^{b}_{a} x dx", Integral(x, (x, a, b))),
-    (r"\int_{f(a)}^{f(b)} f(z) dz", Integral(f(z), (z, f(a), f(b)))),
-    (r"\int a + b + c dx", Integral(a + b + c, x)),
+    (r"\int (x^2 - y)d x", Integral(x ** 2 - y, x)),
+    (r"\int x + a d x", Integral(x + a, x)),
+    (r"\int d a", Integral(1, a)),
+    (r"\int_0^7 d x", Integral(1, (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x d x", Integral(x, (x, 0, 1))),
+    (r"\int_a^b x d x", Integral(x, (x, a, b))),
+    (r"\int^b_a x d x", Integral(x, (x, a, b))),
+    (r"\int_{a}^b x d x", Integral(x, (x, a, b))),
+    (r"\int^{b}_a x d x", Integral(x, (x, a, b))),
+    (r"\int_{a}^{b} x d x", Integral(x, (x, a, b))),
+    (r"\int^{b}_{a} x d x", Integral(x, (x, a, b))),
+    (r"\int_{f(a)}^{f(b)} f(z) d z", Integral(f(z), (z, f(a), f(b)))),
+    (r"\int a + b + c d x", Integral(a + b + c, x)),
     # TODO: the below two were rewritten so the dz term is not in the fraction numerator.
     # it should be possible for them to be in the numerator, but the integral grammar has to be a bit more elaborate.
-    (r"\int \frac{1}{z} dz", Integral(Pow(z, -1), z)),
-    (r"\int \frac{3}{z} dz", Integral(3 * Pow(z, -1), z)),
-    (r"\int \frac{1}{x} dx", Integral(1 / x, x)),
-    (r"\int \frac{1}{a} + \frac{1}{b} dx", Integral(1 / a + 1 / b, x)),
-    (r"\int \frac{1}{a} - \frac{1}{b} dx", Integral(1 / a - 1 / b, x)),
-    (r"\int \frac{1}{x} + 1 dx", Integral(1 / x + 1, x))
+    (r"\int \frac{1}{z} d z", Integral(Pow(z, -1), z)),
+    (r"\int \frac{3}{z} d z", Integral(3 * Pow(z, -1), z)),
+    (r"\int \frac{1}{x} d x", Integral(1 / x, x)),
+    (r"\int \frac{1}{a} + \frac{1}{b} d x", Integral(1 / a + 1 / b, x)),
+    (r"\int \frac{1}{a} - \frac{1}{b} d x", Integral(1 / a - 1 / b, x)),
+    (r"\int \frac{1}{x} + 1 d x", Integral(1 / x + 1, x))
 ]
 
 DERIVATIVE_EXPRESSION_PAIRS = [
-    (r"\frac{d}{dx} x", Derivative(x, x)),
-    (r"\frac{d}{dt} x", Derivative(x, t)),
-    (r"\frac{d}{dx^2} x^3", Derivative(x**3, (x, 2))),
-    (r"\frac{d x y}{dx d y}", Derivative(x*y, (x, 1), (y, 1))),
-    (r"\frac{d}{dx} ( \tan x )", Derivative(tan(x), x)),
-    (r"\frac{d f(x)}{dx}", Derivative(f(x), x)),
-    (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x))
+    (r"\frac{d}{d x} x", Derivative(x, x)),
+    (r"\frac{d}{d t} x", Derivative(x, t)),
+    (r"\frac{d}{d x^2} x^3", Derivative(x**3, (x, 2))),
+    (r"\frac{d x y}{d x d y}", Derivative(x*y, (x, 1), (y, 1))),
+    (r"\frac{d}{d x} ( \tan x )", Derivative(tan(x), x)),
+    (r"\frac{d f(x)}{d x}", Derivative(f(x), x)),
+    (r"\frac{d\theta(x)}{d x}", Derivative(Function('theta')(x), x))
 ]
 
 TRIGONOMETRIC_EXPRESSION_PAIRS = [

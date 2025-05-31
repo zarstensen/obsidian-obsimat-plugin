@@ -203,9 +203,10 @@ binom: _FUNC_BINOM _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MU
 diff_symbol_exponent: symbol [_CARET function_special_arg]
 diff_symbol_arg_list: (_DIFFERENTIAL_SYMBOL diff_symbol_exponent)+
 
+_DERIV_ARG_SEPARATOR.-1: _L_BRACE
 // need to have a post lex which recognises _FUNC_DERIVATIVE and then replaces any single letter symbol which matches _DIFFERENTIAL_SYMBOL with _DIFFERENTIAL_SYMBOL
-derivative: _FUNC_DERIVATIVE expression _R_BRACE _L_BRACE diff_symbol_arg_list _R_BRACE -> derivative_func_first
-    |   _FUNC_DERIVATIVE _R_BRACE _L_BRACE diff_symbol_arg_list _R_BRACE _factor_no_unit -> derivative_symbols_first
+derivative: _FUNC_DERIVATIVE expression _R_BRACE _DERIV_ARG_SEPARATOR diff_symbol_arg_list _R_BRACE -> derivative_func_first
+    |   _FUNC_DERIVATIVE _R_BRACE _DERIV_ARG_SEPARATOR diff_symbol_arg_list _R_BRACE _factor_no_unit -> derivative_symbols_first
 
 integral: _FUNC_INTEGRAL [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_no_bounds
     | _FUNC_INTEGRAL _UNDERSCORE function_special_arg _CARET function_special_arg [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_lower_bound_first
@@ -416,7 +417,7 @@ OPERATOR_MUL: MUL | _CMD_TIMES | _CMD_CDOT
 _PARTIAL_DIFFERENTIAL_SYMBOL: "\\partial"
 _UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
 // TODO: this priority should ideally not be here.
-_DIFFERENTIAL_SYMBOL.1: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _PARTIAL_DIFFERENTIAL_SYMBOL
+_DIFFERENTIAL_SYMBOL.-1: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _PARTIAL_DIFFERENTIAL_SYMBOL
 
 
 // should this just be \w?

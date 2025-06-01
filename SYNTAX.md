@@ -1,6 +1,6 @@
 # Latex Math Syntax
 
-This document aims to provide an overview of the latex parsing capabilites of this plugin. As a general note, the parser was designed with standard latex notation in mind, so as long as no complex formatting or esoteric math functions are used, it should be pretty straight forward to write latex code parsable by this plugin.
+This document aims to provide an overview of the latex parsing capabilities of this plugin. As a general note, the parser was designed with standard latex notation in mind, so as long as no complex formatting or esoteric math functions are used, it should be pretty straight forward to write latex code parsable by this plugin.
 
 Whilst this document should provide a good overview of the parser, one can always look at the grammar files for the concrete implementation.
 
@@ -15,39 +15,38 @@ Whilst this document should provide a good overview of the parser, one can alway
   - [Supported Units](#supported-units)
   - [Supported Physical Constants](#supported-physical-constants)
 
-
 ## Expression Structure
 
 ## Symbols
 
-| Type  | Latex String             |
-| :---- | :----------------------- |
-| greek | `\alpha` / `\beta` / `\gamma` / ... |
-| latin      | `a` / `x` / `symbol` / ... |
-| formatted      | `\mathrm{x}` / `\pmb{vector}` / `\mathit{whitespace symbol}` / ... |
-| indexed      | `x_y` / `\alpha_\gamma` / `\pmb{M}_{1;2}` / ... |
+| Type      | Latex String                                                       |
+| :-------- | :----------------------------------------------------------------- |
+| greek     | `\alpha` / `\beta` / `\gamma` / ...                                |
+| latin     | `a` / `x` / `symbol` / ...                                         |
+| formatted | `\mathrm{x}` / `\pmb{vector}` / `\mathit{whitespace symbol}` / ... |
+| indexed   | `x_y` / `\alpha_\gamma` / `\pmb{M}_{1;2}` / ...                    |
 
 ## Mathematical Functions
 
 | Description              | Latex String                                                                           |
 | :----------------------- | :------------------------------------------------------------------------------------- |
-| sinus                    | `\sin`                                                                                 |
-| cosinus                  | `\cos`                                                                                 |
+| sine                     | `\sin`                                                                                 |
+| cosine                   | `\cos`                                                                                 |
 | tangent                  | `\tan`                                                                                 |
 | secant                   | `\sec`                                                                                 |
 | cosecant                 | `\csc`                                                                                 |
 | cotangent                | `\cot`                                                                                 |
-| arcus sinus              | `\arcsin`                                                                              |
-| arcus cosinus            | `\arccos`                                                                              |
+| arcus sine               | `\arcsin`                                                                              |
+| arcus cosine             | `\arccos`                                                                              |
 | arcus tan                | `\arctan`                                                                              |
 | arcus secant             | `\arcsec`                                                                              |
 | arcus cosecant           | `\arccsc`                                                                              |
 | arcus cotangent          | `\arccot`                                                                              |
-| hyperbolic sinus         | `\sinh`                                                                                |
-| hyperbolic cosinus       | `\cosh`                                                                                |
+| hyperbolic sine          | `\sinh`                                                                                |
+| hyperbolic cosine        | `\cosh`                                                                                |
 | hyperbolic tangent       | `\tanh`                                                                                |
-| hyperbolic arcus sinus   | `\arsinh`                                                                              |
-| hyperbolic arcus cosinus | `\arcosh`                                                                              |
+| hyperbolic arcus sine    | `\arsinh`                                                                              |
+| hyperbolic arcus cosine  | `\arcosh`                                                                              |
 | hyperbolic arcus tangent | `\artanh`                                                                              |
 | log                      | `\log[base]?` / `\ln` / `\lg`                                                          |
 | exponential              | `\exp`                                                                                 |
@@ -57,11 +56,11 @@ Whilst this document should provide a good overview of the parser, one can alway
 | product                  | `\prod_{ . = . }^.`                                                                    |
 | minimum                  | `\min(. , . , ..., . )`                                                                |
 | maximum                  | `\max( . , . , ..., . )`                                                               |
-| standard inner product   | `\langle . \| . \rangle `                                                              |
+| standard inner product   | `\langle . \| . \rangle`                                                               |
 | numeric value            | `\| . \|`                                                                              |
 | norm                     | `\Vert . \Vert` / `\|\| . \|\|`                                                        |
 | floor                    | `\lfloor . \rfloor`                                                                    |
-| ceil                     | `\lceil . \rceil`                                                                      |
+| ceiling                  | `\lceil . \rceil`                                                                      |
 | root                     | `\sqrt[index]?`                                                                        |
 | conjugate                | `\bar` / `\overline`                                                                   |
 | fraction                 | `\frac{ . }{ . }`                                                                      |
@@ -75,14 +74,13 @@ Whilst this document should provide a good overview of the parser, one can alway
 | reduced row echelon form | `\mathrm{rref} .` / `\operatorname{rref} .`                                            |
 | gradient                 | `\nabla ...`                                                                           |
 | hessian                  | `\mathbf{H} ...`                                                                       |
-| jacobian                 | `\mathbf{J} ...`                                                                       |
+| Jacobian                 | `\mathbf{J} ...`                                                                       |
 
 ## Mathematical Constants
 
 The number of mathematical constants has intentionally been kept sparse, as their latex strings cannot be used as symbols. Furthermore, a symbol definition can always be made to emulate a constant in the current notebook.
 
 Below is a table of all the mathematical constants the parser supports.
-
 
 | Name           | Latex String |
 | :------------- | :----------- |
@@ -93,9 +91,9 @@ Below is a table of all the mathematical constants the parser supports.
 
 ## Units and Physical Constants
 
-Units and physical constants are specified by surrounding them with braces `{}`. This, in general, is prioritized lower than braces being used as parentheses, or as argument delimiters to functions. This means that `\sin{km}` for example is parsed as sinus to the symbol km, and not the unit km. To get the unit km, it would have to be written like the following `\sin{{km}}`.
+Units and physical constants are specified by surrounding them with braces `{}`. This, in general, is prioritized lower than braces being used as parentheses, or as argument delimiters to functions. This means that `\sin{km}` for example is parsed as sine to the symbol *km*, and not the unit *kilometer*. To get the unit, it would have to be written like the following `\sin{{km}}`.
 
-The only case were this is not true, is for the base factor in exponentiations. For example here `{km}^2` is seen as kilometers squared. 
+The only case where this is not true, is for the base factor in exponentiations. For example here `{km}^2` is seen as kilometers squared.
 
 The following sections provide an overview of all the supported units of the parser.
 

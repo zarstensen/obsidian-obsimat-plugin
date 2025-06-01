@@ -13,9 +13,9 @@
 **Latex Math** is an [Obsidian](https://obsidian.md/) plugin which adds mathematical evaluation of LaTeX math blocks to your notes, using [Sympy](https://www.sympy.org).
 
 ![demo](readme-assets/frontpage-demo.gif)
-*`Evaluate LaTeX expression` is bound to  `Alt + B` in the above demo.
-In general, all demo Gifs will make use of the [recommended hotkeys](#command-list). [^demo-gif-plugins]*
-[^demo-gif-plugins]: All demo Gif's were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
+*`Evaluate LaTeX expression` is bound to `Alt + B` in the above demo.
+In general, all demo GIFs will make use of the [recommended hotkeys](#command-list). [^demo-gif-plugins]*
+[^demo-gif-plugins]: All demo GIFs were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
 
 ## Usage
 
@@ -48,16 +48,16 @@ If you are a Linux user, make sure to read the [Linux](#linux) subsection of the
 
 Below is a table of all the commands this plugin provides, along with a brief description of what it does and optionally a recommended hotkey.
 
-| Command                                     | Recommended Hotkey | Usage                                                                                                                      |
-| ------------------------------------------- | :----------------: | -------------------------------------------------------------------------------------------------------------------------- |
-| Evaluate LaTeX expression                   |     `Alt + B`      | Evaluate the right most expression (if in a relation) and simplify the result.                                             |
-| Evalf LaTeX expression                      |     `Alt + F`      | Evaluate expression and output decimal numbers instead of fractions in the result.                                         |
-| Expand LaTeX expression                     |     `Alt + E`      | Evaluate expression and expand the result as much as possible.                                                             |
-| Factor LaTeX expression                     |                    | Evaluate expression and factorize the result as much as possible.                                                          |
-| Partial fraction decompose LaTeX expression |                    | Evaluate expression and perform partial fraction decomposition on the result.                                              |
-| Solve LaTeX expression                      |     `Alt + L`      | Solve a single equation or a system of equations. Output the result in a new math block below the current one.             |
-| Convert units in LaTeX expression           |     `Alt + U`      | Try to convert the units in the right most expression to the user supplied one.                                            |
-| Convert LaTeX expression to Sympy.          |                    | Convert entire expression to its equivalent Sympy code, and insert the result in a codeblock below the current math block. |
+| Command                                     | Recommended Hotkey | Usage                                                                                                                       |
+| ------------------------------------------- | :----------------: | --------------------------------------------------------------------------------------------------------------------------- |
+| Evaluate LaTeX expression                   |     `Alt + B`      | Evaluate the right most expression (if in a relation) and simplify the result.                                              |
+| Evalf LaTeX expression                      |     `Alt + F`      | Evaluate expression and output decimal numbers instead of fractions in the result.                                          |
+| Expand LaTeX expression                     |     `Alt + E`      | Evaluate expression and expand the result as much as possible.                                                              |
+| Factor LaTeX expression                     |                    | Evaluate expression and factorize the result as much as possible.                                                           |
+| Partial fraction decompose LaTeX expression |                    | Evaluate expression and perform partial fraction decomposition on the result.                                               |
+| Solve LaTeX expression                      |     `Alt + L`      | Solve a single equation or a system of equations. Output the result in a new math block below the current one.              |
+| Convert units in LaTeX expression           |     `Alt + U`      | Try to convert the units in the right most expression to the user supplied one.                                             |
+| Convert LaTeX expression to Sympy.          |                    | Convert entire expression to its equivalent Sympy code, and insert the result in a code block below the current math block. |
 
 ## Features
 
@@ -75,10 +75,10 @@ The entire evaluate suite consists of the following commands: `Evaluate LaTeX ex
 Solve equations using the `Solve LaTeX expression` command.
 To solve a system of equations, place them in a `align` or `cases` environment separated by latex newlines (`\\\\`).
 
-The solution domain can be restricted for system of equations in the solve equation modal, see the [relevant sympy documentation](https://docs.sympy.org/latest/modules/sets.html#module-sympy.sets.fancysets) for a list of possible values.[^lmat-solve-domain]
+The solution domain can be restricted for system of equations in the solve equation modal, see the [relevant Sympy documentation](https://docs.sympy.org/latest/modules/sets.html#module-sympy.sets.fancysets) for a list of possible values.[^lmat-solve-domain]
 Restrict the solution domain of a single equation with [symbol assumptions](#symbol-assumptions) on the free symbols.
 
-[^lmat-solve-domain]: The default solution domain for systems of equations can be set via. the `domain` key in the `domain` table in an `lmat` environment.
+[^lmat-solve-domain]: The default solution domain for systems of equations can be set via. The `domain` key in the `domain` table in an `lmat` environment.
 
 <!-- TODO: update this one so it has a set solution (sin for example with a periodic solution domain) -->
 
@@ -115,11 +115,11 @@ Use an `lmat` code block to tell **Latex Math** about various assumptions it may
 > ```
 > ````
 
-See the [sympy documentation](https://docs.sympy.org/latest/guides/assumptions.html#id28) for a list of possible assumptions.
+See the [Sympy documentation](https://docs.sympy.org/latest/guides/assumptions.html#id28) for a list of possible assumptions.
 
 ### Convert To Sympy Code
 
-Quickly convert latex to sympy code to perform more advanced computations using the `Convert LaTeX expression to Sympy` command.
+Quickly convert latex to Sympy code to perform more advanced computations using the `Convert LaTeX expression to Sympy` command.
 This will insert a python code block containing the equivalent Sympy code of the selected math block.
 
 ## Installing
@@ -150,7 +150,7 @@ Perform the following commands inside the **Latex Math** installation directory,
 ## Developing
 
 This section describes how to set up a development environment for **Latex Math**.
-Make sure to have python (for sympy client development) and / or NPM (for obsidian plugin development) installed before continuing.
+Make sure to have python (for Sympy client development) and / or NPM (for obsidian plugin development) installed before continuing.
 
 ### Developing the Sympy Client
 
@@ -162,7 +162,7 @@ python setup-dev-env.py
 
 This creates a virtual environment named `.venv` installed with all required dependencies. Furthermore, it sets up a git pre-push hook, which runs the entire test suite, before pushing.
 
-To use this development environment in Obsidian, go to the **Latex Math**  settings in the vault this repo has been cloned to, and toggle the `Developer Mode` switch to on. Make sure to reload the vault after doing this.
+To use this development environment in Obsidian, go to the **Latex Math** settings in the vault this repo has been cloned to, and toggle the `Developer Mode` switch to on. Make sure to reload the vault after doing this.
 
 The plugin should now use the python source files and the created virtual environment, instead of the auto installed `SympyClient` binary.
 
@@ -183,4 +183,3 @@ To perform a one-time production ready build, run `npm run build`.
 ## License
 
 See [LICENSE](LICENSE)
-

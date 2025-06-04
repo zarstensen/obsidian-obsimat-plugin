@@ -23,7 +23,7 @@ export default class LatexMathPlugin extends Plugin {
     settings: LatexMathPluginSettings;
 
     async onload() {
-        console.log(`Loading Math Latex (${this.manifest.version})`);
+        console.log(`Loading Latex Math (${this.manifest.version})`);
 
         await this.loadSettings();
         this.addSettingTab(new LatexMathSettingsTab(this.app, this));

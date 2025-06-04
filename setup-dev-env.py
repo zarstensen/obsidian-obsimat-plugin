@@ -17,8 +17,21 @@ subprocess.check_call([pip_executable, "install", "-r", "requirements.txt", "-r"
 
 print("Creating hook symlinks")
 
-hooks_dir = os.path.join(os.getcwd(), ".git", "hooks")
-pre_push_path = os.path.join(hooks_dir, "pre-push")
+git_dir = os.path.join(os.getcwd(), ".git")
+
+if not os.path.isdir(git_dir):
+    # we are probably a submodule, look for a .git file
+    
+    if not os.path.isfile(git_dir):
+        print("Script could not fint .git folder / file.\nPlease make sure to run the script at the repository root.")
+    
+    with open(git_dir, "r") as f:
+        entries = [ entry.split(':', 1) for entry in f.readlines() ]
+        config_entries = { entry[0].strip() : entry[1].strip() for entry in entries }
+
+    git_dir = config_entries['gitdir']
+
+pre_push_path = os.path.join(git_dir, "hooks", "pre-push")
 
 with open(pre_push_path, "w") as f:
     f.write("#!/bin/sh\n")

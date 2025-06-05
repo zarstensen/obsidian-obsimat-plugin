@@ -341,4 +341,10 @@ class TestEvaluate:
             [-sin(x) * sin(y),  cos(x) * cos(y),0]
         ])
     
+    def test_assumptions(self):
+        handler = EvalHandler(self.parser)
+        x = symbols('x', real=True)
+        result = handler.handle({ 'expression': r"\bar x x", 'environment': { 'symbols': {'x': ['real']} }})
+        assert result.sympy_expr == x**2
+    
     # TODO: add gradient test (it is already implicitly tested in test_jacobi so not high priority)

@@ -28,6 +28,7 @@ from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin,
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy_client.grammar.LmatLatexParser import LmatLatexParser
+from sympy_client.grammar.LmatEnvDefinitionsStore import LmatEnvDefStore
 
 theta = Symbol('\\theta')
 f = Function('f')
@@ -68,8 +69,9 @@ def _MatMul(a, b):
     return MatMul(a, b, evaluate=False)
 
 latex_parser = LmatLatexParser()
+
 def parse_latex_lark(latex_str):
-    return latex_parser.doparse(latex_str, {})
+    return latex_parser.parse(latex_str, LmatEnvDefStore(latex_parser, {}))
 
 # These LaTeX strings should parse to the corresponding SymPy expression
 SYMBOL_EXPRESSION_PAIRS = [

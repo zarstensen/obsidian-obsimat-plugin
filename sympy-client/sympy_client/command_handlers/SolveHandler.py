@@ -1,9 +1,8 @@
-from sympy_client.LmatEnvironmentUtils import LmatEnvironmentUtils
 from sympy_client.LmatEnvironment import LmatEnvironment
-from sympy_client.LatexMathClient import LatexMathClient
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.LmatLatexPrinter import lmat_latex
+from sympy_client.grammar.LmatEnvDefinitionsStore import LmatEnvDefStore
 from .CommandHandler import *
 
 from dataclasses import dataclass
@@ -75,8 +74,9 @@ class SolveHandler(CommandHandler):
 
     @override
     def handle(self, message: SolveModeMessage) -> SolveResult | MultivariateResult | ErrorResult:
-        equations = self._parser.doparse(message['expression'], message['environment'])
-        equations = LmatEnvironmentUtils.substitute_units(equations, message['environment'])
+        equations = self._parser.parse(message['expression'],
+                                         LmatEnvDefStore(self._parser, message['environment'])
+                                         )
 
         # position information is not needed here,
         # so extract the equations into a tuple, which sympy can work with.

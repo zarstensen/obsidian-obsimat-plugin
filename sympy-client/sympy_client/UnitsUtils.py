@@ -40,39 +40,6 @@ __add_unit_aliases(((str(unit.abbrev), unit)
 # add Latex Math specific unit aliases.
 __add_unit_aliases([ ( 'min', u.minute ), ( 'sec', u.second ) ])
 
-# Substitute any symbols present in the sympy expression with the corresponding sympy unit.
-# Also convert all non base units to base units where possible.
-def substitute_units(sympy_expr, excluded_symbols: list[Symbol], unit_system: UnitSystem):
-    # check if any symbol matches a unit string
-    for symbol in sympy_expr.free_symbols:
-        if symbol in excluded_symbols:
-            continue
-        
-        # attempt to replace the symbol with a corresponding unit.
-        try:
-            # find potential unit
-            unit = str_to_unit(str(symbol))
-            
-            if unit is None:
-                continue
-            
-            # check if the unit is in the passed unit system
-            converted_units = u.convert_to(unit, unit_system._base_units)
-            converted_units = (q for q in converted_units.as_terms()[1] if isinstance(q, Quantity))
-            
-            for q in converted_units:
-                if q not in unit_system._base_units:
-                    break
-            else:
-                # substitute the unit in for the symbol
-                sympy_expr = sympy_expr.subs({symbol: unit})
-            
-        except AttributeError:
-            # unit was not found.
-            continue
-        
-    return sympy_expr
-
 # attempt to automatically convert the units in the given sympy expression.
 # this convertion method prioritizes as few units as possible raised to the lowest power possible (or lowest root possible).
 def auto_convert(sympy_expr, unit_system: UnitSystem = SI):    

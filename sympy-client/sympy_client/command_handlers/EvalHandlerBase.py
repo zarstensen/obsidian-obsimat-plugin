@@ -3,14 +3,16 @@ from copy import deepcopy
 from typing import TypedDict, override
 
 from sympy import *
+from sympy.physics.units.unitsystem import UnitSystem
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.core.relational import Relational
 from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.LmatEnvironment import LmatEnvironment
-from sympy_client.LmatEnvironmentUtils import LmatEnvironmentUtils
 from sympy_client.LmatLatexPrinter import lmat_latex
+import sympy_client.UnitsUtils as UnitsUtils
 
+from sympy_client.grammar.LmatEnvDefinitionsStore import LmatEnvDefStore
 from .CommandHandler import CommandHandler, CommandResult
 
 
@@ -48,7 +50,8 @@ class EvalHandlerBase(CommandHandler, ABC):
 
     @override
     def handle(self, message: EvaluateMessage) -> EvalResult:
-        sympy_expr = self._parser.doparse(message['expression'], message['environment'])
+        definitions_store = LmatEnvDefStore(self._parser, message['environment'])
+        sympy_expr = self._parser.parse(message['expression'], definitions_store)
         expr_lines = None
         
         # choose bottom / right most evaluatable expression.
@@ -64,10 +67,14 @@ class EvalHandlerBase(CommandHandler, ABC):
             elif isinstance(sympy_expr, LatticeOp):
                 sympy_expr = AssocOp.make_args(sympy_expr)[-1]
 
-        # store expression before units are converted and it is evaluated,
-        # so we can display this intermediate step in the result.
-
-        sympy_expr = LmatEnvironmentUtils.substitute_units(sympy_expr, message['environment'])
         sympy_expr = self.evaluate(sympy_expr, message)
+        
+        unit_system = message['environment'].get('unit_system', None)
+        
+        if unit_system is not None:
+            sympy_expr = UnitsUtils.auto_convert(sympy_expr, UnitSystem.get_unit_system(unit_system))
+        else:
+            sympy_expr = UnitsUtils.auto_convert(sympy_expr)
+            
   
         return EvalResult(sympy_expr, expr_lines)

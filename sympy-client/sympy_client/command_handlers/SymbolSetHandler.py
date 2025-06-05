@@ -1,6 +1,6 @@
-from sympy_client.LmatEnvironmentUtils import LmatEnvironmentUtils
 from sympy_client.LmatEnvironment import LmatEnvironment
 from .CommandHandler import *
+from ..grammar.SymbolStore import SymbolStore
 
 from sympy import *
 from typing import TypedDict, override
@@ -57,16 +57,13 @@ class SymbolSetModeMessage(TypedDict):
 class SymbolSetHandler(CommandHandler):
     def handle(self, message: SymbolSetModeMessage) -> SymbolSetResult:
         environment: LmatEnvironment = message['environment']
+        symbol_store: SymbolStore = SymbolStore(environment)
     
         set_symbols = {set: [] for set in SETS}
 
-        if 'symbols' not in environment:
-            return SymbolSetResult(set_symbols)
-
-        # loop over sets and figure out which symbol belongs to which sets.
-        
-        for symbol in environment['symbols']:
-            sympy_symbol = LmatEnvironmentUtils.create_sympy_symbol(symbol, environment)
+        # loop over sets and figure out which symbol belongs to which sets.        
+        for symbol in environment.get('symbols', {}):
+            sympy_symbol = symbol_store.get_symbol(symbol)
             
             smallest_containing_set = None
             

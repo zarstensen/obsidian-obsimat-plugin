@@ -10,8 +10,7 @@ from sympy.core.operations import LatticeOp
 from sympy.logic.boolalg import *
 from sympy.physics.units import Quantity
 
-from ..CachedSymbolSubstitutor import CachedSymbolSubstitutor
-from ..FunctionStore import FunctionStore
+from ..SympyParser import DefinitionsStore
 from ..SystemOfExpr import SystemOfExpr
 from .ConstantsTransformer import ConstantsTransformer
 from .FunctionsTransformer import FunctionsTransformer
@@ -23,10 +22,8 @@ class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     class Delim(Enum):
         MatDelim = 1
 
-    def __init__(self, symbol_substitutor: CachedSymbolSubstitutor, function_store: FunctionStore):
-        super().__init__()
-        self._symbol_substitutor = symbol_substitutor
-        self._function_store = function_store
+    def __init__(self, definitions_store: DefinitionsStore):
+        super().__init__(definitions_store)
     
     @v_args(inline=True)
     def NUMERIC_DIGIT(self, digit: Token):
@@ -161,11 +158,11 @@ class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     
     @v_args(inline=True)
     def symbol(self, *symbol_strings: str) -> Symbol:
-        return Symbol(''.join(map(str,symbol_strings)))
+        return self._definitions_store.deserialize_symbol(''.join(map(str, symbol_strings)))
     
     @v_args(inline=True)
     def substitute_symbol(self, symbol: Symbol) -> Symbol | Expr:
-        substituted_value = self._symbol_substitutor.get_symbol_substitution(str(symbol))
+        substituted_value = self._definitions_store.get_symbol_definition(symbol)
         
         if substituted_value is not None:
             return substituted_value
@@ -175,11 +172,14 @@ class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     @v_args(inline=True)
     def undefined_function(self, func_name: Token, func_args: Iterator[Expr]) -> Function | Expr:
         func_name = func_name.value[:-1] # remove the suffixed parenthesees
-        # TODO: workaround for now, the function store should be based on strings and not symbols.
-        if Symbol(func_name) in self._function_store:
-            return self._function_store[Symbol(func_name)].call(*func_args)
+        func = self._definitions_store.deserialize_function(func_name)
+        
+        func_definition = self._definitions_store.get_function_definition(func)
+        
+        if func_definition:
+            return func_definition.call(*func_args)
         else:
-            return Function(func_name)(*func_args)
+            return func(*func_args)
     
     @v_args(inline=True)
     def indexed_symbol(self, symbol: Expr, index: Expr | str, primes: str | None) -> Symbol:

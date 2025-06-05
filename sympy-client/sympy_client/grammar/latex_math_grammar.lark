@@ -219,9 +219,6 @@ integral: _FUNC_INTEGRAL [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_no
 _matrix_notation: _matrix_type | det_matrix
 _matrix_type: matrix | array_matrix
 
-// _matrix_col_delim: _ALIGN
-// matrix_row_delim: _LATEX_NEWLINE -> matrix_like_delim
-
 matrix_row_delim: MATRIX_ROW_DELIM -> matrix_like_delim
 matrix_body: matrix_row_delim? expression ((_MATRIX_COL_DELIM|matrix_row_delim) expression)* matrix_row_delim?
 matrix: CMD_BEGIN_MATRIX matrix_body CMD_END_MATRIX _MATRIX_ENV_END

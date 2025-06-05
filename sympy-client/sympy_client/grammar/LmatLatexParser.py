@@ -8,9 +8,7 @@ from lark.lexer import TerminalDef
 from sympy import *
 from sympy_client.LmatEnvironment import LmatEnvironment
 
-from .CachedSymbolSubstitutor import CachedSymbolSubstitutor
-from .FunctionStore import FunctionStore
-from .SympyParser import SympyParser
+from .SympyParser import SympyParser, DefinitionsStore
 from .transformers.LatexMathLarkTransformer import LatexMathLarkTransformer
 
 
@@ -222,11 +220,8 @@ class LmatLatexParser(SympyParser):
         post_lexer.initialize_scopes(self.parser)
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
-    def doparse(self, latex_str: str, environment: LmatEnvironment = {}):
-        symbol_substitutor = CachedSymbolSubstitutor(environment, self)
-        function_store = FunctionStore(environment, self)
-        
-        transformer = LatexMathLarkTransformer(symbol_substitutor, function_store)
+    def parse(self, latex_str: str, definitions_store: DefinitionsStore):        
+        transformer = LatexMathLarkTransformer(definitions_store)
         parse_tree = self.parser.parse(latex_str)
         expr = transformer.transform(parse_tree)
         

@@ -1,5 +1,6 @@
 from sympy_client.LmatEnvironment import LmatEnvironment
 from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.grammar.LmatEnvDefinitionsStore import LmatEnvDefStore
 from .CommandHandler import CommandHandler, CommandResult
 
 from sympy import *
@@ -27,5 +28,5 @@ class ConvertSympyHandler(CommandHandler):
     @override
     def handle(self, message: ConvertSympyModeMessage):
         return ConvertSympyResult(
-            self._parser.doparse(message['expression'], message['environment'])
+            self._parser.parse(message['expression'], LmatEnvDefStore(self._parser, message['environment']))
         )

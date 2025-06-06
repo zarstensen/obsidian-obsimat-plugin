@@ -393,7 +393,7 @@ CMD_MATRIX_FORMAT: "\\mathbf"
 
 _BANG: "!"
 _BAR: "|" | "\\mid"
-_DOUBLE_BAR: "||" | /\\mid\s*\\mid/ | "\\Vert"
+_DOUBLE_BAR: "||" | /\\mid\s*\\mid/ | /\\[lr]?Vert/
 _DOT: "."
 _CARET: "^"
 _COMMA: ","

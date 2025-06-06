@@ -1,12 +1,13 @@
+<!-- omit in toc -->
 # Latex Math Syntax
 
-This document aims to provide an overview of the latex parsing capabilities of this plugin. As a general note, the parser was designed with standard latex notation in mind, so as long as no complex formatting or esoteric math functions are used, it should be pretty straight forward to write latex code parsable by this plugin.
+This document aims to provide an overview of the latex parsing capabilities of this plugin. As a general note, the parser was designed with standard latex notation in mind, so as long as no complex formatting or esoteric math functions are used, it should be pretty straight forward to write latex formulas parsable by this plugin.
 
-Whilst this document should provide a good overview of the parser, one can always look at the grammar files for the concrete implementation.
+Whilst this document should provide a good overview of the parser, one can always look at the [grammar files](sympy-client/sympy_client/grammar/latex_math_grammar.lark) for the concrete implementation.
 
+<!-- omit in toc -->
 ## Table of Contents
 
-- [Table of Contents](#table-of-contents)
 - [Expression Structure](#expression-structure)
 - [Symbols](#symbols)
 - [Mathematical Functions](#mathematical-functions)
@@ -17,7 +18,28 @@ Whilst this document should provide a good overview of the parser, one can alway
 
 ## Expression Structure
 
+The **Latex Math** parser is able to parse most mathematical expressions and optionally relations (*e.g.* `>`, `<`, `=`)[^le-not-supported] between expressions.
+[^le-not-supported]: `\le` is not recognized by the parser, as it collides with `\left`. Please use `\leq` instead.
+
+An expression is any series of mathematical terms separated by `+` or `-` signs.
+Terms consists of a series of factors separated by a multiplication sign (`*`, `\cdot`, `\times`) or a division sign (`/`), where a factor is one of the following:
+
+<!-- no toc -->
+- Number
+- [Symbol](#symbols)
+- [Unit / Constant](#units-and-physical-constants)
+- Matrix
+- Exponentiation
+- [Funtion](#mathematical-functions)
+- Expression delimited by `()`, `{}` or `[]`
+
+If no multiplication or division sign is present, multiplication is implicitly assumed.
+
+The parser also supports systems of equations. Notate these by placing a series of equations, separated by latex newlines (`\\\\`), inside a `cases` or `align` environment.
+
 ## Symbols
+
+The parser understands various ways of notating symbols. The below table gives some examples for supported notation concepts.
 
 | Type      | Latex String                                                       |
 | :-------- | :----------------------------------------------------------------- |
@@ -26,7 +48,13 @@ Whilst this document should provide a good overview of the parser, one can alway
 | formatted | `\mathrm{x}` / `\pmb{vector}` / `\mathit{whitespace symbol}` / ... |
 | indexed   | `x_y` / `\alpha_\gamma` / `\pmb{M}_{1;2}` / ...                    |
 
+Note that Latin symbols spelling out Greek letters will be converted to Greek symbols upon evaluation e.g. the Latin symbol `alpha` will be output as `\alpha` upon evaluation.
+This is a side effect of how Sympy handles symbols internally.
+
 ## Mathematical Functions
+
+Below is a table of all supported mathematical functions supported by the parser, this list may grow overtime as this project develops.
+Note that a *mathematical function* also encompasses concepts not normally thought of as a function, e.g. `\frac` is considered part of this table whilst it may not intuitively be thought of as a function.
 
 | Description              | Latex String                                                                           |
 | :----------------------- | :------------------------------------------------------------------------------------- |

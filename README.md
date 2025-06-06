@@ -81,7 +81,6 @@ Restrict the solution domain of a single equation with [symbol assumptions](#sym
 [^lmat-solve-domain]: The default solution domain for systems of equations can be set via. The `domain` key in the `domain` table in an `lmat` environment.
 
 <!-- TODO: update this one so it has a set solution (sin for example with a periodic solution domain) -->
-
 ![demo](readme-assets/solve-demo.gif)
 
 ### Symbol and Function Definitions
@@ -93,6 +92,8 @@ Definitions persistence are location based, any math block below a definition wi
 
 To undefine a symbol or function, leave the right-hand side of the `:=` operator blank.
 
+![demo](readme-assets/definitions-demo.gif)
+
 ### Units and Physical Constants
 
 Denote units or physical constants in equations by surrounding them with braces `{}`.
@@ -102,11 +103,13 @@ Latex Math automatically handles conversions between units, constants and their 
 
 Use an `lmat` code block to tell **Latex Math** about various assumptions it may make about specific symbols. This is used to further simplify expressions, such as roots, or limit the solution domain of equations. By default, all symbols are assumed to be complex numbers.
 
-`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions Latex Math should make, under the `symbols` table. Like definitions, an `lmat` code block's persistence is based on its location. See below for a simple example.
+`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions Latex Math should make, under the `symbols` table. Like definitions, an `lmat` code block's persistence is based on its location. See below the demo GIF for a simple static `lmat` code block example.
+
+![demo](readme-assets/assumptions-demo.gif)
 
 > [!TIP]
 > **Example**
-> 
+>
 > ````text
 > ```lmat
 > [symbols]
@@ -169,7 +172,7 @@ The plugin should now use the python source files and the created virtual enviro
 Any changes to the python source code requires reloading Obsidian to have any effect.
 
 > [!CAUTION]
-> If you are using VS Code as an ide, make sure to add `push` as an entry to `git.commandsToLog` in VS Code (user or workspace), if you want to see the output of the push hook if it fails.
+> If you are using VS Code as an IDE, make sure to add `push` as an entry to `git.commandsToLog` in VS Code (user or workspace), if you want to see the output of the push hook if it fails.
 
 ### Developing the Obsidian Plugin
 

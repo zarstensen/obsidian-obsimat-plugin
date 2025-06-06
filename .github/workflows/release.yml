@@ -105,6 +105,11 @@ jobs:
         run: |
           npm install
           npm run build
+      
+      - name: Zip Plugin
+        run: zip plugin.zip main.js styles.css manifest.json
+      - name: Zip Bundle Bin
+        run: zip -r bundle-bin.zip ./bundle-bin
 
       - name: Create Release With Assets
         id: create-release-with-assets
@@ -121,7 +126,8 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            ./bundle-bin/**/*.bin
+            bundle-bin.zip
+            plugin.zip
             main.js
             manifest.json
             styles.css

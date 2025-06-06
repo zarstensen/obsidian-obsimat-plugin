@@ -1,14 +1,14 @@
-from sympy_client.LmatEnvironment import LmatEnvironment
-from sympy_client.grammar.SystemOfExpr import SystemOfExpr
-from sympy_client.grammar.SympyParser import SympyParser
-from sympy_client.LmatLatexPrinter import lmat_latex
-from sympy_client.grammar.LmatEnvDefinitionsStore import LmatEnvDefStore
-from .CommandHandler import *
+from typing import Any, TypedDict, override
 
-from dataclasses import dataclass
 from sympy import *
 from sympy.solvers.solveset import NonlinearError
-from typing import Any, TypedDict, override
+from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
+from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.grammar.SystemOfExpr import SystemOfExpr
+from sympy_client.LmatEnvironment import LmatEnvironment
+from sympy_client.LmatLatexPrinter import lmat_latex
+
+from .CommandHandler import *
 
 
 class SolveModeMessage(TypedDict):

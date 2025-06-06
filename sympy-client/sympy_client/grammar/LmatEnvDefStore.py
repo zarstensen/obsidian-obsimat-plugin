@@ -1,18 +1,19 @@
+from copy import copy
 from typing import Iterable
-from .SympyParser import DefinitionsStore
 
-from sympy import Symbol, Expr, Function, symbols
-from copy import copy, deepcopy
-from .SympyParser import SympyParser, FunctionDefinition
-from ..LmatEnvironment import LmatEnvironment
+from sympy import Expr, Function, Symbol
+from sympy_client.grammar.SympyParser import (DefinitionStore,
+                                              FunctionDefinition, SympyParser)
+from sympy_client.LmatEnvironment import LmatEnvironment
+
 
 class LmatEnvFunctionDefinition(FunctionDefinition):
-    def __init__(self, definition_store: DefinitionsStore, parser: SympyParser, args: Iterable[Symbol], latex_expr: str):
+    def __init__(self, definition_store: DefinitionStore, parser: SympyParser, args: Iterable[Symbol], latex_expr: str):
         super().__init__()
         self._definitions_store = definition_store
         self._parser = parser
-        self.args = tuple(args)
-        self.latex_expr = latex_expr
+        self._args = tuple(args)
+        self._latex_expr = latex_expr
 
     def call(self, *args) -> Expr:
         assert len(args) == len(self.args)
@@ -20,15 +21,24 @@ class LmatEnvFunctionDefinition(FunctionDefinition):
         args_map = { arg: val for arg, val in zip(self.args, args) }
         func_def_store = LmantEnvFuncDefStore(args_map, self._definitions_store)
         
-        expr = self._parser.parse(self.latex_expr, func_def_store)
+        expr = self._parser.parse(self.serialized_body, func_def_store)
         
         return expr
     
     def get_body(self):
         return self.call(*self.args)
+    
+    @property
+    def args(self) -> tuple[Expr]:
+        return self._args
+    
+    @property
+    def serialized_body(self) -> str:
+        return self._latex_expr
 
-# implement this
-class LmatEnvDefStore(DefinitionsStore):
+# Definition store implementation in the context of an LmatEnvironment.
+# provides definitions and deserializatiosn based on the symbols, variables and functions tables.
+class LmatEnvDefStore(DefinitionStore):
     
     def __init__(self, parser: SympyParser, environment: LmatEnvironment):
         super().__init__()
@@ -37,7 +47,6 @@ class LmatEnvDefStore(DefinitionsStore):
         
         self._environment = environment
         
-        # this is a bit cursed.
         self._cached_symbols = {}
         self._cached_symbol_definitions = {}
 
@@ -91,9 +100,11 @@ class LmatEnvDefStore(DefinitionsStore):
         return definition_value
 
     def _gen_symbols_cache(self):
-        tmp_symbol_cache = self._cached_symbol_definitions
-        tmp_symbol_definitions = self._serialized_symbol_definitions
+        tmp_cached_symbol_definitions = self._cached_symbol_definitions
+        tmp_serialized_symbol_definitions = self._serialized_symbol_definitions
         
+        # no symbol substitution should take place during cache generation,
+        # so we temporarily clear these here.
         self._cached_symbol_definitions = {}
         self._serialized_symbol_definitions = {}
         
@@ -107,14 +118,15 @@ class LmatEnvDefStore(DefinitionsStore):
             
             self._cached_symbols[str(symbol)] = Symbol(str(symbol), **assumptions)
             
-        self._cached_symbol_definitions = tmp_symbol_cache
-        self._serialized_symbol_definitions = tmp_symbol_definitions
+        self._cached_symbol_definitions = tmp_cached_symbol_definitions
+        self._serialized_symbol_definitions = tmp_serialized_symbol_definitions
 
 
-
-class LmantEnvFuncDefStore(DefinitionsStore):
+# wrapper class for a DefinitionStore, which maps function args and their corresponding symbols to a given set of values.
+# should be used in the context of parsing a function body.
+class LmantEnvFuncDefStore(DefinitionStore):
     
-    def __init__(self, args: dict[Symbol, Expr], definitions_store: DefinitionsStore):
+    def __init__(self, args: dict[Symbol, Expr], definitions_store: DefinitionStore):
         super().__init__()
         self._definitions_store = definitions_store
         self._args = args

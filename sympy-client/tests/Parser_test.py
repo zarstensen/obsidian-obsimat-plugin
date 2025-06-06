@@ -1,12 +1,12 @@
 from sympy import *
-from sympy_client.grammar.LmatLatexParser import LmatLatexParser
+from sympy_client.grammar.LatexParser import LatexParser
 from sympy_client import LmatEnvironment
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
-from sympy_client.grammar.LmatEnvDefinitionsStore import LmatEnvDefStore
+from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 
 
 class TestParse:
-    parser = LmatLatexParser()
+    parser = LatexParser()
 
     def _parse_expr(self, expr, environment: LmatEnvironment = {}) -> Expr:
         return self.parser.parse(expr, LmatEnvDefStore(self.parser, environment))

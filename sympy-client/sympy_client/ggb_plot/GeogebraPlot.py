@@ -6,8 +6,6 @@ from copy import deepcopy
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
-from sympy_client.grammar.FunctionStore import FunctionStore
-
 from sympy import *
 from sympy.core.relational import Relational
 

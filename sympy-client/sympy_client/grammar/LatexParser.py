@@ -2,14 +2,13 @@ import os
 import re as regex
 from typing import Callable, Iterator
 
-from lark import Lark, Token, Tree
+from lark import Lark, Token
 from lark.lark import PostLex
 from lark.lexer import TerminalDef
 from sympy import *
-from sympy_client.LmatEnvironment import LmatEnvironment
 
-from .SympyParser import SympyParser, DefinitionsStore
-from .transformers.LatexMathLarkTransformer import LatexMathLarkTransformer
+from .SympyParser import DefinitionStore, SympyParser
+from .transformers.LatexTransformer import LatexTransformer
 
 
 # Represents a scope to be handled by the ScopePostLexer.
@@ -194,7 +193,7 @@ class ScopePostLexer(PostLex):
                 break
 
 ## The LmatLatexParser is responsible for parsing a latex string in the context of an LmatEnvironment.
-class LmatLatexParser(SympyParser):
+class LatexParser(SympyParser):
 
     def __init__(self, grammar_file: str = None):
         if grammar_file is None:
@@ -220,8 +219,8 @@ class LmatLatexParser(SympyParser):
         post_lexer.initialize_scopes(self.parser)
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
-    def parse(self, latex_str: str, definitions_store: DefinitionsStore):        
-        transformer = LatexMathLarkTransformer(definitions_store)
+    def parse(self, latex_str: str, definitions_store: DefinitionStore):        
+        transformer = LatexTransformer(definitions_store)
         parse_tree = self.parser.parse(latex_str)
         expr = transformer.transform(parse_tree)
         

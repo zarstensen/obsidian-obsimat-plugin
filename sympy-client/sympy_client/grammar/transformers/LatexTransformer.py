@@ -5,25 +5,27 @@ from typing import Iterator
 import sympy_client.UnitsUtils as UnitUtils
 from lark import Token, v_args
 from sympy import *
+from sympy import Expr
 from sympy.core.numbers import Float, Integer
-from sympy.core.operations import LatticeOp
 from sympy.logic.boolalg import *
 from sympy.physics.units import Quantity
+from sympy_client.grammar.SympyParser import DefinitionStore
+from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
-from ..SympyParser import DefinitionsStore
-from ..SystemOfExpr import SystemOfExpr
 from .ConstantsTransformer import ConstantsTransformer
 from .FunctionsTransformer import FunctionsTransformer
 
+
 # The LatexMathLarkTransofmer class provides functions for transforming
 # rules defined in latex_math_grammar.lark into sympy expressions.
-class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
+class LatexTransformer(ConstantsTransformer, FunctionsTransformer):
 
     class Delim(Enum):
         MatDelim = 1
 
-    def __init__(self, definitions_store: DefinitionsStore):
+    def __init__(self, definitions_store: DefinitionStore):
         super().__init__(definitions_store)
+        self.__definitions_store = definitions_store
     
     @v_args(inline=True)
     def NUMERIC_DIGIT(self, digit: Token):
@@ -158,11 +160,11 @@ class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     
     @v_args(inline=True)
     def symbol(self, *symbol_strings: str) -> Symbol:
-        return self._definitions_store.deserialize_symbol(''.join(map(str, symbol_strings)))
+        return self.__definitions_store.deserialize_symbol(''.join(map(str, symbol_strings)))
     
     @v_args(inline=True)
     def substitute_symbol(self, symbol: Symbol) -> Symbol | Expr:
-        substituted_value = self._definitions_store.get_symbol_definition(symbol)
+        substituted_value = self.__definitions_store.get_symbol_definition(symbol)
         
         if substituted_value is not None:
             return substituted_value
@@ -172,9 +174,9 @@ class LatexMathLarkTransformer(ConstantsTransformer, FunctionsTransformer):
     @v_args(inline=True)
     def undefined_function(self, func_name: Token, func_args: Iterator[Expr]) -> Function | Expr:
         func_name = func_name.value[:-1] # remove the suffixed parenthesees
-        func = self._definitions_store.deserialize_function(func_name)
+        func = self.__definitions_store.deserialize_function(func_name)
         
-        func_definition = self._definitions_store.get_function_definition(func)
+        func_definition = self.__definitions_store.get_function_definition(func)
         
         if func_definition:
             return func_definition.call(*func_args)

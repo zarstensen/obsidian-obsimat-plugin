@@ -1,11 +1,11 @@
-from sympy_client.grammar.LmatLatexParser import LmatLatexParser
+from sympy_client.grammar.LatexParser import LatexParser
 from sympy_client.command_handlers.ConvertSympyHandler import *
 
 from sympy import *
 
 ## Tests the conver to sympy mode.
 class TestConvertSympy:
-    parser = LmatLatexParser()
+    parser = LatexParser()
     
     def test_convert_simple(self):
         a, b = symbols("a b")

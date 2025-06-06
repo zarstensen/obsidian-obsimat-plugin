@@ -1,18 +1,17 @@
 from abc import ABC, abstractmethod
-from copy import deepcopy
 from typing import TypedDict, override
 
+import sympy_client.UnitsUtils as UnitsUtils
 from sympy import *
-from sympy.physics.units.unitsystem import UnitSystem
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.core.relational import Relational
+from sympy.physics.units.unitsystem import UnitSystem
+from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.LmatEnvironment import LmatEnvironment
 from sympy_client.LmatLatexPrinter import lmat_latex
-import sympy_client.UnitsUtils as UnitsUtils
 
-from sympy_client.grammar.LmatEnvDefinitionsStore import LmatEnvDefStore
 from .CommandHandler import CommandHandler, CommandResult
 
 

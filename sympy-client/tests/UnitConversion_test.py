@@ -1,4 +1,4 @@
-from sympy_client.grammar.LmatLatexParser import LmatLatexParser
+from sympy_client.grammar.LatexParser import LatexParser
 from sympy_client.command_handlers.EvalHandler import *
 from sympy_client.command_handlers.ConvertUnitsHandler import *
 from sympy_client.command_handlers.SolveHandler import *
@@ -9,7 +9,7 @@ import sympy.physics.units as units
 
 ## Tests the unit conversions.
 class TestUnitConversion:
-    parser = LmatLatexParser()
+    parser = LatexParser()
     
     def test_single_term_to_derived_unit(self):
         handler = EvalHandler(self.parser)

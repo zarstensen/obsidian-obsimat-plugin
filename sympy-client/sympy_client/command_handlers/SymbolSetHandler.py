@@ -1,9 +1,11 @@
-from sympy_client.LmatEnvironmentUtils import LmatEnvironmentUtils
-from sympy_client.LmatEnvironment import LmatEnvironment
-from .CommandHandler import *
+from typing import TypedDict, override
 
 from sympy import *
-from typing import TypedDict, override
+from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
+from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.LmatEnvironment import LmatEnvironment
+
+from .CommandHandler import *
 
 SETS = [
     S.Complexes,
@@ -55,18 +57,20 @@ class SymbolSetModeMessage(TypedDict):
     environment: LmatEnvironment
 
 class SymbolSetHandler(CommandHandler):
+    
+    def __init__(self, parser: SympyParser):
+        super().__init__()
+        self._parser = parser
+    
     def handle(self, message: SymbolSetModeMessage) -> SymbolSetResult:
         environment: LmatEnvironment = message['environment']
+        definition_store = LmatEnvDefStore(self._parser, environment)
     
         set_symbols = {set: [] for set in SETS}
 
-        if 'symbols' not in environment:
-            return SymbolSetResult(set_symbols)
-
-        # loop over sets and figure out which symbol belongs to which sets.
-        
-        for symbol in environment['symbols']:
-            sympy_symbol = LmatEnvironmentUtils.create_sympy_symbol(symbol, environment)
+        # loop over sets and figure out which symbol belongs to which sets.        
+        for symbol in environment.get('symbols', {}):
+            sympy_symbol = definition_store.deserialize_symbol(symbol)
             
             smallest_containing_set = None
             

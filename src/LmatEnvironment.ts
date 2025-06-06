@@ -20,7 +20,6 @@ export class LmatEnvironment {
             variables,
             functions,
             parsed_lmat_block.units?.system,
-            parsed_lmat_block.units?.exclude,
             parsed_lmat_block.domain?.domain
         );
     }
@@ -99,14 +98,9 @@ export class LmatEnvironment {
         public functions: { [func: string]: { args: string[], expr: string } } = {},
         /**
          * the unit system to use when converting between units.
-         * if left undefined, no unit conversion takes place.
+         * if left undefined, SI is used as the default system.
          */
         public unit_system: string | undefined = undefined,
-        /**
-         * the excluded_symbols list specifies a list symbols which should not be converted to units.
-         * if left undefined, a default list of commonly excluded symbols will be used instead.
-         */
-        public excluded_symbols: string[] | undefined = undefined,
         /**
          * the domain is a sympy expression, evaluating to the default solution domain of any equation solutions.
          */

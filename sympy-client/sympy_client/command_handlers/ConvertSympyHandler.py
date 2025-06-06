@@ -1,9 +1,12 @@
-from sympy_client.LmatEnvironment import LmatEnvironment
-from sympy_client.grammar.SympyParser import SympyParser
-from .CommandHandler import CommandHandler, CommandResult
+from typing import TypedDict, override
 
 from sympy import *
-from typing import Any, TypedDict, override
+from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
+from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.LmatEnvironment import LmatEnvironment
+
+from .CommandHandler import CommandHandler, CommandResult
+
 
 class ConvertSympyResult(CommandResult):
     
@@ -27,5 +30,5 @@ class ConvertSympyHandler(CommandHandler):
     @override
     def handle(self, message: ConvertSympyModeMessage):
         return ConvertSympyResult(
-            self._parser.doparse(message['expression'], message['environment'])
+            self._parser.parse(message['expression'], LmatEnvDefStore(self._parser, message['environment']))
         )

@@ -1,31 +1,36 @@
 from sympy import *
-from sympy_client.grammar.LmatLatexParser import LmatLatexParser
+from sympy_client.grammar.LatexParser import LatexParser
+from sympy_client import LmatEnvironment
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
+from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 
 
 class TestParse:
-    parser = LmatLatexParser()
+    parser = LatexParser()
+
+    def _parse_expr(self, expr, environment: LmatEnvironment = {}) -> Expr:
+        return self.parser.parse(expr, LmatEnvDefStore(self.parser, environment))
 
     def test_basic(self):
         a, b, c = symbols('a b c')
         # result = self.parser.doparse(r'-a i + b \pi + e + \frac{{a}}{b} + {a}^{b} \cdot f(a 25^2 symbol^{yaysymbol}) - \frac{50 - 70}5^{-99} - \frac{{km}}{{h}} \over \sin x + \sqrt[5]{x}')
-        result = self.parser.doparse(r'-a i \cdot (5 + 7)^c + b')
+        result = self._parse_expr(r'-a i \cdot (5 + 7)^c + b')
         assert result == -a * I * (5 + 7) ** c + b
 
     def test_trig_funcs(self):
         x, y, abc = symbols('x y abc')
-        assert self.parser.doparse(r'\sin x') == sin(x)
-        assert self.parser.doparse(r'\sin^y x') == sin(x)**y
-        assert simplify(self.parser.doparse(r'\frac{\sin(abc)}{\cos {abc}}')) == tan(abc)
-        assert self.parser.doparse(r'\arctan{abc}') == atan(abc)
-        assert self.parser.doparse(r'\arcosh y') == acosh(y)
+        assert self._parse_expr(r'\sin x') == sin(x)
+        assert self._parse_expr(r'\sin^y x') == sin(x)**y
+        assert simplify(self._parse_expr(r'\frac{\sin(abc)}{\cos {abc}}')) == tan(abc)
+        assert self._parse_expr(r'\arctan{abc}') == atan(abc)
+        assert self._parse_expr(r'\arcosh y') == acosh(y)
         
 
     def test_relations(self):
         x, y, z = symbols("x y z")
-        assert self.parser.doparse(r"x=y") == Eq(x, y)
+        assert self._parse_expr(r"x=y") == Eq(x, y)
         
-        result = self.parser.doparse(r"x = y < z")
+        result = self._parse_expr(r"x = y < z")
     
         assert isinstance(result, SystemOfExpr)
         assert len(result) == 2
@@ -35,52 +40,52 @@ class TestParse:
     
     def test_matrix(self):
         
-        assert self.parser.doparse(r"\begin{bmatrix} 1 \\ 2 \end{bmatrix}") == Matrix([[1], [2]])
-        assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \end{bmatrix}") == Matrix([[1, 2]])
-        assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}") == Matrix([[1, 2], [3, 4]])
-        assert self.parser.doparse(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{bmatrix}") == Matrix([[1, 2], [3, 4], [5, 6]])
+        assert self._parse_expr(r"\begin{bmatrix} 1 \\ 2 \end{bmatrix}") == Matrix([[1], [2]])
+        assert self._parse_expr(r"\begin{bmatrix} 1 & 2 \end{bmatrix}") == Matrix([[1, 2]])
+        assert self._parse_expr(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}") == Matrix([[1, 2], [3, 4]])
+        assert self._parse_expr(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{bmatrix}") == Matrix([[1, 2], [3, 4], [5, 6]])
     
     def test_mathematical_constants(self):
         
-        assert self.parser.doparse(r"\pi") == S.Pi
-        assert self.parser.doparse(r"e") == S.Exp1
-        assert self.parser.doparse(r"i") == I
+        assert self._parse_expr(r"\pi") == S.Pi
+        assert self._parse_expr(r"e") == S.Exp1
+        assert self._parse_expr(r"i") == I
     
     def test_ambigous_function_expressions(self):
         a, b, c = symbols('a b c')
         
-        assert self.parser.doparse(r"(\sin(a) - b)^2 + c + (\sin(b) - a)") == (sin(a) - b)**2 + c + sin(b) - a
-        assert self.parser.doparse(r"\sin(a) - b") == sin(a) - b
-        assert self.parser.doparse(r"\sin(5) - 75") == sin(5) - 75
-        assert self.parser.doparse(r"\sin(a - b)") == sin(a - b)
-        assert self.parser.doparse(r"\sin(a - b) - c") == sin(a - b) - c
-        assert self.parser.doparse(r"\sin a \cdot b - c") == sin(a) * b - c
-        assert self.parser.doparse(r"\sin{a \cdot b} - c") == sin(a * b) - c
+        assert self._parse_expr(r"(\sin(a) - b)^2 + c + (\sin(b) - a)") == (sin(a) - b)**2 + c + sin(b) - a
+        assert self._parse_expr(r"\sin(a) - b") == sin(a) - b
+        assert self._parse_expr(r"\sin(5) - 75") == sin(5) - 75
+        assert self._parse_expr(r"\sin(a - b)") == sin(a - b)
+        assert self._parse_expr(r"\sin(a - b) - c") == sin(a - b) - c
+        assert self._parse_expr(r"\sin a \cdot b - c") == sin(a) * b - c
+        assert self._parse_expr(r"\sin{a \cdot b} - c") == sin(a * b) - c
         
     def test_implicit_multiplication(self):
         a, b, c = symbols('a b c')
         
-        assert self.parser.doparse(r"2 a") == 2 * a
-        assert self.parser.doparse(r"a b") == a * b
-        assert self.parser.doparse(r"a b c") == a * b * c
-        assert self.parser.doparse(r"a b \cdot c") == a * b * c
-        assert self.parser.doparse(r"a \cdot b c") == a * b * c
+        assert self._parse_expr(r"2 a") == 2 * a
+        assert self._parse_expr(r"a b") == a * b
+        assert self._parse_expr(r"a b c") == a * b * c
+        assert self._parse_expr(r"a b \cdot c") == a * b * c
+        assert self._parse_expr(r"a \cdot b c") == a * b * c
         
         # indexed_symbols
         x1, x2 = symbols('x_{1} x_{2}')
         
-        assert self.parser.doparse(r"x_{1} x_{2}") == x1 * x2
+        assert self._parse_expr(r"x_{1} x_{2}") == x1 * x2
         
         # functions 
-        assert self.parser.doparse(r"b \sin(a)") == sin(a) * b
-        assert self.parser.doparse(r"\sin(a) b") == sin(a) * b
+        assert self._parse_expr(r"b \sin(a)") == sin(a) * b
+        assert self._parse_expr(r"\sin(a) b") == sin(a) * b
         
         # fractions
-        assert self.parser.doparse(r"\frac{a}{b} c") == a / b * c
-        assert self.parser.doparse(r"c \frac{a}{b}") == a / b * c
+        assert self._parse_expr(r"\frac{a}{b} c") == a / b * c
+        assert self._parse_expr(r"c \frac{a}{b}") == a / b * c
         
         # matricies
-        assert self.parser.doparse(r"""
+        assert self._parse_expr(r"""
             \begin{bmatrix}
             10 \\
             20
@@ -91,7 +96,7 @@ class TestParse:
             \end{bmatrix}
             """) == Matrix([[10], [20]]) * Matrix([[30, 40]])
         
-        assert self.parser.doparse(r"""
+        assert self._parse_expr(r"""
             a
             \begin{bmatrix}
             30 &
@@ -99,7 +104,7 @@ class TestParse:
             \end{bmatrix}
             """) == a * Matrix([[30, 40]])
                 
-        assert self.parser.doparse(r"""
+        assert self._parse_expr(r"""
             \begin{bmatrix}
             30 &
             40
@@ -108,33 +113,33 @@ class TestParse:
             """) == a * Matrix([[30, 40]])
         
         # powers
-        assert self.parser.doparse(r"b a^2") == a**2 * b
-        assert self.parser.doparse(r"a^2 b") == a**2 * b
+        assert self._parse_expr(r"b a^2") == a**2 * b
+        assert self._parse_expr(r"a^2 b") == a**2 * b
         
         #scripts
         x1 = symbols("x_{1}")
-        assert self.parser.doparse(r"b x_1") == x1 * b
-        assert self.parser.doparse(r"x_1 b") == x1 * b
+        assert self._parse_expr(r"b x_1") == x1 * b
+        assert self._parse_expr(r"x_1 b") == x1 * b
         
         f, x = symbols("f x")
         
-        assert self.parser.doparse("f (x)") == f * x
-        assert self.parser.doparse("f(x)") == Function('f')(x)
+        assert self._parse_expr("f (x)") == f * x
+        assert self._parse_expr("f(x)") == Function('f')(x)
     
     def test_partial_relations(self):
         x, y = symbols("x y")
         
-        assert self.parser.doparse(r"= 25").rhs == 25
-        assert self.parser.doparse(r"x = ").lhs == x
-        assert self.parser.doparse(r"x =& ").lhs == x
-        assert self.parser.doparse(r"&=& 25").rhs == 25
+        assert self._parse_expr(r"= 25").rhs == 25
+        assert self._parse_expr(r"x = ").lhs == x
+        assert self._parse_expr(r"x =& ").lhs == x
+        assert self._parse_expr(r"&=& 25").rhs == 25
         # check if normal relations have not broken
-        assert self.parser.doparse(r"x & = & y") == Eq(x, y) 
+        assert self._parse_expr(r"x & = & y") == Eq(x, y) 
         
     def test_multi_expressions(self):
         x, y, z = symbols("x y z")
         
-        result = self.parser.doparse(r"""
+        result = self._parse_expr(r"""
             \begin{align}
             x & = 2y 5z \\
             y & = x^2 \\
@@ -158,7 +163,7 @@ class TestParse:
         assert result.get_location(2).end_line == None
 
 
-        result = self.parser.doparse(r"""
+        result = self._parse_expr(r"""
             \begin{cases}
             x
             \end{cases}
@@ -170,7 +175,7 @@ class TestParse:
         assert result.get_expr(0) == x
         assert result.get_location(0).line == 3
         
-        result = self.parser.doparse(r"""
+        result = self._parse_expr(r"""
             \begin{cases}
             x & = 2y
             \end{cases}
@@ -184,7 +189,7 @@ class TestParse:
     
 
     def test_matrix_operations(self):
-        result = self.parser.doparse(r"A A^\ast",
+        result = self._parse_expr(r"A A^\ast",
         {
             "variables": {
                 "A": r"""
@@ -206,17 +211,17 @@ i & 2 i
         s_e = Symbol(r"\pmb{M}_{some label i;j}")
         s_f = Symbol(r"\alpha_{very_{indexed_{variable}}}")
         
-        result = self.parser.doparse(r"variable + v \cdot a_1 + \sqrt{\pmb{M}_{some label i;j}^{\alpha_{very_{indexed_{variable}}}}} + \mathrm{X}^{-1}")
+        result = self._parse_expr(r"variable + v \cdot a_1 + \sqrt{\pmb{M}_{some label i;j}^{\alpha_{very_{indexed_{variable}}}}} + \mathrm{X}^{-1}")
         
         assert result == s_a + s_b * s_c + sqrt(s_e**s_f) + s_d**-1
 
     def test_symbol_definitions(self):
-        result = self.parser.doparse(r"x", { "symbols": { "x": [ "real" ] } })
+        result = self._parse_expr(r"x", { "symbols": { "x": [ "real" ] } })
         assert result == symbols("x", real=True)
         
         x = symbols("x", real=True)
         y = symbols("y", positive=True)
-        result = self.parser.doparse(r"a + b", {
+        result = self._parse_expr(r"a + b", {
             "symbols": {
                 "x": [ "real" ], "y": ["positive"]
                 },
@@ -232,22 +237,22 @@ i & 2 i
         import sympy.physics.units as u
         x, a, b = symbols('x a b')
         
-        assert self.parser.doparse(r"{a + b}^2 + {s}^2") == u.second**2 + (a + b)**2
+        assert self._parse_expr(r"{a + b}^2 + {s}^2") == u.second**2 + (a + b)**2
 
-        result = self.parser.doparse(r"{km} + \sin{x} + \frac{a}{{J}} + b")
+        result = self._parse_expr(r"{km} + \sin{x} + \frac{a}{{J}} + b")
         assert result == u.km + sin(x) + a / u.joule + b
 
     def test_hessian(self):
-        result = self.parser.doparse(r"\mathbf{H}(x^2 + y^2)")
+        result = self._parse_expr(r"\mathbf{H}(x^2 + y^2)")
         
         assert result.doit() == Matrix([[2, 0], [0, 2]])
         
     def test_jacobian(self):
-        result = self.parser.doparse(r"\mathbf{J}(\begin{bmatrix} x + y \\ x \\ y\end{bmatrix})")
+        result = self._parse_expr(r"\mathbf{J}(\begin{bmatrix} x + y \\ x \\ y\end{bmatrix})")
         
         assert result.doit() == Matrix([[1, 1], [1, 0], [0, 1]])
         
     def test_rref(self):
-        result = self.parser.doparse(r"\mathrm{rref}(\begin{bmatrix} 20 & 50 \\ 10 & 25\end{bmatrix})")
+        result = self._parse_expr(r"\mathrm{rref}(\begin{bmatrix} 20 & 50 \\ 10 & 25\end{bmatrix})")
         
         assert result == Matrix([[1, Rational(5, 2)], [0, 0]])

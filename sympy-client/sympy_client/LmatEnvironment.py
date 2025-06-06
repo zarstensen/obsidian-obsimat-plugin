@@ -12,6 +12,5 @@ class LmatEnvironment(TypedDict):
     functions: dict[str, FunctionDef]
 
     unit_system: str
-    excluded_symbols: list[str]
 
     domain: str

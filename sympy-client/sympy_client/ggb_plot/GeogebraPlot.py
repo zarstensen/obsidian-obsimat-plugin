@@ -6,9 +6,6 @@ from copy import deepcopy
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
-from sympy_client.grammar.CachedSymbolSubstitutor import CachedSymbolSubstitutor
-from sympy_client.grammar.FunctionStore import FunctionStore
-
 from sympy import *
 from sympy.core.relational import Relational
 
@@ -156,7 +153,7 @@ class GeogebraPlot:
             return expr
         
         func = self._function_store[expr]
-        self.plot_function(str(expr), func.args, func.parse_body(), visible=False)
+        self.plot_function(str(expr), func.args, func.get_body(), visible=False)
         
         return Function(str(expr))(*GeogebraPlot.AXIS_SYMBOLS[:len(func.args)])
             

@@ -116,8 +116,6 @@ export default class LatexMathPlugin extends Plugin {
         finishRenderMath();
     }
 
-    // download all required assets for spawning a sympy client,
-    // and spawns it at the given plugin_dir.
     private async spawnSympyClient(plugin_dir: string) {
         if(!(this.app.vault.adapter instanceof FileSystemAdapter)) {
             throw new Error(`Expected FileSystemAdapter, got ${this.app.vault.adapter}`);

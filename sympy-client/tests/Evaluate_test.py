@@ -4,12 +4,12 @@ from sympy_client.command_handlers.EvalfHandler import *
 from sympy_client.command_handlers.EvalHandler import *
 from sympy_client.command_handlers.ExpandHandler import *
 from sympy_client.command_handlers.FactorHandler import *
-from sympy_client.grammar.LmatLatexParser import LmatLatexParser
+from sympy_client.grammar.LatexParser import LatexParser
 
 
 ## Tests the evaluate mode.
 class TestEvaluate:
-    parser = LmatLatexParser()
+    parser = LatexParser()
     
     def test_simple_evaluate(self):
         handler = EvalHandler(self.parser)
@@ -236,12 +236,15 @@ class TestEvaluate:
                 "functions": {
                     "f": {
                         "args": ["x", "y"],
-                        "expr": "2x + y^2"
-                    }
+                        "expr": "2x + y^2 + C"
+                    },
+                },
+                "variables": {
+                    "C": "-4"
                 }
             }
         })
-        assert result.sympy_expr == 54
+        assert result.sympy_expr == 50
 
         # Function with arg name defined as variables
         result = handler.handle({
@@ -340,5 +343,11 @@ class TestEvaluate:
             [0,                 cos(y),         0],
             [-sin(x) * sin(y),  cos(x) * cos(y),0]
         ])
+    
+    def test_assumptions(self):
+        handler = EvalHandler(self.parser)
+        x = symbols('x', real=True)
+        result = handler.handle({ 'expression': r"\bar x x", 'environment': { 'symbols': {'x': ['real']} }})
+        assert result.sympy_expr == x**2
     
     # TODO: add gradient test (it is already implicitly tested in test_jacobi so not high priority)

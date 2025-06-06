@@ -3,13 +3,18 @@ from typing import Iterator
 import sympy
 from lark import Token, Transformer, v_args
 from sympy import *
+from sympy.core.function import AppliedUndef
 from sympy.tensor.array import derive_by_array
+from sympy_client.grammar.SympyParser import DefinitionStore
 
 
 # The FucntionsTransformer holds the implementation of various mathematical function rules,
 # defined in the latex math grammar.
 @v_args(inline=True)
 class FunctionsTransformer(Transformer):
+    
+    def __init__(self, definitions_store: DefinitionStore):
+        self.__definitions_store = definitions_store
     
     def trig_function(self, func_token: Token, exponent: Expr | None, arg: Expr) -> Expr:
         func_type = func_token.type.replace('FUNC_', '').lower()
@@ -110,12 +115,15 @@ class FunctionsTransformer(Transformer):
         return self.derivative_symbols_first(symbols, expr)
     
     def derivative_prime(self, expr: Expr, primes: Token):
-        if expr in self._function_store:
-            func = self._function_store[expr]
-            symbols = func.args
-            expr = func.parse_body()
-        else:
-            symbols = expr.free_symbols
+        
+        symbols = expr.free_symbols
+        
+        if isinstance(expr, AppliedUndef):
+            func_def = self.__definitions_store.get_function_definition(expr.func)
+        
+            if func_def is not None:
+                symbols = func_def.args
+                expr = func_def.get_body()
         
         if len(symbols) == 0:
             return S.Zero
@@ -185,32 +193,38 @@ class FunctionsTransformer(Transformer):
     # Linear Alg Specific Implementations
     
     def gradient(self, exponent: Expr | None, expr: Expr) -> Expr:
-        if expr in self._function_store:
-            func = self._function_store[expr]
-            symbols = func.args
-            expr = func.parse_body()
-        else:
-            symbols = list(sorted(expr.free_symbols, key=str))
+        symbols = list(sorted(expr.free_symbols, key=str))
+        
+        if isinstance(expr, Symbol):
+            func_def = self.__definitions_store.get_function_definition(expr.func)
+            
+            if func_def is not None:
+                symbols = func_def.args
+                expr = func_def.get_body()
         
         return self._try_raise_exponent(Matrix([derive_by_array(expr, symbols)]), exponent)
 
     def hessian(self, exponent: Expr | None, expr: Expr) -> Expr:
-        if expr in self._function_store:
-            func = self._function_store[expr]
-            symbols = func.args
-            expr = func.parse_body()
-        else:
-            symbols = list(sorted(expr.free_symbols, key=str))
+        symbols = list(sorted(expr.free_symbols, key=str))
+        
+        if isinstance(expr, Symbol):
+            func_def = self.__definitions_store.get_function_definition(self.__definitions_store.deserialize_function(str(expr)))
+        
+            if func_def is not None:
+                symbols = func_def.args
+                expr = func_def.get_body()
         
         return self._try_raise_exponent(hessian(expr, symbols), exponent)
         
     def jacobian(self, exponent: Expr | None, matrix: Expr) -> Expr:
-        if matrix in self._function_store:
-            func = self._function_store[matrix]
-            symbols = func.args
-            matrix = func.parse_body() 
-        else:
-            symbols = list(sorted(matrix.free_symbols, key=str))
+        symbols = list(sorted(matrix.free_symbols, key=str))
+        
+        if isinstance(matrix, Symbol):
+            func_def = self.__definitions_store.get_function_definition(self.__definitions_store.deserialize_function(str(matrix)))
+        
+            if func_def is not None:
+                symbols = func_def.args
+                matrix = func_def.get_body()
         
         matrix = self._ensure_matrix(matrix)
             

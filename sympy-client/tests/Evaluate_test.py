@@ -195,7 +195,7 @@ class TestEvaluate:
         })
         
         x, y = symbols("x y")
-        assert result.sympy_expr == Matrix([[y * (2 * x + y), x * (2 * y + x)]])
+        assert result.sympy_expr == Matrix([y * (2 * x + y), x * (2 * y + x)])
     
     def test_evalf(self):
         handler = EvalfHandler(self.parser)

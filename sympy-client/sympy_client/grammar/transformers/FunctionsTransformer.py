@@ -196,13 +196,13 @@ class FunctionsTransformer(Transformer):
         symbols = list(sorted(expr.free_symbols, key=str))
         
         if isinstance(expr, Symbol):
-            func_def = self.__definitions_store.get_function_definition(expr.func)
+            func_def = self.__definitions_store.get_function_definition(self.__definitions_store.deserialize_function(str(expr)))
             
             if func_def is not None:
                 symbols = func_def.args
                 expr = func_def.get_body()
         
-        return self._try_raise_exponent(Matrix([derive_by_array(expr, symbols)]), exponent)
+        return self._try_raise_exponent(Matrix(derive_by_array(expr, symbols)), exponent)
 
     def hessian(self, exponent: Expr | None, expr: Expr) -> Expr:
         symbols = list(sorted(expr.free_symbols, key=str))

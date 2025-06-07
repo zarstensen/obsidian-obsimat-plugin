@@ -73,6 +73,12 @@ class FunctionsTransformer(Transformer):
 
     def factorial(self, arg: Expr) -> Expr:
         return factorial(arg)
+    
+    def upper_gamma(self, s: Expr, x: Expr = 0) -> Expr:
+        return uppergamma(s, x)
+    
+    def lower_gamma(self, s: Expr, x: Expr) -> Expr:
+        return lowergamma(s, x)
 
     def limit(self, symbol: Expr, approach_value: Expr, direction: str | None, arg: Expr) -> Expr:
         # default direction of limits is both positive and negative.
@@ -240,6 +246,17 @@ class FunctionsTransformer(Transformer):
             gradients.append(Matrix([derive_by_array(item, symbols)]))
         
         return self._try_raise_exponent(Matrix.vstack(*gradients), exponent)
+    
+    # Combinatorial Functions
+    
+    def permutations(self, n: Expr, k: Expr):
+        return Mul(factorial(n), factorial((n - k)) ** S.NegativeOne)
+    
+    def combinations(self, n: Expr, k: Expr):
+        return binomial(n, k)
+    
+    def derangements(self, n: Expr):
+        return (factorial(n) - lowergamma(n + 1, -1)) / E
     
     # Helper Methods
     

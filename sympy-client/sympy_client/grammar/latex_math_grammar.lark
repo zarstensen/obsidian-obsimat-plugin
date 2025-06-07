@@ -98,7 +98,15 @@ _function: _delimited_function
     | derivative
     | derivative_prime
 
-_named_function: undefined_function | trig_function | _log | exponential | limit | _filter_functions | _matrix_functions
+_named_function: undefined_function
+    | trig_function
+    | _log
+    | exponential
+    | limit
+    | upper_gamma | lower_gamma
+    | _filter_functions
+    | _matrix_functions
+    | _combinatorial_functions
 
 // this rule matches a singular argument to a function.
 // if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
@@ -148,6 +156,9 @@ log_explicit_base: FUNC_LOG _UNDERSCORE function_special_arg [_CARET function_sp
 exponential: _func_template{_FUNC_EXP}
 
 factorial: _factor_no_unit _BANG
+
+upper_gamma: _FUNC_UPPER_GAMMA expression (_COMMA expression)? _R_PAREN
+lower_gamma: _FUNC_LOWER_GAMMA expression _COMMA expression _R_PAREN
 
 derivative_prime: _factor_no_unit PRIMES
 
@@ -239,6 +250,14 @@ gradient: _func_template{_FUNC_GRADIENT}
 hessian: _func_template{_FUNC_HESSIAN}
 jacobian: _func_template{_FUNC_JACOBIAN}
 
+// ======== Combinatorial functions ========
+
+_combinatorial_functions: permutations | combinations | derangements
+
+permutations: _FUNC_PERMUTATIONS expression _COMMA expression _R_PAREN
+combinations: _FUNC_COMBINATIONS expression _COMMA expression _R_PAREN
+derangements: _FUNC_DERANGEMENTS expression _R_PAREN
+
 // ======== System of relations ========
 
 %declare _EXPR_DELIM
@@ -268,7 +287,8 @@ _WS: /[\s\t\n\r]+/
 %ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
 %ignore "\\*" | "\\-" | "\\." | "\\/" | "\\(" | "\\=" | "\\middle"
 
-%ignore "\\left" | "\\right"
+_LR_FORMAT: "\\left" | "\\right"
+%ignore _LR_FORMAT
 %ignore "\\limits" | "\\nolimits"
 %ignore "\\displaystyle"
 
@@ -359,6 +379,8 @@ FUNC_ACOSH: "\\arcosh"
 FUNC_ATANH: "\\artanh"
 
 _FUNC_SQRT: "\\sqrt"
+_FUNC_UPPER_GAMMA.1: "\\Gamma" _LR_FORMAT? _L_PAREN
+_FUNC_LOWER_GAMMA.1: "\\gamma" _LR_FORMAT? _L_PAREN
 
 // matrix functions
 
@@ -373,8 +395,16 @@ _FUNC_GRADIENT: "\\nabla"
 _FUNC_HESSIAN: CMD_MATRIX_FORMAT _WS? _L_BRACE _WS? "H" _WS? _R_BRACE
 _FUNC_JACOBIAN: CMD_MATRIX_FORMAT _WS? _L_BRACE _WS? "J" _WS? _R_BRACE
 
+// combinatorial functions.
+
+// all combinatorial functions should have to be called with their arguments wrapped in parenthesees,
+// therefore they are defined a bit differently here.
+_FUNC_PERMUTATIONS.1: "P" _LR_FORMAT? _L_PAREN
+_FUNC_COMBINATIONS.1: "C" _LR_FORMAT? _L_PAREN
+_FUNC_DERANGEMENTS.1: "D" _LR_FORMAT? _L_PAREN
+
 // TODO: use a bit more elaborate regex here, so more complex strings are allowed in the index.
-UNDEFINED_FUNC_START: (SINGLE_LETTER_SYMBOL|MULTI_LETTER_SYMBOL) (_WS? _UNDERSCORE _WS? _L_BRACE /\s*[^{}]+\s*/ _R_BRACE)? _L_PAREN
+UNDEFINED_FUNC_START: (SINGLE_LETTER_SYMBOL|MULTI_LETTER_SYMBOL) (_WS? _UNDERSCORE _WS? _L_BRACE /\s*[^{}]+\s*/ _R_BRACE)? _LR_FORMAT? _L_PAREN
 
 // mathematical constants
 CONST_PI: "\\pi"
@@ -438,7 +468,6 @@ ADJOINT_TRANSPOSE_EXPONENT: /(\\prime|\\ast|'|\*)/
 ADJOINT_TRANSPOSE_EXPONENTS: /{(\\prime|\\ast|'|\*|\s)+}/
 
 CMD_BEGIN: "\\begin" _WS? _L_BRACE
-// TODO: this is not going to be used?
 CMD_END: "\\end" _WS? _L_BRACE
 
 // matrices

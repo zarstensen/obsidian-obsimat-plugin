@@ -349,5 +349,36 @@ class TestEvaluate:
         x = symbols('x', real=True)
         result = handler.handle({ 'expression': r"\bar x x", 'environment': { 'symbols': {'x': ['real']} }})
         assert result.sympy_expr == x**2
+        
+    def test_combinatorial(self):
+        handler = EvalHandler(self.parser)
+        
+        
+        result = handler.handle({ 'expression': r"P(10, 5)", 'environment': { } })
+    
+        assert result.sympy_expr == 30240
+        
+        n, c = symbols('n C')
+        result = handler.handle({'expression': r"C (2 + 3) + C(n, 42)", 'environment': { } })
+        
+        assert result.sympy_expr == c * 5 + binomial(n, 42)
+        
+        result = handler.handle({'expression': r"D(6)", 'environment': { } })
+        
+        assert result.sympy_expr == 265
+        
+    def test_gamma(self):
+        handler = EvalHandler(self.parser)
+        
+        result = handler.handle({ 'expression': r"\frac{6!}{e} - \frac{\gamma\left(6 + 1, -1\right)}{e}", 'environment': { } })
+        
+        assert result.sympy_expr == 265
+        
+        result = handler.handle({ 'expression': r"\Gamma(25 + 1)", 'environment': { } })
+        assert result.sympy_expr == factorial(25)
+        
+        
+        result = handler.handle({ 'expression': r"\Gamma(4, 5)", 'environment': { } })
+        assert result.sympy_expr == 236 / exp(5)
     
     # TODO: add gradient test (it is already implicitly tested in test_jacobi so not high priority)

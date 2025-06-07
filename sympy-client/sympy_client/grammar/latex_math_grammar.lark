@@ -403,7 +403,7 @@ _UNDERSCORE: "_"
 EQUAL: "="
 NOT_EQUAL: "\\neq" | "\\ne"
 LT: "<"
-LTE: LT EQUAL | "\\leq" | "\\leqslant" // | "\\le" removed because it collides with \\left
+LTE: LT EQUAL | "\\leq" | "\\leqslant" | /\\le(?!ft)/ // do not match \left as \le f t
 GT: ">"
 GTE: GT EQUAL | "\\geq" | "\\ge" | "\\geqslant"
 

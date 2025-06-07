@@ -18,8 +18,7 @@ Whilst this document should provide a good overview of the parser, one can alway
 
 ## Expression Structure
 
-The **Latex Math** parser is able to parse most mathematical expressions and optionally relations (*e.g.* `>`, `<`, `=`)[^le-not-supported] between expressions.
-[^le-not-supported]: `\le` is not recognized by the parser, as it collides with `\left`. Please use `\leq` instead.
+The **Latex Math** parser is able to parse most mathematical expressions and optionally relations (*e.g.* `>`, `<`, `=`) between expressions.
 
 An expression is any series of mathematical terms separated by `+` or `-` signs.
 Terms consists of a series of factors separated by a multiplication sign (`*`, `\cdot`, `\times`) or a division sign (`/`), where a factor is one of the following:

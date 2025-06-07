@@ -225,7 +225,7 @@ RELATION_EXPRESSION_PAIRS = [
     (r"x > y", Gt(x, y)),
     (r"x \leq y", Le(x, y)),
     (r"x \geq y", Ge(x, y)),
-    (r"x <= y", Le(x, y)),
+    (r"x \le y", Le(x, y)),
     (r"x \ge y", Ge(x, y)),
     (r"x < y", StrictLessThan(x, y)),
     (r"x \leq y", LessThan(x, y)),

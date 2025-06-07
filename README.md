@@ -19,7 +19,7 @@ In general, all demo GIFs will make use of the [recommended hotkeys](#command-li
 
 ## Usage
 
-Start out by placing the cursor inside any math block. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)). **Latex Math** will now parse the latex math, evaluate the equation, and insert the result at the end of the math block.
+Start out by placing the cursor inside any math block. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)). **Latex Math** will now parse the latex math block, evaluate the equation, and insert the result at the end of the math block.
 
 Take a look at the [command list](#command-list) a brief overview of what this plugin can do, or go look at the [features](#features) list, for a more in depth walkthrough of this plugin's advanced features.
 

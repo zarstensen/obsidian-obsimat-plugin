@@ -7,16 +7,16 @@
 
 _rel_op: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
 _align: _ALIGN | _LATEX_NEWLINE
-relation: (_align? _rel_op)? expression (_rel_op expression)* (_rel_op _align?)?
+relation: (_align* _rel_op)? expression (_rel_op expression)* (_rel_op _align*)?
 
 // an expression is a sum of terms
-expression: (_align? (ADD|SUB))? term ((ADD|SUB) term)*
+expression: (_align* (ADD|SUB))? term ((ADD|SUB) term)*
 
 // a term is a series of products of factors separated by product operators.
-term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (_align? (ADD|SUB))? implicit_multiplication)*
+term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (_align* (ADD|SUB))? implicit_multiplication)*
 
 // factors with no operator between them are implicitly multiplied together.
-?implicit_multiplication: _align? _factor (_align? _factor)* _align?
+?implicit_multiplication: _align* _factor (_align* _factor)* _align*
 
 // a factor is either a number, a constant, a symbol, or a function.
 // here exponentiation, fractions, binomials are loosly seen as functions.

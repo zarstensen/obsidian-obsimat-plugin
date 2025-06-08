@@ -85,9 +85,20 @@ class FunctionsTransformer(Transformer):
         direction = '+-' if direction is None else direction
         return limit(arg, symbol, approach_value, direction)
     
+    def real_part(self, exponent: Expr | None, val: Expr) -> Expr:
+        return self._try_raise_exponent(re(val), exponent)
+    
+    def imaginary_part(self, exponent: Expr | None, val: Expr) -> Expr:
+        return self._try_raise_exponent(im(val), exponent)
+    
+    def argument(self, exponent: Expr | None, val: Expr) -> Expr:
+        return self._try_raise_exponent(arg(val), exponent)
 
-    def sign(self, sign_token: Token) -> str:
-        return sign_token.value
+    def sign(self, exponent: Expr | None, val: Expr) -> Expr:
+        return self._try_raise_exponent(sign(val), exponent)
+
+    def limit_direction(self, direction_token: Token) -> str:
+        return direction_token.value
 
     def abs(self, arg: Expr) -> Expr:
         # if arg is a matrix, this notation actually means taking its determinant.

@@ -76,6 +76,10 @@ Note that a *mathematical function* also encompasses concepts not normally thoug
 | hyperbolic arcus cosine  | `\arcosh`                                                                              |
 | hyperbolic arcus tangent | `\artanh`                                                                              |
 | log                      | `\log[base]?` / `\ln` / `\lg`                                                          |
+| real part                | `\Re .` / `\mathrm{Re} .`                                                              |
+| imaginary part           | `\Im .` / `\mathrm{Im} .`                                                              |
+| argument                 | `\arg .`                                                                               |
+| sign                     | `\mathrm{sgn} .` / `\operatorname{sgn} .`                                              |
 | exponential              | `\exp`                                                                                 |
 | factorial                | `!`                                                                                    |
 | limit                    | `\lim_{ . \to . }`                                                                     |

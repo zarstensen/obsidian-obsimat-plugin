@@ -97,6 +97,7 @@ _function: _delimited_function
     | factorial
     | derivative
     | derivative_prime
+    | modulo
 
 _named_function: undefined_function
     | trig_function
@@ -107,6 +108,7 @@ _named_function: undefined_function
     | _filter_functions
     | _matrix_functions
     | _combinatorial_functions
+    | _divisibility_functions
 
 // this rule matches a singular argument to a function.
 // if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
@@ -258,6 +260,14 @@ permutations: _FUNC_PERMUTATIONS expression _COMMA expression _R_PAREN
 combinations: _FUNC_COMBINATIONS expression _COMMA expression _R_PAREN
 derangements: _FUNC_DERANGEMENTS expression _R_PAREN
 
+// ======== Divisibility functions ========
+
+_divisibility_functions: gcd | lcm 
+
+gcd: _FUNC_GCD _L_PAREN expression _COMMA expression _R_PAREN
+lcm: _FUNC_LCM _L_PAREN expression _COMMA expression _R_PAREN
+modulo: _factor_no_unit _FUNC_MOD _factor_no_unit
+
 // ======== System of relations ========
 
 %declare _EXPR_DELIM
@@ -402,6 +412,12 @@ _FUNC_JACOBIAN: CMD_MATRIX_FORMAT _WS? _L_BRACE _WS? "J" _WS? _R_BRACE
 _FUNC_PERMUTATIONS.1: "P" _LR_FORMAT? _L_PAREN
 _FUNC_COMBINATIONS.1: "C" _LR_FORMAT? _L_PAREN
 _FUNC_DERANGEMENTS.1: "D" _LR_FORMAT? _L_PAREN
+
+// divisibility functions.
+
+_FUNC_GCD: "\\gcd"
+_FUNC_LCM: CMD_OPERATOR _WS? _L_BRACE _WS? "lcm" _WS? _R_BRACE
+_FUNC_MOD: "\\mod"
 
 // TODO: use a bit more elaborate regex here, so more complex strings are allowed in the index.
 UNDEFINED_FUNC_START: (SINGLE_LETTER_SYMBOL|MULTI_LETTER_SYMBOL) (_WS? _UNDERSCORE _WS? _L_BRACE /\s*[^{}]+\s*/ _R_BRACE)? _LR_FORMAT? _L_PAREN

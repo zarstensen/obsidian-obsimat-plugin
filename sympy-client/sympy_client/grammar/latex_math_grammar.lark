@@ -104,6 +104,7 @@ _named_function: undefined_function
     | _log
     | exponential
     | limit
+    | real_part | imaginary_part | argument | sign
     | upper_gamma | lower_gamma
     | _filter_functions
     | _matrix_functions
@@ -155,6 +156,13 @@ log_implicit_base: _func_template{FUNC_LOG}
 log_explicit_base: FUNC_LOG _UNDERSCORE function_special_arg [_CARET function_special_arg] _factor_no_unit
     | FUNC_LOG _CARET function_special_arg _UNDERSCORE function_special_arg _factor_no_unit -> log_explicit_base_exponent_first
 
+real_part: _func_template{_FUNC_RE}
+imaginary_part: _func_template{_FUNC_IM}
+argument: _func_template{_FUNC_ARG}
+sign: _func_template{_FUNC_SGN}
+
+
+
 exponential: _func_template{_FUNC_EXP}
 
 factorial: _factor_no_unit _BANG
@@ -164,11 +172,11 @@ lower_gamma: _FUNC_LOWER_GAMMA expression _COMMA expression _R_PAREN
 
 derivative_prime: _factor_no_unit PRIMES
 
-sign: _L_BRACE (ADD|SUB) _R_BRACE
+limit_direction: _L_BRACE (ADD|SUB) _R_BRACE
     | ADD
     | SUB
 
-limit: _FUNC_LIMIT _UNDERSCORE _L_BRACE symbol _LIM_APPROACH_SYMBOL _base_factor [_CARET sign] _R_BRACE _factor_no_unit
+limit: _FUNC_LIMIT _UNDERSCORE _L_BRACE symbol _LIM_APPROACH_SYMBOL _base_factor [_CARET limit_direction] _R_BRACE _factor_no_unit
 
 _series_template_start_iter_first{series_name}: series_name _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE _CARET function_special_arg _factor_no_unit
 _series_template_end_iter_first{series_name}: series_name _CARET function_special_arg _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE _factor_no_unit
@@ -354,6 +362,10 @@ FUNC_LG:   "\\lg"
 _FUNC_MIN: "\\min"
 _FUNC_MAX: "\\max"
 _FUNC_CONJUGATE: _CMD_OVERLINE | _CMD_BAR
+_FUNC_RE: "\\Re" | CMD_OPERATOR _WS? _L_BRACE _WS? "Re" _WS? _R_BRACE
+_FUNC_IM: "\\Im" | CMD_OPERATOR _WS? _L_BRACE _WS? "Im" _WS? _R_BRACE
+_FUNC_ARG: "\\arg"
+_FUNC_SGN: CMD_OPERATOR _WS? _L_BRACE _WS? "sgn" _WS? _R_BRACE
 
 // multiarg functions
 

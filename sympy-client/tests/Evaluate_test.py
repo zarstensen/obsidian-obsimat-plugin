@@ -397,5 +397,21 @@ class TestEvaluate:
         
         result = handler.handle({ 'expression': r"\operatorname{lcm}(6, 21)", 'environment': { } })
         assert result.sympy_expr == 42
+    
+    def test_complex(self):
+        handler = EvalHandler(self.parser)
         
+        result = handler.handle({ 'expression': r"\Re (5 + 7 i)", 'environment': { } })
+        assert result.sympy_expr == 5
+        
+        result = handler.handle({ 'expression': r"\operatorname{Im} (5 + 7 i)", 'environment': { } })
+        assert result.sympy_expr == 7
+        
+        result = handler.handle({ 'expression': r"\arg e^{i \pi / 2}", 'environment': { } })
+        assert result.sympy_expr == pi/2
+        
+        result = handler.handle({ 'expression': r"\mathrm{sgn}(-256)", 'environment': { } })
+        
+        assert result.sympy_expr == -1    
+    
     # TODO: add gradient test (it is already implicitly tested in test_jacobi so not high priority)

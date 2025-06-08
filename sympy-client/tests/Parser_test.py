@@ -23,7 +23,14 @@ class TestParse:
         assert self._parse_expr(r'\sin^y x') == sin(x)**y
         assert simplify(self._parse_expr(r'\frac{\sin(abc)}{\cos {abc}}')) == tan(abc)
         assert self._parse_expr(r'\arctan{abc}') == atan(abc)
-        assert self._parse_expr(r'\arcosh y') == acosh(y)
+        assert self._parse_expr(r'\mathrm{arcosh} y') == acosh(y)
+        assert self._parse_expr(r'\operatorname{arcosh} y') == acosh(y)
+        assert self._parse_expr(r'\mathrm{sech} y') == sech(y)
+        assert self._parse_expr(r'\mathrm{arsech} y') == asech(y)
+        assert self._parse_expr(r'\mathrm{csch} y') == csch(y)
+        assert self._parse_expr(r'\mathrm{arcsch} y') == acsch(y)
+        assert self._parse_expr(r'\coth y') == coth(y)
+        assert self._parse_expr(r'\mathrm{arcoth} y') == acoth(y)
         
 
     def test_relations(self):

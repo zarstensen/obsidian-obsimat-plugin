@@ -140,10 +140,16 @@ trig_function: _func_template{FUNC_SIN}
     | _func_template{FUNC_ACOT}
     | _func_template{FUNC_SINH}
     | _func_template{FUNC_COSH}
+    | _func_template{FUNC_CSCH}
+    | _func_template{FUNC_SECH}
+    | _func_template{FUNC_COTH}
     | _func_template{FUNC_TANH}
     | _func_template{FUNC_ASINH}
     | _func_template{FUNC_ACOSH}
     | _func_template{FUNC_ATANH}
+    | _func_template{FUNC_ACSCH}
+    | _func_template{FUNC_ASECH}
+    | _func_template{FUNC_ACOTH}
 
 _log: log_implicit_base
     | log_explicit_base
@@ -388,17 +394,23 @@ FUNC_COT:  "\\cot"
 FUNC_ASIN: "\\arcsin"
 FUNC_ACOS: "\\arccos"
 FUNC_ATAN: "\\arctan"
-FUNC_ACSC: "\\arccsc"
-FUNC_ASEC: "\\arcsec"
-FUNC_ACOT: "\\arccot"
+FUNC_ACSC: CMD_OPERATOR _WS? _L_BRACE _WS? "arccsc" _WS? _R_BRACE
+FUNC_ASEC: CMD_OPERATOR _WS? _L_BRACE _WS? "arcsec" _WS? _R_BRACE
+FUNC_ACOT: CMD_OPERATOR _WS? _L_BRACE _WS? "arccot" _WS? _R_BRACE
 
 // hyperbolic trigonometric functions
 FUNC_SINH: "\\sinh"
 FUNC_COSH: "\\cosh"
 FUNC_TANH: "\\tanh"
-FUNC_ASINH: "\\arsinh"
-FUNC_ACOSH: "\\arcosh"
-FUNC_ATANH: "\\artanh"
+FUNC_CSCH: CMD_OPERATOR _WS? _L_BRACE _WS? "csch" _WS? _R_BRACE
+FUNC_SECH: CMD_OPERATOR _WS? _L_BRACE _WS? "sech" _WS? _R_BRACE
+FUNC_COTH: "\\coth"
+FUNC_ASINH: CMD_OPERATOR _WS? _L_BRACE _WS? "arsinh" _WS? _R_BRACE
+FUNC_ACOSH: CMD_OPERATOR _WS? _L_BRACE _WS? "arcosh" _WS? _R_BRACE
+FUNC_ATANH: CMD_OPERATOR _WS? _L_BRACE _WS? "artanh" _WS? _R_BRACE
+FUNC_ACSCH: CMD_OPERATOR _WS? _L_BRACE _WS? "arcsch" _WS? _R_BRACE
+FUNC_ASECH: CMD_OPERATOR _WS? _L_BRACE _WS? "arsech" _WS? _R_BRACE
+FUNC_ACOTH: CMD_OPERATOR _WS? _L_BRACE _WS? "arcoth" _WS? _R_BRACE
 
 _FUNC_SQRT: "\\sqrt"
 _FUNC_UPPER_GAMMA.1: "\\Gamma" _LR_FORMAT? _L_PAREN

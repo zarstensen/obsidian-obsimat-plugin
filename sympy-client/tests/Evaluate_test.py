@@ -381,4 +381,21 @@ class TestEvaluate:
         result = handler.handle({ 'expression': r"\Gamma(4, 5)", 'environment': { } })
         assert result.sympy_expr == 236 / exp(5)
     
+    def test_divisibility(self):
+        handler = EvalHandler(self.parser)
+        
+        result = handler.handle({ 'expression': r"{3 + 5^2} \mod 2", 'environment': { } })
+        assert result.sympy_expr == 0
+        
+        a, b, m = symbols('a b m')
+        result = handler.handle({ 'expression': r"(a \mod m + b \mod m) \mod m", 'environment': { } })
+        assert result.sympy_expr == Mod(a + b, m)
+        
+        result = handler.handle({ 'expression': r"\gcd(8, 12)", 'environment': { } })
+        
+        assert result.sympy_expr == 4
+        
+        result = handler.handle({ 'expression': r"\operatorname{lcm}(6, 21)", 'environment': { } })
+        assert result.sympy_expr == 42
+        
     # TODO: add gradient test (it is already implicitly tested in test_jacobi so not high priority)

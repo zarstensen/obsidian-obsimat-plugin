@@ -258,6 +258,18 @@ class FunctionsTransformer(Transformer):
     def derangements(self, n: Expr):
         return (factorial(n) - lowergamma(n + 1, -1)) / E
     
+    # Divisibility Functions
+    
+    def gcd(self, a: Expr, b: Expr) -> Expr:
+        return gcd(a, b)
+    
+    
+    def lcm(self, a: Expr, b: Expr) -> Expr:
+        return lcm(a, b)
+    
+    def modulo(self, a: Expr, b: Expr) -> Expr:
+        return Mod(a, b)
+    
     # Helper Methods
     
     @v_args(inline=False)

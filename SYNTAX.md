@@ -102,6 +102,12 @@ Note that a *mathematical function* also encompasses concepts not normally thoug
 | gradient                 | `\nabla ...`                                                                           |
 | hessian                  | `\mathbf{H} ...`                                                                       |
 | Jacobian                 | `\mathbf{J} ...`                                                                       |
+| permutations             | `P( ... ,  ... )`                                                                      |
+| combinations             | `C( ... ,  ... )`                                                                      |
+| derangements             | `D( ... )`                                                                             |
+| greatest common divisor  | `\gcd( ... ,  ... )`                                                                   |
+| least common multiple    | `\mathrm{lcm}( ... ,  ... )` / `\operatorname{lcm}( ... ,  ... )`                      |
+| modulo                   | `. \mod .`                                                                             |
 
 ## Mathematical Constants
 

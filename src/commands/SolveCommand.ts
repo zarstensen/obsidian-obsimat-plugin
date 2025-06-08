@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Notice } from "obsidian";
-import { SympyEvaluator } from "src/SympyEvaluator";
+import { SympyServer } from "src/SympyServer";
 import { ILatexMathCommand } from "./ILatexMathCommand";
 import { EquationExtractor } from "src/EquationExtractor";
 import { LmatEnvironment } from "src/LmatEnvironment";
@@ -9,7 +9,7 @@ import { formatLatex } from "src/FormatLatex";
 export class SolveCommand implements ILatexMathCommand {
     readonly id: string = 'solve-latex-expression';
 
-    async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
+    async functionCallback(evaluator: SympyServer, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
         // Extract the equation to solve
         const equation = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor);
 

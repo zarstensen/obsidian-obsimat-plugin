@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView } from "obsidian";
-import { SympyEvaluator } from "src/SympyEvaluator";
+import { SympyServer } from "src/SympyServer";
 import { EvaluateCommand } from "./EvaluateCommand";
 import { UnitConvertModeModal } from "src/UnitConvertModeModal";
 
@@ -8,7 +8,7 @@ export class UnitConvertCommand extends EvaluateCommand {
         super('convert-units');
     }
     
-    public override async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
+    public override async functionCallback(evaluator: SympyServer, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
         const modal = new UnitConvertModeModal(app);
         modal.open();
 

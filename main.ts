@@ -1,5 +1,5 @@
 import { FileSystemAdapter, finishRenderMath, MarkdownPostProcessorContext, MarkdownView, Notice, Plugin, renderMath } from 'obsidian';
-import { SympyEvaluator } from 'src/SympyEvaluator';
+import { SympyServer } from 'src/SympyServer';
 import { LmatEnvironment } from 'src/LmatEnvironment';
 import { ExecutableSpawner, SourceCodeSpawner } from 'src/SympyClientSpawner';
 import { LatexMathSettingsTab } from 'src/LatexMathSettingsTab';
@@ -34,7 +34,7 @@ export default class LatexMathPlugin extends Plugin {
             return;
         }
 
-        this.sympy_evaluator = new SympyEvaluator();
+        this.sympy_evaluator = new SympyServer();
 
         this.sympy_evaluator.onError((error) => {
             // limit error message to 4 lines,
@@ -131,6 +131,6 @@ export default class LatexMathPlugin extends Plugin {
         await this.sympy_evaluator.initializeAsync(sympy_client_spawner);
     }
 
-    private sympy_evaluator: SympyEvaluator;
+    private sympy_evaluator: SympyServer;
     private spawn_sympy_client_promise: Promise<void>;
 }

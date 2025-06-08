@@ -4,12 +4,12 @@ import { ChildProcessWithoutNullStreams } from 'child_process';
 import { SympyClientSpawner } from './SympyClientSpawner';
 import { assert } from 'console';
 
-// The PythonEvalServer class manages a connection as well as message encoding and handling, with an SympyEvaluator script instance.
+// The SympyServer class manages a connection as well as message encoding and handling, with an SympyClient script instance.
 // Also manages the python process itself.
-export class SympyEvaluator {
-    // Start the SympyEvaluator python process, and establish an connection to it.
+export class SympyServer {
+    // Start the SympyClient python process, and establish an connection to it.
     // vault_dir: the directory of the vault, which thsi plugin is installed in.
-    // python_exec: the python executable to use to start the SympyEvaluator process.
+    // python_exec: the python executable to use to start the SympyClient process.
     public async initializeAsync(sympy_client_spawner: SympyClientSpawner): Promise<void> {
         // Start by setting up the web socket server, so we can get a port to give to the python program.
         const server_port = await getPort();
@@ -50,18 +50,18 @@ export class SympyEvaluator {
     }
 
     // Assign an error callback handler.
-    // This callback is called any time an error message is received from the SympyEvaluator process.
+    // This callback is called any time an error message is received from the SympyClient process.
     public onError(callback: (error: string) => void): void {
         this.error_callback = callback;
     }
 
-    // Send a message to the SympyEvaluator process.
+    // Send a message to the SympyClient process.
     public async send(mode: string, data: unknown): Promise<void> {
         await this.initialized_promise;
         this.ws_python.send(mode + "|" + JSON.stringify(data));
     }
 
-    // Receive a result from the SympyEvaluator process.
+    // Receive a result from the SympyClient process.
     // Returns a promise that resolves to the result object, parsed from the received json payload.
     public async receive(): Promise<any> {
         return new Promise((resolve, reject) => {

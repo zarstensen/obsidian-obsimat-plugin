@@ -1,5 +1,5 @@
 import { App, Editor, EditorPosition, MarkdownView, Notice } from "obsidian";
-import { SympyEvaluator } from "src/SympyEvaluator";
+import { SympyServer } from "src/SympyServer";
 import { ILatexMathCommand } from "./ILatexMathCommand";
 import { EquationExtractor } from "src/EquationExtractor";
 import { LmatEnvironment } from "src/LmatEnvironment";
@@ -13,19 +13,18 @@ export class EvaluateCommand implements ILatexMathCommand {
         this.evaluate_mode = evaluate_mode;
     }
     
-    public async functionCallback(evaluator: SympyEvaluator, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
+    public async functionCallback(evaluator: SympyServer, app: App, editor: Editor, view: MarkdownView, message: Record<string, any> = {}): Promise<void> {
                 
-        let equation: { from: number, to: number, contents: string } | null = null;
-        
-        // Extract equation to evaluate
-        if(editor.getSelection().length <= 0) {
-            equation = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor);
-        } else {
+        let equation: { from: number, to: number, contents: string, is_multiline: boolean } | null
+                        = EquationExtractor.extractEquation(editor.posToOffset(editor.getCursor()), editor);
+
+        if(editor.getSelection().length > 0) {
             equation = {
-              from: editor.posToOffset(editor.getCursor('from')),
-              to: editor.posToOffset(editor.getCursor('to')),
-              contents: editor.getSelection()  
-            } ;
+                from: editor.posToOffset(editor.getCursor('from')),
+                to: editor.posToOffset(editor.getCursor('to')),
+                contents: editor.getSelection(),
+                is_multiline: equation?.is_multiline ?? false
+            };
         }
 
         if (equation === null) {
@@ -41,10 +40,14 @@ export class EvaluateCommand implements ILatexMathCommand {
         const response = await evaluator.receive();
 
         const insert_pos: EditorPosition = editor.offsetToPos(equation.to);
-        const insert_content = " = " + await formatLatex(response.result);
+        let insert_content = " = " + await formatLatex(response.result);
 
+        // remove any newlines from the formatted latex if the math block does not support newlines.
+        if(!equation.is_multiline) {
+            insert_content = insert_content.replaceAll('\n', ' ');
+        }
 
-        // check if we have gotten a preferred insert position from SympyEvaluator,
+        // check if we have gotten a preferred insert position from SympyClient,
         // if not just place it at the end of the equation.
         if (response.metadata.end_line !== undefined) {
             insert_pos.line = editor.offsetToPos(equation.from).line + response.metadata.end_line - 1;

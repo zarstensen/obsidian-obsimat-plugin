@@ -55,63 +55,69 @@ This is a side effect of how Sympy handles symbols internally.
 Below is a table of all supported mathematical functions supported by the parser, this list may grow overtime as this project develops.
 Note that a *mathematical function* also encompasses concepts not normally thought of as a function, e.g. `\frac` is considered part of this table whilst it may not intuitively be thought of as a function.
 
-| Description              | Latex String                                                                           |
-| :----------------------- | :------------------------------------------------------------------------------------- |
-| sine                     | `\sin`                                                                                 |
-| cosine                   | `\cos`                                                                                 |
-| tangent                  | `\tan`                                                                                 |
-| secant                   | `\sec`                                                                                 |
-| cosecant                 | `\csc`                                                                                 |
-| cotangent                | `\cot`                                                                                 |
-| arcus sine               | `\arcsin`                                                                              |
-| arcus cosine             | `\arccos`                                                                              |
-| arcus tan                | `\arctan`                                                                              |
-| arcus secant             | `\arcsec`                                                                              |
-| arcus cosecant           | `\arccsc`                                                                              |
-| arcus cotangent          | `\arccot`                                                                              |
-| hyperbolic sine          | `\sinh`                                                                                |
-| hyperbolic cosine        | `\cosh`                                                                                |
-| hyperbolic tangent       | `\tanh`                                                                                |
-| hyperbolic arcus sine    | `\arsinh`                                                                              |
-| hyperbolic arcus cosine  | `\arcosh`                                                                              |
-| hyperbolic arcus tangent | `\artanh`                                                                              |
-| log                      | `\log[base]?` / `\ln` / `\lg`                                                          |
-| real part                | `\Re .` / `\mathrm{Re} .`                                                              |
-| imaginary part           | `\Im .` / `\mathrm{Im} .`                                                              |
-| argument                 | `\arg .`                                                                               |
-| sign                     | `\mathrm{sgn} .` / `\operatorname{sgn} .`                                              |
-| exponential              | `\exp`                                                                                 |
-| factorial                | `!`                                                                                    |
-| limit                    | `\lim_{ . \to . }`                                                                     |
-| sum                      | `\sum_{ . = . }^.`                                                                     |
-| product                  | `\prod_{ . = . }^.`                                                                    |
-| minimum                  | `\min(. , . , ..., . )`                                                                |
-| maximum                  | `\max( . , . , ..., . )`                                                               |
-| standard inner product   | `\langle . \| . \rangle`                                                               |
-| numeric value            | `\| . \|`                                                                              |
-| norm                     | `\Vert . \Vert` / `\|\| . \|\|`                                                        |
-| floor                    | `\lfloor . \rfloor`                                                                    |
-| ceiling                  | `\lceil . \rceil`                                                                      |
-| root                     | `\sqrt[index]?`                                                                        |
-| conjugate                | `\bar` / `\overline`                                                                   |
-| fraction                 | `\frac{ . }{ . }`                                                                      |
-| binomial                 | `\binom{ . }{ . }`                                                                     |
-| partial derivative       | `\frac{ d ... }{ d . d . ... }` / `\frac{ \partial }{ \partial . \partial . ... } ...` |
-| prime derivative         | `(...)'''...`                                                                          |
-| integral                 | `\int ... d .` / `\int_a^b ... d .`                                                    |
-| determinant              | `\det .` / `\begin{vmatrix} ... \end{vmatrix}`                                         |
-| trace                    | `\mathrm{trace} .` / `\operatorname{trace} .`                                          |
-| adjugate                 | `\mathrm{adjugate} .` / `\operatorname{adjugate} .`                                    |
-| reduced row echelon form | `\mathrm{rref} .` / `\operatorname{rref} .`                                            |
-| gradient                 | `\nabla ...`                                                                           |
-| hessian                  | `\mathbf{H} ...`                                                                       |
-| Jacobian                 | `\mathbf{J} ...`                                                                       |
-| permutations             | `P( ... ,  ... )`                                                                      |
-| combinations             | `C( ... ,  ... )`                                                                      |
-| derangements             | `D( ... )`                                                                             |
-| greatest common divisor  | `\gcd( ... ,  ... )`                                                                   |
-| least common multiple    | `\mathrm{lcm}( ... ,  ... )` / `\operatorname{lcm}( ... ,  ... )`                      |
-| modulo                   | `. \mod .`                                                                             |
+| Description                | Latex String                                                                           |
+| :------------------------- | :------------------------------------------------------------------------------------- |
+| sine                       | `\sin`                                                                                 |
+| cosine                     | `\cos`                                                                                 |
+| tangent                    | `\tan`                                                                                 |
+| secant                     | `\sec`                                                                                 |
+| cosecant                   | `\csc`                                                                                 |
+| cotangent                  | `\cot`                                                                                 |
+| arcus sine                 | `\arcsin`                                                                              |
+| arcus cosine               | `\arccos`                                                                              |
+| arcus tan                  | `\arctan`                                                                              |
+| arcus secant               | `\arcsec`                                                                              |
+| arcus cosecant             | `\arccsc`                                                                              |
+| arcus cotangent            | `\arccot`                                                                              |
+| hyperbolic sine            | `\sinh`                                                                                |
+| hyperbolic cosine          | `\cosh`                                                                                |
+| hyperbolic tangent         | `\tanh`                                                                                |
+| hyperbolic secant          | `\mathrm{sech}` / `\operatorname{sech}`                                                |
+| hyperbolic cosecant        | `\mathrm{csch}` / `\operatorname{csch}`                                                |
+| hyperbolic cotangent       | `\coth`                                                |
+| hyperbolic arcus sine      | `\mathrm{arsinh}` / `\operatorname{arsinh}`                                            |
+| hyperbolic arcus cosine    | `\mathrm{arcosh}` / `\operatorname{arcosh}`                                            |
+| hyperbolic arcus tangent   | `\mathrm{artanh}` / `\operatorname{artanh}`                                            |
+| hyperbolic arcus secant    | `\mathrm{arsech}` / `\operatorname{arsech}`                                            |
+| hyperbolic arcus cosecant  | `\mathrm{arcsch}` / `\operatorname{arcsch}`                                            |
+| hyperbolic arcus cotangent | `\mathrm{arcoth}` / `\operatorname{arcoth}`                                            |
+| log                        | `\log[base]?` / `\ln` / `\lg`                                                          |
+| real part                  | `\Re .` / `\mathrm{Re} .`                                                              |
+| imaginary part             | `\Im .` / `\mathrm{Im} .`                                                              |
+| argument                   | `\arg .`                                                                               |
+| sign                       | `\mathrm{sgn} .` / `\operatorname{sgn} .`                                              |
+| exponential                | `\exp`                                                                                 |
+| factorial                  | `!`                                                                                    |
+| limit                      | `\lim_{ . \to . }`                                                                     |
+| sum                        | `\sum_{ . = . }^.`                                                                     |
+| product                    | `\prod_{ . = . }^.`                                                                    |
+| minimum                    | `\min(. , . , ..., . )`                                                                |
+| maximum                    | `\max( . , . , ..., . )`                                                               |
+| standard inner product     | `\langle . \| . \rangle`                                                               |
+| numeric value              | `\| . \|`                                                                              |
+| norm                       | `\Vert . \Vert` / `\|\| . \|\|`                                                        |
+| floor                      | `\lfloor . \rfloor`                                                                    |
+| ceiling                    | `\lceil . \rceil`                                                                      |
+| root                       | `\sqrt[index]?`                                                                        |
+| conjugate                  | `\bar` / `\overline`                                                                   |
+| fraction                   | `\frac{ . }{ . }`                                                                      |
+| binomial                   | `\binom{ . }{ . }`                                                                     |
+| partial derivative         | `\frac{ d ... }{ d . d . ... }` / `\frac{ \partial }{ \partial . \partial . ... } ...` |
+| prime derivative           | `(...)'''...`                                                                          |
+| integral                   | `\int ... d .` / `\int_a^b ... d .`                                                    |
+| determinant                | `\det .` / `\begin{vmatrix} ... \end{vmatrix}`                                         |
+| trace                      | `\mathrm{trace} .` / `\operatorname{trace} .`                                          |
+| adjugate                   | `\mathrm{adjugate} .` / `\operatorname{adjugate} .`                                    |
+| reduced row echelon form   | `\mathrm{rref} .` / `\operatorname{rref} .`                                            |
+| gradient                   | `\nabla ...`                                                                           |
+| hessian                    | `\mathbf{H} ...`                                                                       |
+| Jacobian                   | `\mathbf{J} ...`                                                                       |
+| permutations               | `P( ... ,  ... )`                                                                      |
+| combinations               | `C( ... ,  ... )`                                                                      |
+| derangements               | `D( ... )`                                                                             |
+| greatest common divisor    | `\gcd( ... ,  ... )`                                                                   |
+| least common multiple      | `\mathrm{lcm}( ... ,  ... )` / `\operatorname{lcm}( ... ,  ... )`                      |
+| modulo                     | `. \mod .`                                                                             |
 
 ## Mathematical Constants
 

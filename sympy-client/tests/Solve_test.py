@@ -1,7 +1,8 @@
-from sympy_client.grammar.LatexParser import LatexParser
-from sympy_client.command_handlers.SolveHandler import *
-
+import sympy.physics.units as u
 from sympy import *
+from sympy_client.command_handlers.SolveHandler import *
+from sympy_client.grammar.LatexParser import LatexParser
+
 
 class TestSolve:
     parser = LatexParser()
@@ -79,3 +80,10 @@ class TestSolve:
         
         assert result.solution == EmptySet
         assert result.symbols == [y, z]
+
+    def test_solve_simplify(self):
+        handler = SolveHandler(self.parser)
+        
+        result = handler.handle({ "expression": r"x^2 = 5 {kW} {h}", "environment": { } })
+        
+        assert result.solution == FiniteSet(sqrt(5 * 3600000 * u.joule), -sqrt(5 * 3600000 * u.joule))

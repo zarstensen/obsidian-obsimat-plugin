@@ -2,6 +2,7 @@ from typing import Any, TypedDict, override
 
 from sympy import *
 from sympy.solvers.solveset import NonlinearError
+from sympy_client import UnitsUtils
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
@@ -131,5 +132,20 @@ class SolveHandler(CommandHandler):
                 solution_set = linsolve(equations, symbols)
             except NonlinearError:
                 solution_set = nonlinsolve(equations, symbols)
+        
+        unit_system = message['environment'].get('unit_system', None)
+        
+        # if there is a finite number of solutions, go through each solution, simplify it, and convert units in it.
+        if isinstance(solution_set, FiniteSet):
+            if unit_system is not None:
+                solution_set = FiniteSet(*(
+                    UnitsUtils.auto_convert(simplify(sol.doit()), unit_system)
+                    for sol in solution_set.args)
+                    )
+            else:
+                solution_set = FiniteSet(*(
+                    UnitsUtils.auto_convert(simplify(sol.doit()))
+                    for sol in solution_set.args)
+                    )
         
         return SolveResult(solution_set, symbols)

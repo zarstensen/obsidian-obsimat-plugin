@@ -74,7 +74,7 @@ Note that a *mathematical function* also encompasses concepts not normally thoug
 | hyperbolic tangent         | `\tanh`                                                                                |
 | hyperbolic secant          | `\mathrm{sech}` / `\operatorname{sech}`                                                |
 | hyperbolic cosecant        | `\mathrm{csch}` / `\operatorname{csch}`                                                |
-| hyperbolic cotangent       | `\coth`                                                |
+| hyperbolic cotangent       | `\coth`                                                                                |
 | hyperbolic arcus sine      | `\mathrm{arsinh}` / `\operatorname{arsinh}`                                            |
 | hyperbolic arcus cosine    | `\mathrm{arcosh}` / `\operatorname{arcosh}`                                            |
 | hyperbolic arcus tangent   | `\mathrm{artanh}` / `\operatorname{artanh}`                                            |
@@ -112,9 +112,9 @@ Note that a *mathematical function* also encompasses concepts not normally thoug
 | gradient                   | `\nabla ...`                                                                           |
 | hessian                    | `\mathbf{H} ...`                                                                       |
 | Jacobian                   | `\mathbf{J} ...`                                                                       |
-| permutations               | `P( ... ,  ... )`                                                                      |
-| combinations               | `C( ... ,  ... )`                                                                      |
-| derangements               | `D( ... )`                                                                             |
+| permutations               | `P( ... ,  ... )` / `{[_^] ... P_ ... }`                                               |
+| combinations               | `C( ... ,  ... )` / `{[_^] ... C_ ... }`                                               |
+| derangements               | `D( ... )` / `{ ! ... }`                                                               |
 | greatest common divisor    | `\gcd( ... ,  ... )`                                                                   |
 | least common multiple      | `\mathrm{lcm}( ... ,  ... )` / `\operatorname{lcm}( ... ,  ... )`                      |
 | modulo                     | `. \mod .`                                                                             |

@@ -37,12 +37,23 @@ export default class LatexMathPlugin extends Plugin {
         this.sympy_evaluator = new SympyServer();
 
         this.sympy_evaluator.onError((error) => {
+            if(this.prev_err_notice !== null) {
+                this.prev_err_notice.hide();
+            }
+
             // limit error message to 4 lines,
             // need to check the developer console to see the full message.
-            const maxLines = 4;
+
             const errorLines = error.split('\n');
-            const truncatedError = errorLines.slice(0, maxLines).join('\n') + (errorLines.length > maxLines ? '\n...' : '');
-            new Notice("Error\n" + truncatedError);
+            const truncatedError = errorLines.slice(0, LatexMathPlugin.ERR_NOTICE_LINE_COUNT).join('\n') + (errorLines.length > LatexMathPlugin.ERR_NOTICE_LINE_COUNT ? '\n...' : '');
+            
+            const err_notice = new Notice("Latex Math Error\n", LatexMathPlugin.ERR_NOTICE_TIMEOUT);
+            
+            const err_elem = err_notice.messageEl.createEl('code');
+            err_elem.innerText = truncatedError;
+            err_notice.messageEl.appendChild(err_elem);
+
+            this.prev_err_notice = err_notice;
         });
         
         this.registerMarkdownCodeBlockProcessor("lmat", this.renderLmatCodeBlock.bind(this));
@@ -79,7 +90,7 @@ export default class LatexMathPlugin extends Plugin {
                 await this.spawn_sympy_client_promise;
                 cmd.functionCallback(this.sympy_evaluator, this.app, e, v as MarkdownView, {});
             }
-            });
+        });
         });
     }
 
@@ -94,6 +105,13 @@ export default class LatexMathPlugin extends Plugin {
     async saveSettings() {
         await this.saveData(this.settings);
     }
+
+    private static readonly ERR_NOTICE_TIMEOUT = 30 * 1000;
+    private static readonly ERR_NOTICE_LINE_COUNT = 8;
+
+    private sympy_evaluator: SympyServer;
+    private spawn_sympy_client_promise: Promise<void>;
+    private prev_err_notice: Notice | null = null;
 
     private async renderLmatCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
         await this.spawn_sympy_client_promise;
@@ -130,7 +148,4 @@ export default class LatexMathPlugin extends Plugin {
 
         await this.sympy_evaluator.initializeAsync(sympy_client_spawner);
     }
-
-    private sympy_evaluator: SympyServer;
-    private spawn_sympy_client_promise: Promise<void>;
 }

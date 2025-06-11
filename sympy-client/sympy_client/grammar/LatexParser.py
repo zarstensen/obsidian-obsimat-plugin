@@ -2,7 +2,7 @@ import os
 import re as regex
 from typing import Callable, Iterator
 
-from lark import Lark, Token
+from lark import Lark, LarkError, Token, UnexpectedInput
 from lark.lark import PostLex
 from lark.lexer import TerminalDef
 from sympy import *
@@ -221,7 +221,14 @@ class LatexParser(SympyParser):
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
     def parse(self, latex_str: str, definitions_store: DefinitionStore):        
         transformer = LatexTransformer(definitions_store)
-        parse_tree = self.parser.parse(latex_str)
+        
+        try:
+            parse_tree = self.parser.parse(latex_str)
+        except UnexpectedInput as e:
+            raise LarkError(f"{e.get_context(latex_str, LatexParser.__PARSE_ERR_PRETTY_STR_SPAN)}{e}") from e
+            
         expr = transformer.transform(parse_tree)
         
         return expr
+    
+    __PARSE_ERR_PRETTY_STR_SPAN = 30

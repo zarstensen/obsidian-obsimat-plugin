@@ -5,7 +5,7 @@ from sympy import *
 
 ## Tests the conver to sympy mode.
 class TestConvertSympy:
-    parser = LatexParser()
+    parser = LatexParser
     
     def test_convert_simple(self):
         a, b = symbols("a b")

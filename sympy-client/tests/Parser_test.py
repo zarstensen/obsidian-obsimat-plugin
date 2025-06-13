@@ -6,7 +6,7 @@ from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 
 
 class TestParse:
-    parser = LatexParser()
+    parser = LatexParser
 
     def _parse_expr(self, expr, environment: LmatEnvironment = {}) -> Expr:
         return self.parser.parse(expr, LmatEnvDefStore(self.parser, environment))

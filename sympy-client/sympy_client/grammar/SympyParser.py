@@ -1,3 +1,4 @@
+from lark import Tree
 from sympy import Expr
 from abc import ABC, abstractmethod
 
@@ -44,6 +45,7 @@ class DefinitionStore(ABC):
 
 # Interface for classes implementing sympy parsing functionality in the context of a DefinitionsStore.
 class SympyParser(ABC):
+    
     @abstractmethod
-    def parse(self, serialized: str, definitions_store: DefinitionStore) -> Expr:
+    def parse(self, serialized: str, definition_store: DefinitionStore) -> Expr:
         pass

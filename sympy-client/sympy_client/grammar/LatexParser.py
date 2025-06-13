@@ -1,8 +1,9 @@
+from abc import ABC, abstractmethod
 import os
 import re as regex
 from typing import Callable, Iterator
 
-from lark import Lark, LarkError, Token, UnexpectedInput
+from lark import Lark, LarkError, Token, UnexpectedInput, Tree
 from lark.lark import PostLex
 from lark.lexer import TerminalDef
 from sympy import *
@@ -192,9 +193,30 @@ class ScopePostLexer(PostLex):
                     continue
                 break
 
-## The LmatLatexParser is responsible for parsing a latex string in the context of an LmatEnvironment.
-class LatexParser(SympyParser):
 
+class LarkAstParser(ABC):
+    
+    @abstractmethod
+    def parse_ast(self, serialized: str) -> Tree:
+        pass
+
+class LarkAstTransformer(ABC):
+    @abstractmethod
+    def transform_ast(self, ast: Tree, definition_store: DefinitionStore) -> Expr:
+        pass
+    
+class LarkSympyParser(SympyParser):
+    
+    def __init__(self, ast_parser: LarkAstParser, ast_transformer: LarkAstTransformer):
+        super().__init__()
+        self._ast_parser = ast_parser
+        self._ast_transformer = ast_transformer
+        
+    def parse(self, serialized: str, definition_store: DefinitionStore):
+        return self._ast_transformer.transform_ast(self._ast_parser.parse_ast(serialized), definition_store)
+        
+
+class LatexAstParser(LarkAstParser):
     def __init__(self, grammar_file: str = None):
         if grammar_file is None:
             grammar_file = os.path.join(
@@ -218,17 +240,23 @@ class LatexParser(SympyParser):
         
         post_lexer.initialize_scopes(self.parser)
 
-    # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
-    def parse(self, latex_str: str, definitions_store: DefinitionStore):        
-        transformer = LatexTransformer(definitions_store)
-        
+
+    def parse_ast(self, latex_str) -> Tree:
         try:
-            parse_tree = self.parser.parse(latex_str)
+            return self.parser.parse(latex_str)
         except UnexpectedInput as e:
-            raise LarkError(f"{e.get_context(latex_str, LatexParser.__PARSE_ERR_PRETTY_STR_SPAN)}{e}") from e
-            
-        expr = transformer.transform(parse_tree)
-        
-        return expr
-    
+            raise LarkError(f"{e.get_context(latex_str, LatexAstParser.__PARSE_ERR_PRETTY_STR_SPAN)}{e}") from e
+
     __PARSE_ERR_PRETTY_STR_SPAN = 30
+    
+class LatexAstTransformer(LarkAstTransformer):
+    def transform_ast(self, tree: Tree, definitions_store: DefinitionStore) -> Expr:
+        transformer = LatexTransformer(definitions_store)
+        return transformer.transform(tree)
+    
+## The LmatLatexParser is responsible for parsing a latex string in the context of an LmatEnvironment.
+LatexParser = LarkSympyParser(LatexAstParser(), LatexAstTransformer())
+
+# class LatexSymbolParser(LatexParser):
+    
+#     def parse():

@@ -9,7 +9,7 @@ from sympy_client.grammar.LatexParser import LatexParser
 
 ## Tests the evaluate mode.
 class TestEvaluate:
-    parser = LatexParser()
+    parser = LatexParser
     
     def test_simple_evaluate(self):
         handler = EvalHandler(self.parser)

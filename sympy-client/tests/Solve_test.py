@@ -5,7 +5,7 @@ from sympy_client.grammar.LatexParser import LatexParser
 
 
 class TestSolve:
-    parser = LatexParser()
+    parser = LatexParser
     
     def test_solve_with_domain(self):
         x = symbols('x')

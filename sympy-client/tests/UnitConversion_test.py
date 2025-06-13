@@ -9,7 +9,7 @@ import sympy.physics.units as units
 
 ## Tests the unit conversions.
 class TestUnitConversion:
-    parser = LatexParser()
+    parser = LatexParser
     
     def test_single_term_to_derived_unit(self):
         handler = EvalHandler(self.parser)

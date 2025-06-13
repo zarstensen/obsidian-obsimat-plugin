@@ -28,6 +28,10 @@ class LatexTransformer(SymbolsTransformer, ConstantsTransformer, FunctionsTransf
         super().__init__(definition_store)
     
     @v_args(inline=True)
+    def latex_string(self, expr: Expr) -> Expr:
+        return expr
+    
+    @v_args(inline=True)
     def NUMERIC_DIGIT(self, digit: Token):
         return Integer(str(digit))
     

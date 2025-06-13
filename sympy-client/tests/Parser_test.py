@@ -1,5 +1,5 @@
 from sympy import *
-from sympy_client.grammar.LatexParser import LatexParser
+from sympy_client.grammar.LatexParser import LatexParser, LatexSymbolsParser
 from sympy_client import LmatEnvironment
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
@@ -7,9 +7,13 @@ from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 
 class TestParse:
     parser = LatexParser
+    symbols_parser = LatexSymbolsParser
 
     def _parse_expr(self, expr, environment: LmatEnvironment = {}) -> Expr:
         return self.parser.parse(expr, LmatEnvDefStore(self.parser, environment))
+
+    def _parse_symbols_expr(self, expr, environment: LmatEnvironment = {}) -> FiniteSet:
+        return self.symbols_parser.parse(expr, LmatEnvDefStore(self.parser, environment))
 
     def test_basic(self):
         a, b, c = symbols('a b c')
@@ -263,3 +267,17 @@ i & 2 i
         result = self._parse_expr(r"\mathrm{rref}(\begin{bmatrix} 20 & 50 \\ 10 & 25\end{bmatrix})")
         
         assert result == Matrix([[1, Rational(5, 2)], [0, 0]])
+
+ 
+    def test_symbols_only(self):
+        x, y, z = symbols('x y z')
+        indexed_symbol = Symbol("indexed_{symbol}")
+        
+        result = self._parse_symbols_expr("x + y^2")
+        assert result == FiniteSet(x, y)
+        
+        result = self._parse_symbols_expr(r"\sum_{x = 5}^y {\sqrt{x + y \cdot z^3}!}")
+        assert result == FiniteSet(x, y, z)
+        
+        result = self._parse_symbols_expr(r"\begin{bmatrix} x & y & z \\ indexed_{symbol}^z & y - x + z & 3 \\ \sqrt[x]y & y & z \end{bmatrix} \cdot x")
+        assert result == FiniteSet(x, y, z, indexed_symbol)

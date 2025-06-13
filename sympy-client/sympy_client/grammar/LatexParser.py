@@ -8,6 +8,8 @@ from lark.lark import PostLex
 from lark.lexer import TerminalDef
 from sympy import *
 
+from sympy_client.grammar.transformers.SymbolsOnlyTransformer import SymbolsOnlyTransformer
+
 from .SympyParser import DefinitionStore, SympyParser
 from .transformers.LatexTransformer import LatexTransformer
 
@@ -260,9 +262,7 @@ LatexParser = LarkSympyParser(LatexAstParser(), LatexAstTransformer())
 
 class LatexSymbolsAstTransformer(LarkAstTransformer):
     def transform_ast(self, tree: Tree, definitions_store: DefinitionStore) -> Expr:
-        transformer = LatexTransformer(definitions_store)
+        transformer = SymbolsOnlyTransformer(definitions_store)
         return transformer.transform(tree)
 
-# class LatexSymbolParser(LatexParser):
-    
-#     def parse():
+LatexSymbolsParser = LarkSympyParser(LatexAstParser(), LatexSymbolsAstTransformer())

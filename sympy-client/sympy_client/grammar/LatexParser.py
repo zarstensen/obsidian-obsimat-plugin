@@ -253,9 +253,15 @@ class LatexAstTransformer(LarkAstTransformer):
     def transform_ast(self, tree: Tree, definitions_store: DefinitionStore) -> Expr:
         transformer = LatexTransformer(definitions_store)
         return transformer.transform(tree)
-    
-## The LmatLatexParser is responsible for parsing a latex string in the context of an LmatEnvironment.
+
+## The LatexParser is responsible for parsing a latex string in the context of an LmatEnvironment.
 LatexParser = LarkSympyParser(LatexAstParser(), LatexAstTransformer())
+
+
+class LatexSymbolsAstTransformer(LarkAstTransformer):
+    def transform_ast(self, tree: Tree, definitions_store: DefinitionStore) -> Expr:
+        transformer = LatexTransformer(definitions_store)
+        return transformer.transform(tree)
 
 # class LatexSymbolParser(LatexParser):
     

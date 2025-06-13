@@ -6,15 +6,13 @@ from sympy import *
 from sympy.core.function import AppliedUndef
 from sympy.tensor.array import derive_by_array
 from sympy_client.grammar.SympyParser import DefinitionStore
+from sympy_client.grammar.transformers.DefStoreBaseTransformer import DefStoreBaseTransformer
 
 
 # The FucntionsTransformer holds the implementation of various mathematical function rules,
 # defined in the latex math grammar.
 @v_args(inline=True)
-class FunctionsTransformer(Transformer):
-    
-    def __init__(self, definitions_store: DefinitionStore):
-        self.__definitions_store = definitions_store
+class FunctionsTransformer(DefStoreBaseTransformer):
     
     def trig_function(self, func_token: Token, exponent: Expr | None, arg: Expr) -> Expr:
         func_type = func_token.type.replace('FUNC_', '').lower()
@@ -136,7 +134,7 @@ class FunctionsTransformer(Transformer):
         symbols = expr.free_symbols
         
         if isinstance(expr, AppliedUndef):
-            func_def = self.__definitions_store.get_function_definition(expr.func)
+            func_def = self.definition_store.get_function_definition(expr.func)
         
             if func_def is not None:
                 symbols = func_def.args
@@ -213,7 +211,7 @@ class FunctionsTransformer(Transformer):
         symbols = list(sorted(expr.free_symbols, key=str))
         
         if isinstance(expr, Symbol):
-            func_def = self.__definitions_store.get_function_definition(self.__definitions_store.deserialize_function(str(expr)))
+            func_def = self.definition_store.get_function_definition(self.definition_store.deserialize_function(str(expr)))
             
             if func_def is not None:
                 symbols = func_def.args
@@ -225,7 +223,7 @@ class FunctionsTransformer(Transformer):
         symbols = list(sorted(expr.free_symbols, key=str))
         
         if isinstance(expr, Symbol):
-            func_def = self.__definitions_store.get_function_definition(self.__definitions_store.deserialize_function(str(expr)))
+            func_def = self.definition_store.get_function_definition(self.definition_store.deserialize_function(str(expr)))
         
             if func_def is not None:
                 symbols = func_def.args
@@ -237,7 +235,7 @@ class FunctionsTransformer(Transformer):
         symbols = list(sorted(matrix.free_symbols, key=str))
         
         if isinstance(matrix, Symbol):
-            func_def = self.__definitions_store.get_function_definition(self.__definitions_store.deserialize_function(str(matrix)))
+            func_def = self.definition_store.get_function_definition(self.definition_store.deserialize_function(str(matrix)))
         
             if func_def is not None:
                 symbols = func_def.args

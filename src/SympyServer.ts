@@ -4,6 +4,29 @@ import { ChildProcessWithoutNullStreams } from 'child_process';
 import { SympyClientSpawner } from './SympyClientSpawner';
 import { assert } from 'console';
 
+interface ServerMessage {
+    type: string;
+    uid: string;
+    payload: Record<string, unknown>;
+}
+
+interface ClientMessage {
+    status: string;
+    uid: string;
+    result: Record<string, unknown>;
+}
+
+interface ClientErrorMessage {
+    status: "error";
+    uid: string;
+    result: { message: string };
+}
+
+interface MessagePromiseEntry {
+    resolve: (value: ClientMessage | PromiseLike<ClientMessage>) => void;
+    reject: (reason?: any) => void;
+}
+
 // The SympyServer class manages a connection as well as message encoding and handling, with an SympyClient script instance.
 // Also manages the python process itself.
 export class SympyServer {
@@ -40,10 +63,9 @@ export class SympyServer {
     }
 
     public async shutdown(): Promise<void> {
-        await this.send("exit", {});
-        const result = await this.receive();
+        const result = await this.send("exit", {});
 
-        assert(result === "exit");
+        assert(result.status === "exit");
 
         this.ws_python.close();
         this.ws_python_server.close();
@@ -56,43 +78,69 @@ export class SympyServer {
     }
 
     // Send a message to the SympyClient process.
-    public async send(mode: string, data: unknown): Promise<void> {
-        await this.initialized_promise;
-        this.ws_python.send(mode + "|" + JSON.stringify(data));
+    public async send(type: string, data: Record<string, unknown>): Promise<ClientMessage> {
+        const server_message: ServerMessage = {
+            type: type,
+            uid: crypto.randomUUID(),
+            payload: data,
+        };
+        
+        
+        const result_promise =  new Promise<ClientMessage>((resolve, reject) => {
+            this.message_promises[server_message.uid] = {
+                resolve: resolve,
+                reject: reject,
+            };
+        });
+
+        this.ws_python.send(JSON.stringify(server_message));
+        
+        return await result_promise;
     }
 
     // Receive a result from the SympyClient process.
     // Returns a promise that resolves to the result object, parsed from the received json payload.
-    public async receive(): Promise<any> {
-        return new Promise((resolve, reject) => {
+    public async receive(): Promise<void> {
+        return new Promise((resolve, _reject) => {
             this.ws_python.once('message', (result_buffer) => {
-                const result = result_buffer.toString();
-                const separator_index = result.indexOf("|");
+                const result: ClientMessage = JSON.parse(result_buffer.toString());
                 
-                const status = result.substring(0, separator_index);
-                const payload = JSON.parse(result.substring(separator_index + 1));
+                // first retreive the message promise to resolve (if present).
 
-                if (status === "error") {
+                let message_promise: MessagePromiseEntry | null = null;
+                
+                if (this.message_promises[result.uid] !== undefined) {
+                    message_promise = this.message_promises[result.uid];
+                    delete this.message_promises[result.uid];
+                }
+                
+                // first some special cases.
+
+                if (result.status === "error") {
                     
-                    if(this.error_callback) {
-                        this.error_callback(payload.message);
-                    }
+                    const err = result as ClientErrorMessage;
 
-                    reject(payload.message);
-                } else if(status === "exit") {
-                    resolve("exit");
+                    if(this.error_callback) {
+                        this.error_callback(err.result.message);
+                    }
+                    
+                    message_promise?.reject(err.result.message);
+                    
+                    resolve();
                 } else {
-                    resolve(payload);
+                    message_promise?.resolve(result);
+                    resolve();
                 }
             });
         });
     }
 
-    private initialized_promise: Promise<void>;
     private python_process: ChildProcessWithoutNullStreams;
     private ws_python: WebSocket;
     private ws_python_server: WebSocketServer;
     private error_callback: (error: string) => void;
+
+    private message_promises: Record<string, MessagePromiseEntry> = { };
 
     private resolveConnection(resolve: (value: WebSocket) => void, reject: (reason: string) => void) {
         this.ws_python_server.once('connection', (ws) => {

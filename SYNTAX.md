@@ -86,8 +86,10 @@ Note that a *mathematical function* also encompasses concepts not normally thoug
 | imaginary part             | `\Im .` / `\mathrm{Im} .`                                                              |
 | argument                   | `\arg .`                                                                               |
 | sign                       | `\mathrm{sgn} .` / `\operatorname{sgn} .`                                              |
-| exponential                | `\exp`                                                                                 |
-| factorial                  | `!`                                                                                    |
+| exponential                | `\exp .`                                                                               |
+| factorial                  | `. !`                                                                                  |
+| percent                    | `. \%`                                                                                 |
+| permille                   | `. \textperthousand`                                                                   |
 | limit                      | `\lim_{ . \to . }`                                                                     |
 | sum                        | `\sum_{ . = . }^.`                                                                     |
 | product                    | `\prod_{ . = . }^.`                                                                    |

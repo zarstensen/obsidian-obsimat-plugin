@@ -263,3 +263,8 @@ i & 2 i
         result = self._parse_expr(r"\mathrm{rref}(\begin{bmatrix} 20 & 50 \\ 10 & 25\end{bmatrix})")
         
         assert result == Matrix([[1, Rational(5, 2)], [0, 0]])
+        
+    def test_percent_permille(self):
+        result = self._parse_expr(r"25\% - 5\textperthousand")
+        
+        assert abs(result - (0.25 - 0.005)) <= 1e-14

@@ -95,6 +95,8 @@ _function: _delimited_function
     | frac
     | binom
     | factorial
+    | percent
+    | permille
     | derivative
     | derivative_prime
     | modulo
@@ -167,11 +169,12 @@ imaginary_part: _func_template{_FUNC_IM}
 argument: _func_template{_FUNC_ARG}
 sign: _func_template{_FUNC_SGN}
 
-
-
 exponential: _func_template{_FUNC_EXP}
 
 factorial: _factor_no_unit _BANG
+
+percent: _factor_no_unit _PERCENT
+permille: _factor_no_unit _PERMILLE
 
 upper_gamma: _FUNC_UPPER_GAMMA expression (_COMMA expression)? _R_PAREN
 lower_gamma: _FUNC_LOWER_GAMMA expression _COMMA expression _R_PAREN
@@ -476,6 +479,8 @@ _DOT: "."
 _CARET: "^"
 _COMMA: ","
 _UNDERSCORE: "_"
+_PERCENT: "\\%"
+_PERMILLE: "\\textperthousand"
 
 // relational symbols
 EQUAL: "="

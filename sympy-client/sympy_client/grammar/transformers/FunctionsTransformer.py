@@ -74,6 +74,12 @@ class FunctionsTransformer(Transformer):
     def factorial(self, arg: Expr) -> Expr:
         return factorial(arg)
     
+    def percent(self, arg: Expr) -> Expr:
+        return Mul(arg, 100 ** -1)
+    
+    def permille(self, arg: Expr) -> Expr:
+        return Mul(arg, 1000 ** -1)
+    
     def upper_gamma(self, s: Expr, x: Expr = 0) -> Expr:
         return uppergamma(s, x)
     

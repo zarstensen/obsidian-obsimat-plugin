@@ -1,51 +1,27 @@
-from lark import Tree
+from typing import Callable
+from lark import Lark, Tree
 from sympy import Expr
 from abc import ABC, abstractmethod
 
 from sympy import Function, Symbol, Expr
 
-# Interface class for a function definition in a DefinitionStore.
-# It holds both its original serialized body and a deserialized version.
-# Also provides an interface for,
-# invoking a serialized version of its body with passed arguments.
-class FunctionDefinition(ABC):
-    @abstractmethod
-    def call(self, *args: Expr) -> Expr:
-        pass
-    
-    @abstractmethod
-    def get_body(self) -> Expr:
-        pass
-    
-    @property
-    @abstractmethod
-    def args(self) -> tuple[Expr]:
-        pass
-    
-    @property
-    @abstractmethod
-    def serialized_body(self) -> str:
-        pass
+from sympy_client.grammar import DefinitionStore
+from sympy_client.grammar.transformers.DefStoreBaseTransformer import DefStoreBaseTransformer
 
-# Interface for classes storing a list of sympy symbol and function definitions.
-class DefinitionStore(ABC):
-    @abstractmethod
-    def get_function_definition(self, function: Function) -> FunctionDefinition | None:
-        pass
-    
-    def deserialize_function(self, serialized_function: str) -> Function:
-        return Function(serialized_function)
-    
-    @abstractmethod
-    def get_symbol_definition(self, symbol: Symbol) -> Expr | None:
-        pass
-    
-    def deserialize_symbol(self, serialized_symbol: str) -> Symbol:
-        return Symbol(serialized_symbol)
 
 # Interface for classes implementing sympy parsing functionality in the context of a DefinitionsStore.
-class SympyParser(ABC):
+# XXX: What is the point of this?
+#      should this not just be direct lark stuff?
+#      is another parser ever going to be used, probably not?
+#      if anything, it would be sympy which is replaced as the CAS, and not lark as the parser???
+#      So, remove this, and just have the parser be a lark and a transformer pair it is easier to split up that way, since this needs to be done anyways.
+#      there could be a series of helper methods which then pair up some common lark instances (only one for now?) and transformers.
+
+class DefStoreLarkCompiler:
     
-    @abstractmethod
-    def parse(self, serialized: str, definition_store: DefinitionStore) -> Expr:
-        pass
+    def __init__(self, parser: Lark, transformer_cls: Callable[[], DefStoreBaseTransformer]):
+        self._parser = parser
+        self._transformer_cls = transformer_cls
+    
+    def compile(self, serialized: str, definition_store: DefinitionStore) -> Expr:
+        return self._transformer_cls(definition_store).transform(self._parser.parse(serialized))

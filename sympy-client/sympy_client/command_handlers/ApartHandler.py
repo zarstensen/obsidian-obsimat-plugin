@@ -1,11 +1,11 @@
 from typing import Any, override
 from .EvalHandlerBase import EvalHandlerBase, EvaluateMessage
-from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.grammar.SympyParser import DefStoreLarkCompiler
 
 from sympy import *
 
 class ApartHandler(EvalHandlerBase):
-    def __init__(self, parser: SympyParser):
+    def __init__(self, parser: DefStoreLarkCompiler):
         super().__init__(parser)
 
     @override

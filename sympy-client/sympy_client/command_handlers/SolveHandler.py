@@ -4,7 +4,7 @@ from sympy import *
 from sympy.solvers.solveset import NonlinearError
 from sympy_client import UnitsUtils
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
-from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.grammar.SympyParser import DefStoreLarkCompiler
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.LmatEnvironment import LmatEnvironment
 from sympy_client.LmatLatexPrinter import lmat_latex
@@ -69,13 +69,13 @@ class SolveResult(CommandResult):
 # if successfull its sends a message with status solved, and the result in the result key.
 class SolveHandler(CommandHandler):
     
-    def __init__(self, parser: SympyParser):
+    def __init__(self, parser: DefStoreLarkCompiler):
         super().__init__()
         self._parser = parser
 
     @override
     def handle(self, message: SolveModeMessage) -> SolveResult | MultivariateResult | ErrorResult:
-        equations = self._parser.parse(message['expression'],
+        equations = self._parser.compile(message['expression'],
                                          LmatEnvDefStore(self._parser, message['environment'])
                                          )
 

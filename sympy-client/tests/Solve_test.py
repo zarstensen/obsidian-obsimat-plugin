@@ -1,11 +1,11 @@
 import sympy.physics.units as u
 from sympy import *
 from sympy_client.command_handlers.SolveHandler import *
-from sympy_client.grammar.LatexParser import LatexParser
+from sympy_client.grammar.LatexCompiler import LatexSympyCompiler
 
 
 class TestSolve:
-    parser = LatexParser
+    parser = LatexSympyCompiler
     
     def test_solve_with_domain(self):
         x = symbols('x')

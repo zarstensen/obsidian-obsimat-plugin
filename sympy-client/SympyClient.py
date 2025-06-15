@@ -1,5 +1,5 @@
 from sympy_client.LatexMathClient import LatexMathClient
-from sympy_client.grammar.LatexParser import LatexParser
+from sympy_client.grammar.LatexCompiler import LatexParser
 from sympy_client.command_handlers.EvalHandler import EvalHandler
 from sympy_client.command_handlers.EvalfHandler import EvalfHandler
 from sympy_client.command_handlers.ExpandHandler import ExpandHandler

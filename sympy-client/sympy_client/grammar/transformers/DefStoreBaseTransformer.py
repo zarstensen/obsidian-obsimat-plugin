@@ -1,6 +1,6 @@
 from lark import Transformer
 
-from sympy_client.grammar.SympyParser import DefinitionStore
+from sympy_client.grammar import DefinitionStore
 
 class DefStoreBaseTransformer(Transformer):
     

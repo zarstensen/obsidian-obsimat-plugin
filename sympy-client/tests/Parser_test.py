@@ -1,23 +1,22 @@
 from sympy import *
-from sympy_client.grammar.LatexParser import LatexParser, LatexSymbolsParser
+from sympy_client.grammar.LatexCompiler import LatexSympyCompiler, LatexSympySymbolsCompiler
 from sympy_client import LmatEnvironment
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 
 
 class TestParse:
-    parser = LatexParser
-    symbols_parser = LatexSymbolsParser
+    parser = LatexSympyCompiler
+    symbols_parser = LatexSympySymbolsCompiler
 
     def _parse_expr(self, expr, environment: LmatEnvironment = {}) -> Expr:
-        return self.parser.parse(expr, LmatEnvDefStore(self.parser, environment))
+        return self.parser.compile(expr, LmatEnvDefStore(self.parser, environment))
 
     def _parse_symbols_expr(self, expr, environment: LmatEnvironment = {}) -> FiniteSet:
-        return self.symbols_parser.parse(expr, LmatEnvDefStore(self.parser, environment))
+        return self.symbols_parser.compile(expr, LmatEnvDefStore(self.parser, environment))
 
     def test_basic(self):
         a, b, c = symbols('a b c')
-        # result = self.parser.doparse(r'-a i + b \pi + e + \frac{{a}}{b} + {a}^{b} \cdot f(a 25^2 symbol^{yaysymbol}) - \frac{50 - 70}5^{-99} - \frac{{km}}{{h}} \over \sin x + \sqrt[5]{x}')
         result = self._parse_expr(r'-a i \cdot (5 + 7)^c + b')
         assert result == -a * I * (5 + 7) ** c + b
 

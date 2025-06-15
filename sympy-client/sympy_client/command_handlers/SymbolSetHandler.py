@@ -2,7 +2,7 @@ from typing import TypedDict, override
 
 from sympy import *
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
-from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.grammar.SympyParser import DefStoreLarkCompiler
 from sympy_client.LmatEnvironment import LmatEnvironment
 
 from .CommandHandler import *
@@ -58,7 +58,7 @@ class SymbolSetModeMessage(TypedDict):
 
 class SymbolSetHandler(CommandHandler):
     
-    def __init__(self, parser: SympyParser):
+    def __init__(self, parser: DefStoreLarkCompiler):
         super().__init__()
         self._parser = parser
     

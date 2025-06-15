@@ -1,14 +1,16 @@
 from copy import copy
 from typing import Iterable
 
-from sympy import Expr, Function, Symbol
-from sympy_client.grammar.SympyParser import (DefinitionStore,
-                                              FunctionDefinition, SympyParser)
+from lark import Tree
+from sympy import Expr, FiniteSet, Function, Symbol
+from sympy_client.grammar.DefinitionStore import DefinitionStore, FunctionDefinition
 from sympy_client.LmatEnvironment import LmatEnvironment
-
-
+from sympy_client.grammar.LatexCompiler import LatexSympyCompiler, LatexSympySymbolsCompiler
+from sympy_client.grammar.SympyParser import DefStoreLarkCompiler
+    
+    
 class LmatEnvFunctionDefinition(FunctionDefinition):
-    def __init__(self, definition_store: DefinitionStore, parser: SympyParser, args: Iterable[Symbol], latex_expr: str):
+    def __init__(self, definition_store: DefinitionStore, parser: DefStoreLarkCompiler, args: Iterable[Symbol], latex_expr: str):
         super().__init__()
         self._definitions_store = definition_store
         self._parser = parser
@@ -21,7 +23,7 @@ class LmatEnvFunctionDefinition(FunctionDefinition):
         args_map = { arg: val for arg, val in zip(self.args, args) }
         func_def_store = LmantEnvFuncDefStore(args_map, self._definitions_store)
         
-        expr = self._parser.parse(self.serialized_body, func_def_store)
+        expr = self._parser.compile(self.serialized_body, func_def_store)
         
         return expr
     
@@ -40,10 +42,11 @@ class LmatEnvFunctionDefinition(FunctionDefinition):
 # provides definitions and deserializatiosn based on the symbols, variables and functions tables.
 class LmatEnvDefStore(DefinitionStore):
     
-    def __init__(self, parser: SympyParser, environment: LmatEnvironment):
+    def __init__(self, environment: LmatEnvironment, expr_compiler: DefStoreLarkCompiler = LatexSympyCompiler, symbols_compiler: DefStoreLarkCompiler = LatexSympySymbolsCompiler):
         super().__init__()
         
-        self._parser = parser
+        self._expr_compiler = expr_compiler
+        self._symbols_compiler = symbols_compiler
         
         self._environment = environment
         
@@ -57,7 +60,6 @@ class LmatEnvDefStore(DefinitionStore):
 
         self._gen_symbols_cache()
         
-        
         self._functions: dict[Symbol, FunctionDefinition] = {}
         
         if 'functions' in self._environment:
@@ -69,7 +71,7 @@ class LmatEnvDefStore(DefinitionStore):
                     definition_store=self,
                     args=func_args,
                     latex_expr=func_def['expr'],
-                    parser=parser
+                    parser=expr_compiler
                 )
     
     
@@ -88,13 +90,22 @@ class LmatEnvDefStore(DefinitionStore):
             return self._deserialize_definition(symbol)  
         else:
             return None
+    
+    def get_symbol_dependencies(self, symbol) -> set[Symbol]:
+        assert symbol in self._serialized_symbol_definitions
         
+        symbol_dependencies = self._symbols_compiler.compile(self._serialized_symbol_definitions)
+        
+        assert isinstance(symbol_dependencies, FiniteSet)
+        
+        return set(symbol_dependencies)
+    
     def deserialize_symbol(self, symbol_latex: str):
         return copy(self._cached_symbols.get(symbol_latex, Symbol(symbol_latex)))
 
     def _deserialize_definition(self, symbol: Symbol):
         serialized_definition = self._serialized_symbol_definitions[symbol]
-        definition_value = self._parser.parse(serialized_definition, self)
+        definition_value = self._expr_compiler.compile(serialized_definition, self)
         self._cached_symbols[symbol] = definition_value
         
         return definition_value
@@ -109,7 +120,7 @@ class LmatEnvDefStore(DefinitionStore):
         self._serialized_symbol_definitions = {}
         
         for latex_str, assumptions_list in self._environment.get('symbols', {}).items():
-            symbol = self._parser.parse(latex_str, self)
+            symbol = self._expr_compiler.compile(latex_str, self)
             
             if not isinstance(symbol, Symbol):
                 raise RuntimeError(f'Symbol expression cannot be parsed as a symbol: "{latex_str}"')

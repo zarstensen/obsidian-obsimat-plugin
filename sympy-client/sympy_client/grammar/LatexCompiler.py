@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 import os
 import re as regex
-from typing import Callable, Iterator
+from typing import Callable, Iterator, Optional
 
-from lark import Lark, LarkError, Token, UnexpectedInput, Tree
+from lark import Lark, LarkError, ParseTree, Token, UnexpectedInput, Tree
 from lark.lark import PostLex
 from lark.lexer import TerminalDef
 from sympy import *
 
 from sympy_client.grammar.transformers.SymbolsOnlyTransformer import SymbolsOnlyTransformer
 
-from .SympyParser import DefinitionStore, SympyParser
+from .SympyParser import DefStoreLarkCompiler
 from .transformers.LatexTransformer import LatexTransformer
 
 
@@ -195,74 +195,36 @@ class ScopePostLexer(PostLex):
                     continue
                 break
 
-
-class LarkAstParser(ABC):
+class LarkPrettyErr(Lark):
     
-    @abstractmethod
-    def parse_ast(self, serialized: str) -> Tree:
-        pass
-
-class LarkAstTransformer(ABC):
-    @abstractmethod
-    def transform_ast(self, ast: Tree, definition_store: DefinitionStore) -> Expr:
-        pass
-    
-class LarkSympyParser(SympyParser):
-    
-    def __init__(self, ast_parser: LarkAstParser, ast_transformer: LarkAstTransformer):
-        super().__init__()
-        self._ast_parser = ast_parser
-        self._ast_transformer = ast_transformer
+    def parse(self, text: str, start: Optional[str]=None, on_error: Optional[Callable[[UnexpectedInput], bool]]=None) -> ParseTree:
+        try:
+            return super().parse(text, start, on_error)
+        except UnexpectedInput as e:
+            raise LarkError(f"{e.get_context(text, LarkPrettyErr.__PARSE_ERR_PRETTY_STR_SPAN)}{e}") from e
         
-    def parse(self, serialized: str, definition_store: DefinitionStore):
-        return self._ast_transformer.transform_ast(self._ast_parser.parse_ast(serialized), definition_store)
-        
+    __PARSE_ERR_PRETTY_STR_SPAN = 30
 
-class LatexAstParser(LarkAstParser):
-    def __init__(self, grammar_file: str = None):
-        if grammar_file is None:
-            grammar_file = os.path.join(
+__latex_sympy_grammar_file = os.path.join(
                 os.path.dirname(__file__), "latex_math_grammar.lark"
             )
-        
-        post_lexer = ScopePostLexer()
-        
-        self.parser = Lark.open(
-            grammar_file,
-            rel_to=os.path.dirname(grammar_file),
-            parser="lalr",
-            start="latex_string",
-            lexer="contextual",
-            debug=False,
-            cache=True,
-            propagate_positions=True,
-            maybe_placeholders=True,
-            postlex=post_lexer
-        )
-        
-        post_lexer.initialize_scopes(self.parser)
 
+__latex_sympy_post_lexer = ScopePostLexer()
 
-    def parse_ast(self, latex_str) -> Tree:
-        try:
-            return self.parser.parse(latex_str)
-        except UnexpectedInput as e:
-            raise LarkError(f"{e.get_context(latex_str, LatexAstParser.__PARSE_ERR_PRETTY_STR_SPAN)}{e}") from e
+LatexSympyParser = LarkPrettyErr.open(
+    __latex_sympy_grammar_file,
+    rel_to=os.path.dirname(__latex_sympy_grammar_file),
+    parser="lalr",
+    start="latex_string",
+    lexer="contextual",
+    debug=False,
+    cache=True,
+    propagate_positions=True,
+    maybe_placeholders=True,
+    postlex=__latex_sympy_post_lexer
+)
 
-    __PARSE_ERR_PRETTY_STR_SPAN = 30
-    
-class LatexAstTransformer(LarkAstTransformer):
-    def transform_ast(self, tree: Tree, definitions_store: DefinitionStore) -> Expr:
-        transformer = LatexTransformer(definitions_store)
-        return transformer.transform(tree)
+__latex_sympy_post_lexer.initialize_scopes(LatexSympyParser)
 
-## The LatexParser is responsible for parsing a latex string in the context of an LmatEnvironment.
-LatexParser = LarkSympyParser(LatexAstParser(), LatexAstTransformer())
-
-
-class LatexSymbolsAstTransformer(LarkAstTransformer):
-    def transform_ast(self, tree: Tree, definitions_store: DefinitionStore) -> Expr:
-        transformer = SymbolsOnlyTransformer(definitions_store)
-        return transformer.transform(tree)
-
-LatexSymbolsParser = LarkSympyParser(LatexAstParser(), LatexSymbolsAstTransformer())
+LatexSympyCompiler = DefStoreLarkCompiler(LatexSympyParser, LatexTransformer)
+LatexSympySymbolsCompiler = DefStoreLarkCompiler(LatexSympyParser, SymbolsOnlyTransformer)

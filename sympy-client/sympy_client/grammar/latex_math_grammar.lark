@@ -3,7 +3,10 @@
 
 // ======== Core structure ========
 
-latex_string: relation | system_of_relations
+
+latex_string: relation | system_of_relations | definition
+
+definition: (symbol | undefined_function) _OP_DEFINE expression
 
 _rel_op: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
 _align: _ALIGN | _LATEX_NEWLINE
@@ -475,6 +478,7 @@ _DOUBLE_BAR: "||" | /\\mid\s*\\mid/ | /\\[lr]?Vert/
 _DOT: "."
 _CARET: "^"
 _COMMA: ","
+_COLON: ":"
 _UNDERSCORE: "_"
 
 // relational symbols
@@ -484,6 +488,9 @@ LT: "<"
 LTE: LT EQUAL | "\\leq" | "\\leqslant" | /\\le(?!ft)/ // do not match \left as \le f t
 GT: ">"
 GTE: GT EQUAL | "\\geq" | "\\ge" | "\\geqslant"
+
+// define symbol
+_OP_DEFINE: _COLON EQUAL
 
 OPERATOR_DIV: _CMD_DIV | DIV
 OPERATOR_MUL: MUL | _CMD_TIMES | _CMD_CDOT

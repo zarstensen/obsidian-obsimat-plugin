@@ -7,7 +7,7 @@ from sympy.core.operations import AssocOp, LatticeOp
 from sympy.core.relational import Relational
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
-from sympy_client.grammar.SympyParser import SympyParser
+from sympy_client.grammar.SympyParser import DefStoreLarkCompiler
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.LmatEnvironment import LmatEnvironment
 from sympy_client.LmatLatexPrinter import lmat_latex
@@ -39,7 +39,7 @@ class EvaluateMessage(TypedDict):
 
 class EvalHandlerBase(CommandHandler, ABC):
     
-    def __init__(self, parser: SympyParser):
+    def __init__(self, parser: DefStoreLarkCompiler):
         super().__init__()
         self._parser = parser
     
@@ -50,7 +50,7 @@ class EvalHandlerBase(CommandHandler, ABC):
     @override
     def handle(self, message: EvaluateMessage) -> EvalResult:
         definitions_store = LmatEnvDefStore(self._parser, message['environment'])
-        sympy_expr = self._parser.parse(message['expression'], definitions_store)
+        sympy_expr = self._parser.compile(message['expression'], definitions_store)
         expr_lines = None
         
         # choose bottom / right most evaluatable expression.

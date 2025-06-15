@@ -4,12 +4,12 @@ from sympy_client.command_handlers.EvalfHandler import *
 from sympy_client.command_handlers.EvalHandler import *
 from sympy_client.command_handlers.ExpandHandler import *
 from sympy_client.command_handlers.FactorHandler import *
-from sympy_client.grammar.LatexParser import LatexParser
+from sympy_client.grammar.LatexCompiler import LatexSympyCompiler
 
 
 ## Tests the evaluate mode.
 class TestEvaluate:
-    parser = LatexParser
+    parser = LatexSympyCompiler
     
     def test_simple_evaluate(self):
         handler = EvalHandler(self.parser)

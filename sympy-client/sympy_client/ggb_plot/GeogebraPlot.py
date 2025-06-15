@@ -22,7 +22,7 @@ class GeogebraPlot:
     def __init__(self, ggb_template_file, function_store: FunctionStore):
         self._function_store = function_store
         # ONLY very fy this the first time _run_ggb is called.
-        self._ggb_template_file = ElementTree.parse(ggb_template_file)
+        self._ggb_template_file = ElementTree.compile(ggb_template_file)
         self._construction = self._ggb_template_file.getroot().find('construction')
         self._defined_constants = set(GeogebraPlot.AXIS_SYMBOLS)
         self._has_contour_plot = False

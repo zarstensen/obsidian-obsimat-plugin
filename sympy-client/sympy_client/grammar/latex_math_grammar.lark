@@ -113,10 +113,6 @@ _named_function: undefined_function
     | _combinatorial_functions
     | _divisibility_functions
 
-// this rule matches a singular argument to a function.
-// if a function takes multiple non special arguments, _multiarg_func_arg should be used instead.
- // parenthesees_expression should maybe not be here. it does not render properly in all cases, but it is very convenient...
-
 // matches a special kind of argument, defined by the fact that fractions and binomials can be passed without surrounding them with braces.
 substitute_single_letter_symbol: single_letter_symbol -> substitute_symbol
 ?function_special_arg: braces_expression | parenthesees_expression | _named_function | _delimited_function | frac | binom | substitute_single_letter_symbol | _digit
@@ -159,8 +155,7 @@ _log: log_implicit_base
 log_implicit_base: _func_template{FUNC_LOG}
     | _func_template{FUNC_LN}
     | _func_template{FUNC_LG}
- 
- // TODO: both orderings should be allowed, where caret is also to the left of the log.
+
 log_explicit_base: FUNC_LOG _UNDERSCORE function_special_arg [_CARET function_special_arg] _factor_no_unit
     | FUNC_LOG _CARET function_special_arg _UNDERSCORE function_special_arg _factor_no_unit -> log_explicit_base_exponent_first
 
@@ -486,7 +481,7 @@ _PERMILLE: "\\textperthousand"
 EQUAL: "="
 NOT_EQUAL: "\\neq" | "\\ne"
 LT: "<"
-LTE: LT EQUAL | "\\leq" | "\\leqslant" | /\\le(?!ft)/ // do not match \left as \le f t
+LTE: LT EQUAL | "\\leq" | "\\leqslant" | /\\le(?!ft)/ // do not match `\left` as `\le` followed by the symbol `ft`
 GT: ">"
 GTE: GT EQUAL | "\\geq" | "\\ge" | "\\geqslant"
 
@@ -501,7 +496,6 @@ _UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
 _DIFFERENTIAL_SYMBOL.-1: "d" | _UPRIGHT_DIFFERENTIAL_SYMBOL | _PARTIAL_DIFFERENTIAL_SYMBOL
 
 
-// should this just be \w?
 LATIN_SYMBOL: /[a-zA-Z]/
 LATIN_SYMBOL_WITH_PRIMTES: LATIN_SYMBOL PRIMES
 MULTI_LETTER_LATIN_SYMBOL: /[a-zA-Z]{2,}'*/

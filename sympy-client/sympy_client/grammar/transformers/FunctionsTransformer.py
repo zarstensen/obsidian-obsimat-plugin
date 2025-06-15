@@ -77,7 +77,7 @@ class FunctionsTransformer(Transformer):
     def percent(self, arg: Expr) -> Expr:
         return Mul(arg, 100 ** -1)
     
-    def permill(self, arg: Expr) -> Expr:
+    def permille(self, arg: Expr) -> Expr:
         return Mul(arg, 1000 ** -1)
     
     def upper_gamma(self, s: Expr, x: Expr = 0) -> Expr:

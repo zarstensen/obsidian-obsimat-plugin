@@ -96,7 +96,7 @@ _function: _delimited_function
     | binom
     | factorial
     | percent
-    | permill
+    | permille
     | derivative
     | derivative_prime
     | modulo
@@ -174,7 +174,7 @@ exponential: _func_template{_FUNC_EXP}
 factorial: _factor_no_unit _BANG
 
 percent: _factor_no_unit _PERCENT
-permill: _factor_no_unit _PERMILL
+permille: _factor_no_unit _permille
 
 upper_gamma: _FUNC_UPPER_GAMMA expression (_COMMA expression)? _R_PAREN
 lower_gamma: _FUNC_LOWER_GAMMA expression _COMMA expression _R_PAREN
@@ -480,7 +480,7 @@ _CARET: "^"
 _COMMA: ","
 _UNDERSCORE: "_"
 _PERCENT: "\\%"
-_PERMILL: "\\textperthousand"
+_permille: "\\textperthousand"
 
 // relational symbols
 EQUAL: "="

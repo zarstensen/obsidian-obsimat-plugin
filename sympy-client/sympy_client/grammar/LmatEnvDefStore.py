@@ -1,9 +1,12 @@
+from collections import deque
 from copy import copy
+from nt import environ
 from typing import Iterable
 
 from lark import Tree
-from sympy import Expr, FiniteSet, Function, Symbol
-from sympy_client.grammar.DefinitionStore import DefinitionStore, FunctionDefinition
+from pytest import mark
+from sympy import Expr, FiniteSet, Function, Symbol, isolate
+from sympy_client.grammar.DefinitionStore import DefinitionStore, FunctionDefinition, SymbolDefinition
 from sympy_client.LmatEnvironment import LmatEnvironment
 from sympy_client.grammar.LatexCompiler import LatexSympyCompiler, LatexSympySymbolsCompiler
 from sympy_client.grammar.SympyParser import DefStoreLarkCompiler
@@ -42,7 +45,7 @@ class LmatEnvFunctionDefinition(FunctionDefinition):
 # provides definitions and deserializatiosn based on the symbols, variables and functions tables.
 class LmatEnvDefStore(DefinitionStore):
     
-    def __init__(self, environment: LmatEnvironment, expr_compiler: DefStoreLarkCompiler = LatexSympyCompiler, symbols_compiler: DefStoreLarkCompiler = LatexSympySymbolsCompiler):
+    def __init__(self, environment: LmatEnvironment, latex_str: str, expr_compiler: DefStoreLarkCompiler = LatexSympyCompiler, symbols_compiler: DefStoreLarkCompiler = LatexSympySymbolsCompiler):
         super().__init__()
         
         self._expr_compiler = expr_compiler
@@ -50,16 +53,12 @@ class LmatEnvDefStore(DefinitionStore):
         
         self._environment = environment
         
-        self._cached_symbols = {}
-        self._cached_symbol_definitions = {}
-
-        self._serialized_symbol_definitions = {
-            self.deserialize_symbol(s): definition
-            for s, definition in environment.get('variables', {}).items()
-        }
-
-        self._gen_symbols_cache()
+        symbol_dependencies: set[Symbol] = set(self._symbols_compiler.compile(latex_str, self))
         
+        self._add_symbols(tuple(filter(lambda s: str(s) in environment.get('variables', {}), symbol_dependencies)))
+        
+        
+
         self._functions: dict[Symbol, FunctionDefinition] = {}
         
         if 'functions' in self._environment:
@@ -83,13 +82,8 @@ class LmatEnvDefStore(DefinitionStore):
     
     # Attempt to get the value which the given variable / symbol name should be substituted with.
     # If no such variable / symbol exists, returns None.
-    def get_symbol_definition(self, symbol: Symbol) -> Expr | None:
-        if symbol in self._cached_symbol_definitions:
-            return self._cached_symbol_definitions[symbol]
-        elif symbol in self._serialized_symbol_definitions:
-            return self._deserialize_definition(symbol)  
-        else:
-            return None
+    def get_symbol_definition(self, symbol: Symbol) -> SymbolDefinition | None:
+        return self._symbols.get(symbol, None)
     
     def get_symbol_dependencies(self, symbol) -> set[Symbol]:
         assert symbol in self._serialized_symbol_definitions
@@ -101,37 +95,74 @@ class LmatEnvDefStore(DefinitionStore):
         return set(symbol_dependencies)
     
     def deserialize_symbol(self, symbol_latex: str):
-        return copy(self._cached_symbols.get(symbol_latex, Symbol(symbol_latex)))
-
-    def _deserialize_definition(self, symbol: Symbol):
-        serialized_definition = self._serialized_symbol_definitions[symbol]
-        definition_value = self._expr_compiler.compile(serialized_definition, self)
-        self._cached_symbols[symbol] = definition_value
+        return copy(Symbol(symbol_latex))
+    
+    def _add_symbols(self, symbols: tuple[Symbol]):
         
-        return definition_value
-
-    def _gen_symbols_cache(self):
-        tmp_cached_symbol_definitions = self._cached_symbol_definitions
-        tmp_serialized_symbol_definitions = self._serialized_symbol_definitions
+        self._symbols: dict[Symbol, SymbolDefinition] = { }
         
-        # no symbol substitution should take place during cache generation,
-        # so we temporarily clear these here.
-        self._cached_symbol_definitions = {}
-        self._serialized_symbol_definitions = {}
-        
-        for latex_str, assumptions_list in self._environment.get('symbols', {}).items():
-            symbol = self._expr_compiler.compile(latex_str, self)
-            
-            if not isinstance(symbol, Symbol):
-                raise RuntimeError(f'Symbol expression cannot be parsed as a symbol: "{latex_str}"')
-            
-            assumptions = { assumption: True for assumption in assumptions_list }
-            
-            self._cached_symbols[str(symbol)] = Symbol(str(symbol), **assumptions)
-            
-        self._cached_symbol_definitions = tmp_cached_symbol_definitions
-        self._serialized_symbol_definitions = tmp_serialized_symbol_definitions
+        # build the dependency graph (connected subcomponent) which contains all entries in the passed symbols list.
+    
+        dependency_graph: dict[Symbol, set[Symbol]] = { }
+        marked_symbols = set({ })
 
+        in_deg_table: dict[int, Symbol] = { }
+        
+        for symbol in symbols:
+            if symbol in marked_symbols:
+                continue
+            
+            visit_queue = deque({ symbol })
+            
+            dependency_graph[symbol] = set()
+            in_deg_table[symbol] = 0
+            marked_symbols.add(symbol)
+            
+            while len(visit_queue) > 0:
+                
+                symbol_vert = visit_queue.popleft()
+
+                neighbours = set(self._symbols_compiler.compile(self._environment['variables'][str(symbol_vert)], self))
+                
+                for neighbour in neighbours:
+                    dependency_graph[symbol_vert].add(neighbour)
+                    
+                    if neighbour not in marked_symbols:
+                        marked_symbols.add(neighbour)
+                        dependency_graph[neighbour] = set()
+                        in_deg_table[neighbour] = 0
+                        visit_queue.append(neighbour)
+            
+                    in_deg_table[neighbour] += 1
+        
+        print(dependency_graph)
+        # process dependencies in reverse topological order according to the constructed dependency graph.
+        # XXX: this ordering should be stored in the definition store.
+        topological_ordering = [ ]
+        
+        source_symbols = deque(filter(lambda s: in_deg_table[s] == 0, dependency_graph))
+        
+        while len(source_symbols) > 0:
+            source = source_symbols.popleft()
+            
+            topological_ordering.append(source)
+            
+            for neighbour in dependency_graph[source]:
+                in_deg_table[neighbour] -= 1
+                
+                if in_deg_table[neighbour] == 0:
+                    source_symbols.append(neighbour)
+            
+            del in_deg_table[source]
+        
+        if in_deg_table != { }:
+            # in_deg_table is not empty => graph is not a DAG => there is a cyclic dependency in the remaining vertices in the graph.
+            raise RuntimeError(f"There is a cyclic dependency between the following symbols: {', '.join(map(str, in_deg_table.keys()))}")
+        
+        for symbol in reversed(topological_ordering):
+            self._symbols[symbol] = SymbolDefinition(symbol,
+                                                     self._expr_compiler.compile(self._environment['variables'][str(symbol)], self),
+                                                     dependency_graph[symbol])
 
 # wrapper class for a DefinitionStore, which maps function args and their corresponding symbols to a given set of values.
 # should be used in the context of parsing a function body.

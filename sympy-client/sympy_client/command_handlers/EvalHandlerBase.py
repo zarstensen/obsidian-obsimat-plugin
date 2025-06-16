@@ -49,7 +49,7 @@ class EvalHandlerBase(CommandHandler, ABC):
 
     @override
     def handle(self, message: EvaluateMessage) -> EvalResult:
-        definitions_store = LmatEnvDefStore(self._parser, message['environment'])
+        definitions_store = LmatEnvDefStore(message['environment'], message['expression'])
         sympy_expr = self._parser.compile(message['expression'], definitions_store)
         expr_lines = None
         

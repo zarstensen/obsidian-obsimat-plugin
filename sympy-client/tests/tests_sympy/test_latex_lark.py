@@ -68,10 +68,8 @@ def _MatAdd(a, b):
 def _MatMul(a, b):
     return MatMul(a, b, evaluate=False)
 
-latex_parser = LatexSympyCompiler
-
 def parse_latex_lark(latex_str):
-    return latex_parser.compile(latex_str, LmatEnvDefStore(latex_parser, {}))
+    return LatexSympyCompiler.compile(latex_str, LmatEnvDefStore({}))
 
 # These LaTeX strings should parse to the corresponding SymPy expression
 SYMBOL_EXPRESSION_PAIRS = [

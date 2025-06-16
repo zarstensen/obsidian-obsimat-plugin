@@ -73,12 +73,12 @@ The entire evaluate suite consists of the following commands: `Evaluate LaTeX ex
 ### Solve
 
 Solve equations using the `Solve LaTeX expression` command.
-To solve a system of equations, place them in a `align` or `cases` environment separated by latex newlines (`\\\\`).
+To solve a system of equations, place them in a `align` or `cases` environment, separated by latex newlines (`\\\\`).
 
-The solution domain can be restricted for system of equations in the solve equation modal, see the [relevant Sympy documentation](https://docs.sympy.org/latest/modules/sets.html#module-sympy.sets.fancysets) for a list of possible values.[^lmat-solve-domain]
-Restrict the solution domain of a single equation with [symbol assumptions](#symbol-assumptions) on the free symbols.
+The solution domain can be restricted for single equations in the solve equation modal, see the [relevant Sympy documentation](https://docs.sympy.org/latest/modules/sets.html#module-sympy.sets.fancysets) for a list of possible values.[^lmat-solve-domain]
+Restrict the solution domain of a system of equations with [symbol assumptions](#symbol-assumptions) on the free symbols.
 
-[^lmat-solve-domain]: The default solution domain for systems of equations can be set via. The `domain` key in the `domain` table in an `lmat` environment.
+[^lmat-solve-domain]: The default solution domain for single equations can be set via. The `domain` key in the `domain` table in an `lmat` environment.
 
 <!-- TODO: update this one so it has a set solution (sin for example with a periodic solution domain) -->
 ![demo](readme-assets/solve-demo.gif)

@@ -33,7 +33,7 @@ class ConvertSympyHandler(CommandHandler):
         environment: LmatEnvironment = message['environment']
         expression: str = message['expression']
         
-        def_store = LmatEnvDefStore(message['environment'])
+        def_store = LmatEnvDefStore(message['environment'], expression)
         
         # TODO: add support for functions.
         

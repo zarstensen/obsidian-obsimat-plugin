@@ -5,7 +5,7 @@ from sympy_client.grammar.transformers.SymbolsTransformer import SymbolsTransfor
 @v_args(inline=True)
 class SymbolsOnlyTransformer(SymbolsTransformer):
     
-    def latex_string(self, symbols: list[Symbol]) -> FiniteSet:
+    def latex_string(self, symbols: list[Symbol] = []) -> FiniteSet:
         return FiniteSet(*symbols)
     
     def __default__(self, data, children, meta):

@@ -14,8 +14,11 @@ class TestConvertSympy:
         handler = ConvertSympyHandler(self.expr_compiler, self.symbols_compiler)
         
         result = handler.handle({"expression": "a + b + x + y", "environment": { "variables": {
-            'x': '25',
-            'y': '50'
+            'x': 'y^2 - z',
+            'y': '50',
+            'z': '2 y',
+            'A': 'B',
+            'B': 'A + z',
         }}})
 
         assert result.sympy_expr == a + b

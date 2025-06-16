@@ -25,3 +25,7 @@ class DefStoreLarkCompiler:
     
     def compile(self, serialized: str, definition_store: DefinitionStore) -> Expr:
         return self._transformer_cls(definition_store).transform(self._parser.parse(serialized))
+
+    @property
+    def parser(self):
+        return self._parser

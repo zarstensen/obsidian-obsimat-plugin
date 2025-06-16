@@ -4,7 +4,6 @@ from sympy import *
 from sympy.physics.units import Quantity
 
 from sympy_client import UnitsUtils
-from sympy_client.grammar.SympyParser import DefinitionStore
 from sympy_client.grammar.transformers.DefStoreBaseTransformer import DefStoreBaseTransformer
 
 @v_args(inline=True)
@@ -44,7 +43,7 @@ class SymbolsTransformer(DefStoreBaseTransformer):
         substituted_value = self.definition_store.get_symbol_definition(symbol)
         
         if substituted_value is not None:
-            return substituted_value
+            return substituted_value.value
         else:
             return symbol
     

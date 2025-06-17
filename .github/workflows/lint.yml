@@ -1,0 +1,25 @@
+name: Lint Sympy Client
+on: pull_request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt -r requirements-dev.txt ruff
+      - name: Run Ruff Fix
+        run: ruff check --fix --output-format=github
+      - name: Commit Lint Changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Lint SympyClient code base
+          branch: ${{ github.head_ref }}

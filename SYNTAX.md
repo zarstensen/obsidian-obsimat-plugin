@@ -1,5 +1,5 @@
 <!-- omit in toc -->
-# Latex Math Syntax
+# LaTeX Math Syntax
 
 This document aims to provide an overview of the latex parsing capabilities of this plugin. As a general note, the parser was designed with standard latex notation in mind, so as long as no complex formatting or esoteric math functions are used, it should be pretty straight forward to write latex formulas parsable by this plugin.
 
@@ -18,7 +18,7 @@ Whilst this document should provide a good overview of the parser, one can alway
 
 ## Expression Structure
 
-The **Latex Math** parser is able to parse most mathematical expressions and optionally relations (*e.g.* `>`, `<`, `=`) between expressions.
+The **LaTeX Math** parser is able to parse most mathematical expressions and optionally relations (*e.g.* `>`, `<`, `=`) between expressions.
 
 An expression is any series of mathematical terms separated by `+` or `-` signs.
 Terms consists of a series of factors separated by a multiplication sign (`*`, `\cdot`, `\times`) or a division sign (`/`), where a factor is one of the following:
@@ -40,7 +40,7 @@ The parser also supports systems of equations. Notate these by placing a series 
 
 The parser understands various ways of notating symbols. The below table gives some examples for supported notation concepts.
 
-| Type      | Latex String                                                       |
+| Type      | LaTeX String                                                       |
 | :-------- | :----------------------------------------------------------------- |
 | greek     | `\alpha` / `\beta` / `\gamma` / ...                                |
 | latin     | `a` / `x` / `symbol` / ...                                         |
@@ -55,7 +55,7 @@ This is a side effect of how Sympy handles symbols internally.
 Below is a table of all supported mathematical functions supported by the parser, this list may grow overtime as this project develops.
 Note that a *mathematical function* also encompasses concepts not normally thought of as a function, e.g. `\frac` is considered part of this table whilst it may not intuitively be thought of as a function.
 
-| Description                | Latex String                                                                           |
+| Description                | LaTeX String                                                                           |
 | :------------------------- | :------------------------------------------------------------------------------------- |
 | sine                       | `\sin`                                                                                 |
 | cosine                     | `\cos`                                                                                 |
@@ -127,7 +127,7 @@ The number of mathematical constants has intentionally been kept sparse, as thei
 
 Below is a table of all the mathematical constants the parser supports.
 
-| Name           | Latex String |
+| Name           | LaTeX String |
 | :------------- | :----------- |
 | pi             | `\pi`        |
 | euler          | `e`          |

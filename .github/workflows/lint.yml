@@ -4,6 +4,8 @@ on: pull_request
 jobs:
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,7 +21,7 @@ jobs:
       - name: Run Ruff Fix
         run: ruff check --fix --output-format=github
       - name: Commit Lint Changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v6
         with:
           commit_message: Lint SympyClient code base
           branch: ${{ github.head_ref }}

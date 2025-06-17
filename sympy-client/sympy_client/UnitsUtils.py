@@ -37,7 +37,7 @@ __add_unit_aliases(((str(unit.abbrev), unit)
                 for unit in __defined_units_quantities.values()
                 if isinstance(unit, PhysicalConstant)))
 
-# add Latex Math specific unit aliases.
+# add LaTeX Math specific unit aliases.
 __add_unit_aliases([ ( 'min', u.minute ), ( 'sec', u.second ) ])
 
 # attempt to automatically convert the units in the given sympy expression.

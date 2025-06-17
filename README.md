@@ -1,7 +1,7 @@
 <div align="center">
   
   <h1 align="center">
-  Latex Math
+  LaTeX Math
 
   <a>[![GitHub Release](https://img.shields.io/github/v/release/zarstensen/obsidian-latex-math?style=flat-square&color=blue)](https://github.com/zarstensen/obsidian-latex-math/releases/latest) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zarstensen/obsidian-latex-math/push.yml?style=flat-square&label=tests)
   </a>
@@ -10,7 +10,7 @@
 
 </div>
 
-**Latex Math** is an [Obsidian](https://obsidian.md/) plugin which adds mathematical evaluation of LaTeX math blocks to your notes, using [Sympy](https://www.sympy.org).
+**LaTeX Math** is an [Obsidian](https://obsidian.md/) plugin which adds mathematical evaluation of LaTeX math blocks to your notes, using [Sympy](https://www.sympy.org).
 
 ![demo](readme-assets/frontpage-demo.gif)
 *`Evaluate LaTeX expression` is bound to `Alt + B` in the above demo.
@@ -19,7 +19,7 @@ In general, all demo GIFs will make use of the [recommended hotkeys](#command-li
 
 ## Usage
 
-Start out by placing the cursor inside any math block. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)). **Latex Math** will now parse the latex math block, evaluate the equation, and insert the result at the end of the math block.
+Start out by placing the cursor inside any math block. Then execute the `Evaluate LaTeX expression` command (or any other command from the [command list](#command-list)). **LaTeX Math** will now parse the latex math block, evaluate the equation, and insert the result at the end of the math block.
 
 Take a look at the [command list](#command-list) a brief overview of what this plugin can do, or go look at the [features](#features) list, for a more in depth walkthrough of this plugin's advanced features.
 
@@ -97,13 +97,13 @@ To undefine a symbol or function, leave the right-hand side of the `:=` operator
 ### Units and Physical Constants
 
 Denote units or physical constants in equations by surrounding them with braces `{}`.
-Latex Math automatically handles conversions between units, constants and their various prefixes. See the [syntax](SYNTAX.md#unit-list) document for a list of supported units and physical constants.
+LaTeX Math automatically handles conversions between units, constants and their various prefixes. See the [syntax](SYNTAX.md#unit-list) document for a list of supported units and physical constants.
 
 ### Symbol Assumptions
 
-Use an `lmat` code block to tell **Latex Math** about various assumptions it may make about specific symbols. This is used to further simplify expressions, such as roots, or limit the solution domain of equations. By default, all symbols are assumed to be complex numbers.
+Use an `lmat` code block to tell **LaTeX Math** about various assumptions it may make about specific symbols. This is used to further simplify expressions, such as roots, or limit the solution domain of equations. By default, all symbols are assumed to be complex numbers.
 
-`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions Latex Math should make, under the `symbols` table. Like definitions, an `lmat` code block's persistence is based on its location. See below the demo GIF for a simple static `lmat` code block example.
+`lmat` code blocks make use of the [TOML](https://toml.io) config format. To define assumptions for a symbol, assign the symbol's name to a list of assumptions LaTeX Math should make, under the `symbols` table. Like definitions, an `lmat` code block's persistence is based on its location. See below the demo GIF for a simple static `lmat` code block example.
 
 ![demo](readme-assets/assumptions-demo.gif)
 
@@ -133,7 +133,7 @@ Download the plugin zip file from the [latest release](https://github.com/zarste
 
 If you receive an error upon plugin load on Linux, you might need to give execute permissions to the `SympyClient-linux.bin` file located in the plugin's installation directory.
 
-Perform the following commands inside the **Latex Math** installation directory, to give the necessary permissions:
+Perform the following commands inside the **LaTeX Math** installation directory, to give the necessary permissions:
 
 - (Optional) Check execution permissions of `SympyClient-linux.bin`:
   
@@ -147,12 +147,12 @@ Perform the following commands inside the **Latex Math** installation directory,
 
 - (Optional) Perform step 1 to check if permissions have changed.
 
-- Reload Obsidian with **Latex Math** enabled.
+- Reload Obsidian with **LaTeX Math** enabled.
   No errors should pop up, and the plugin should now work as expected
 
 ## Developing
 
-This section describes how to set up a development environment for **Latex Math**.
+This section describes how to set up a development environment for **LaTeX Math**.
 Make sure to have python (for Sympy client development) and / or NPM (for obsidian plugin development) installed before continuing.
 
 ### Developing the Sympy Client
@@ -165,7 +165,7 @@ python setup-dev-env.py
 
 This creates a virtual environment named `.venv` installed with all required dependencies. Furthermore, it sets up a git pre-push hook, which runs the entire test suite, before pushing.
 
-To use this development environment in Obsidian, go to the **Latex Math** settings in the vault this repo has been cloned to, and toggle the `Developer Mode` switch to on. Make sure to reload the vault after doing this.
+To use this development environment in Obsidian, go to the **LaTeX Math** settings in the vault this repo has been cloned to, and toggle the `Developer Mode` switch to on. Make sure to reload the vault after doing this.
 
 The plugin should now use the python source files and the created virtual environment, instead of the auto installed `SympyClient` binary.
 

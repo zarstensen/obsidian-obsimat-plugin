@@ -2,13 +2,34 @@ name: Lint Sympy Client
 on: pull_request
 
 jobs:
+  head-commit-msg:
+    name: Get PR Head Commit Message
+    runs-on: ubuntu-latest
+    outputs:
+      message: ${{ steps.head_commit_message.outputs.message }}
+    steps:
+      - name: PR Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Get PR HEAD Commit Message
+        id: head_commit_message
+        run: |
+          echo "message=$(git show -s --format=%s)" >> $GITHUB_OUTPUT
+          echo "message=$(git show -s --format=%s)"
+
   lint:
+    needs: head-commit-msg
+    if: ${{ !endsWith(needs.head-commit-msg.outputs.message, '[skip lint]') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - name: Check Message
+        run: echo "${{ toJson(github) }}"
       - uses: actions/checkout@v4
         with:
+          token: ${{ secrets.PAT_LINT_WORKFLOW }}
           ref: ${{ github.head_ref }}
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -23,5 +44,5 @@ jobs:
       - name: Commit Lint Changes
         uses: stefanzweifel/git-auto-commit-action@v6
         with:
-          commit_message: Lint SympyClient code base
+          commit_message: Lint SympyClient code base [skip lint]
           branch: ${{ github.head_ref }}

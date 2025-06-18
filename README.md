@@ -13,9 +13,10 @@
 **LaTeX Math** is an [Obsidian](https://obsidian.md/) plugin which adds mathematical evaluation of LaTeX math blocks to your notes, using [Sympy](https://www.sympy.org).
 
 ![demo](readme-assets/frontpage-demo.gif)
-*`Evaluate LaTeX expression` is bound to `Alt + B` in the above demo.
-In general, all demo GIFs will make use of the [recommended hotkeys](#command-list). [^demo-gif-plugins]*
-[^demo-gif-plugins]: All demo GIFs were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
+`Evaluate LaTeX expression` is bound to `Alt + B` in the above demo.
+In general, all demo GIFs will make use of the [recommended hotkeys](#command-list).[^gifs-note]
+
+[^gifs-note]: All demo GIFs were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
 
 ## Usage
 
@@ -126,6 +127,9 @@ Quickly convert latex to Sympy code to perform more advanced computations using 
 This will insert a python code block containing the equivalent Sympy code of the selected math block.
 
 ## Installing
+Press `Browse` in obsidians `Options > Community plugins` menu and search for `LaTeX Math`.
+
+OR
 
 Download the plugin zip file from the [latest release](https://github.com/zarstensen/obsidian-latex-math/releases/latest), and extract it to your vault's plugin folder, commonly located at `.obsidian/plugins`, relative to your vault's path.
 
@@ -133,7 +137,7 @@ Download the plugin zip file from the [latest release](https://github.com/zarste
 
 If you receive an error upon plugin load on Linux, you might need to give execute permissions to the `SympyClient-linux.bin` file located in the plugin's installation directory.
 
-Perform the following commands inside the **LaTeX Math** installation directory, to give the necessary permissions:
+Perform the following commands inside the **LaTeX Math** installation directory (see the [installing section](#installing)) **after enabling the plugin**, to give the necessary permissions:
 
 - (Optional) Check execution permissions of `SympyClient-linux.bin`:
   

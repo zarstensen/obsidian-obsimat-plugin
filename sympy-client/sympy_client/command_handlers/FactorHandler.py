@@ -1,8 +1,11 @@
-from typing import Any, override
-from .EvalHandlerBase import EvalHandlerBase, EvaluateMessage
-from sympy_client.grammar.SympyParser import SympyParser
+from typing import override
 
 from sympy import *
+
+from sympy_client.grammar.SympyParser import SympyParser
+
+from .EvalHandlerBase import EvalHandlerBase, EvaluateMessage
+
 
 class FactorHandler(EvalHandlerBase):
     def __init__(self, parser: SympyParser):

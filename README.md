@@ -14,9 +14,9 @@
 
 ![demo](readme-assets/frontpage-demo.gif)
 `Evaluate LaTeX expression` is bound to `Alt + B` in the above demo.
-In general, all demo GIFs will make use of the [recommended hotkeys](#command-list).[^test]
+In general, all demo GIFs will make use of the [recommended hotkeys](#command-list).[^gifs-note]
 
-[^test]: All demo GIFs were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
+[^gifs-note]: All demo GIFs were produced with the [Obsidian Latex Suite](https://github.com/artisticat1/obsidian-latex-suite) plugin installed.
 
 ## Usage
 

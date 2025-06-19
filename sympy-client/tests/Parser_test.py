@@ -268,3 +268,29 @@ i & 2 i
         result = self._parse_expr(r"25\% - 5\textperthousand")
         
         assert abs(result - (0.25 - 0.005)) <= 1e-14
+        
+    def test_regression_101(self):
+        x, y = symbols('x y')
+        
+        result = self._parse_expr(r"\sin x^2")
+        
+        assert result == sin(x**2)
+        
+        result = self._parse_expr(r"\sin(x)^2")
+        
+        assert result == sin(x)**2
+        
+        result = self._parse_expr(r"\log_{10} x^2")
+        assert result == log(x**2, 10)
+        
+        result = self._parse_expr(r"\cos |x|")
+        assert result == cos(abs(x))
+        
+        result = self._parse_expr(r"\sin x \mod y")
+        assert result == Mod(sin(x), y)
+        
+        result = self._parse_expr(r"\log(x)!")
+        assert result == factorial(log(x))
+        
+        result = self._parse_expr(r"\log x!!!")
+        assert result == log(factorial(factorial(factorial(x))))

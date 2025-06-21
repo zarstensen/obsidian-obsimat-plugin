@@ -9,6 +9,7 @@ Whilst this document should provide a good overview of the parser, one can alway
 ## Table of Contents
 
 - [Expression Structure](#expression-structure)
+- [Numbers](#numbers)
 - [Symbols](#symbols)
 - [Mathematical Functions](#mathematical-functions)
 - [Mathematical Constants](#mathematical-constants)
@@ -24,7 +25,7 @@ An expression is any series of mathematical terms separated by `+` or `-` signs.
 Terms consists of a series of factors separated by a multiplication sign (`*`, `\cdot`, `\times`) or a division sign (`/`), where a factor is one of the following:
 
 <!-- no toc -->
-- Number
+- [Number](#numbers)
 - [Symbol](#symbols)
 - [Unit / Constant](#units-and-physical-constants)
 - Matrix
@@ -35,6 +36,18 @@ Terms consists of a series of factors separated by a multiplication sign (`*`, `
 If no multiplication or division sign is present, multiplication is implicitly assumed.
 
 The parser also supports systems of equations. Notate these by placing a series of equations, separated by latex newlines (`\\\\`), inside a `cases` or `align` environment.
+
+## Numbers
+
+Numbers can be notated in 1 of the following 4 ways.
+
+- No prefix for base 10 e.g. `1234`.
+- `0x` or `0X` prefix for hexadecimal (base 16) e.g. `0xFF12`.
+- `0o` prefix for octal (base 8) e.g. `0o57`.
+- `0b` prefix for binary (base 2) e.g. `0b10110100`.
+
+Any prefixed number may optionally be surrounded with `\mathrm{...}`.
+Only surrounding the character in the prefix is also allowed `0\mathrm{x|b|o}...`.
 
 ## Symbols
 

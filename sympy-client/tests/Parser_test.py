@@ -17,6 +17,13 @@ class TestParse:
         result = self._parse_expr(r'-a i \cdot (5 + 7)^c + b')
         assert result == -a * I * (5 + 7) ** c + b
 
+    def test_non_base_10_numbers(self):
+        result = self._parse_expr(r"0b1001 - \mathrm{0b0001} + 0\mathrm{b}1000")
+        assert result == 16
+        
+        result = self._parse_expr(r"\frac{\mathrm{0XFF}}{0xf} + 0123")
+        assert result == 140
+
     def test_trig_funcs(self):
         x, y, abc = symbols('x y abc')
         assert self._parse_expr(r'\sin x') == sin(x)

@@ -32,13 +32,31 @@ class LatexTransformer(ConstantsTransformer, FunctionsTransformer):
         return Integer(str(digit))
     
     @v_args(inline=True)
-    def NUMERIC_NUMBER(self, number: Token):
+    def BASE_10_NUMBER(self, number: Token):
         
         number_str = str(number)
         
         if '.' in number_str:
             return Float(number_str)
         return Integer(number_str)
+
+    @v_args(inline=True)
+    def HEXADECIMAL_NUMBER(self, number):
+        hex_number_str = str(number).replace("\\mathrm{", "").replace("}", "").lower()
+        
+        return Integer(int(hex_number_str, 16))
+
+    @v_args(inline=True)
+    def OCTAL_NUMBER(self, number):
+        octal_number_str = str(number).replace("\\mathrm{", "").replace("}", "")
+        
+        return Integer(int(octal_number_str, 8))
+    
+    @v_args(inline=True)
+    def BINARY_NUMBER(self, number):
+        binary_number_str = str(number).replace("\\mathrm{", "").replace("}", "")
+        
+        return Integer(int(binary_number_str, 2))
 
     def system_of_relations(self, relations: list[Expr]) -> SystemOfExpr:
         return SystemOfExpr([

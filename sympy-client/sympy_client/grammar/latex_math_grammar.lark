@@ -93,7 +93,7 @@ _digit: _numeric_digit | _constant
 _constant: CONST_PI | CONST_EULER | CONST_IMAGINARY | CONST_INFINITY
 
 _numeric_digit: NUMERIC_DIGIT
-_numeric_number: NUMERIC_NUMBER
+_numeric_number: HEXADECIMAL_NUMBER | BASE_10_NUMBER | OCTAL_NUMBER | BINARY_NUMBER
 
 // ======== Functions ========
 
@@ -545,7 +545,13 @@ MULTI_LETTER_SYMBOL: LATIN_SYMBOL_WITH_PRIMTES | GREEK_SYMBOL_WITH_PRIMES | MULT
 
 %import common.DIGIT -> NUMERIC_DIGIT
 
-NUMERIC_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* _DOT NUMERIC_DIGIT+
+BINARY_NUMBER: /0(b|\\mathrm{b})[01]+/ | /\\mathrm{0b[01]+}/
+
+OCTAL_NUMBER: /0(o|\\mathrm{o})[0-7]+/ | /\\mathrm{0o[0-7]+}/
+
+HEXADECIMAL_NUMBER: /0[xX][\da-fA-F]+/ | /\\mathrm{0[xX][\da-fA-F]+}/
+
+BASE_10_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* _DOT NUMERIC_DIGIT+
 
 PRIMES: "'"+
 

@@ -25,30 +25,40 @@ term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (_align* (ADD|SUB))? 
     | unit
     | function_noarg
 
-?factor_func_arg: factor_func_arg_no_delim
+// matches all factors which may be passed to a mathematical function (excluding postfix functions) as an argument
+?factor_func_arg: factor_func_postfix_arg
     | _delimitedfactor
 
-?factor_func_arg_no_delim: exponentiation_arg
+// matches all factors which may be passed to a post fix mathematical function (factorial, percent, ...) WHICH may be passed to another mathematical function as an argument.
+// e.g. \sin x! this rule should match x, since x is an allowed arg in x! and x! is an allowed arg to \sin x!.
+// should not match (x) in e.g. \sin(x)! since (x)! is not passable as an arg to \sin.
+// this should instead be interpreted as (\sin(x))!, which another rule will take care of.
+?factor_func_postfix_arg: exponentiation_arg
     | basefactor_arg
 
+// matches all base factors in an exponentiation, which may be passed to a mathematical function as an argument.
 ?basefactor_arg: substitute_symbol
-    | function_arg_function
+    | function_as_arg
     | _number
     | _matrix_notation
 
-?exponentiation_ext: (unit|_delimitedfactor|function_noarg) _CARET function_special_arg -> exponentiation
-    | (unit|_delimitedfactor|function_noarg) _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
-
-// groups a base factor and an exponent factor to be evaluated in an exponentation.
-exponentiation_arg: basefactor_arg _CARET function_special_arg -> exponentiation
-    | basefactor_arg _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
-
+// various rules for grouping expressions surrounded by delimiters.
 _delimitedfactor: parenthesees_expression | brackets_expression | braces_expression
 
-// various rules for grouping expressions surrounded by delimiters.
 ?parenthesees_expression: _L_PAREN expression _R_PAREN
 ?braces_expression: _L_BRACE expression _R_BRACE
 ?brackets_expression: _L_BRACKET expression _R_BRACKET
+
+// groups a base factor and an exponent factor to be evaluated in an exponentation.
+// this variant matches only exponentiations which may be used as arguments to functions.
+// e.g. it should match x^2 in \sin x^2 but not (x + y)^2 in \sin(x+ y)^2
+//
+// exponentiation_arg combined with exponentiation_ext should match all exponentiations possible. 
+exponentiation_arg: basefactor_arg _CARET function_special_arg -> exponentiation
+    | basefactor_arg _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
+
+?exponentiation_ext: (unit|_delimitedfactor|function_noarg) _CARET function_special_arg -> exponentiation
+    | (unit|_delimitedfactor|function_noarg) _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
 
 // ======== Symbols ========
 
@@ -89,10 +99,12 @@ _numeric_number: NUMERIC_NUMBER
 
 undefined_function: UNDEFINED_FUNC_START list_of_expressions _R_PAREN
 
-?function_noarg: _postfix_function // should be allowed in function arg BUT only if lhs operator is not surrounded by parenthesees.
+// groups all functions whic cannot be used as an argument to other functions.
+// to pass this type of function, delimit them so they are matched by the _delimited_factor rule.
+?function_noarg: _postfix_function
 
 // groups all functions which can be used as arguments to other functions without needing to be delimited.
-?function_arg_function: _delimited_function
+?function_as_arg: _delimited_function
     | named_function
     | _series_function
     | integral
@@ -168,21 +180,6 @@ sign: _func_template{_FUNC_SGN}
 
 exponential: _func_template{_FUNC_EXP}
 
-_postfix_function: factorial | percent | permille | derivative_prime | modulo
-_postfix_function_arg: factorial_func_arg | percent_func_arg | permille_func_arg | derivative_prime_func_arg
-
-factorial: _delimitedfactor _BANG
-factorial_func_arg: factor_func_arg_no_delim _BANG -> factorial
-
-percent: factor_func_arg _PERCENT
-percent_func_arg: factor_func_arg_no_delim _PERCENT -> percent
-permille: factor_func_arg _PERMILLE
-permille_func_arg: factor_func_arg_no_delim _PERMILLE -> permille
-derivative_prime: factor_func_arg PRIMES
-derivative_prime_func_arg: factor_func_arg_no_delim PRIMES -> derivative_prime
-
-modulo: factor_func_arg _FUNC_MOD factor_func_arg
-
 
 upper_gamma: _FUNC_UPPER_GAMMA expression (_COMMA expression)? _R_PAREN
 lower_gamma: _FUNC_LOWER_GAMMA expression _COMMA expression _R_PAREN
@@ -233,6 +230,36 @@ _multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
 // due to lalr's limited lookahead, a custom post lexer needs to insert this token when parsing.
 %declare _MULTIARG_DELIMITER
 %declare _MULTIARG_EOS
+
+// postfix functions
+
+_postfix_function: factorial | percent | permille | derivative_prime | modulo
+
+// postfix functions can generally not be passed as an argument to other mathematical functions,
+// e.g. \sin(x)!, where (x)! would be the postfix function call.
+// if this was allowed, then \sin(x)! would be interpreted as \sin((x)!), but from a human reader perspective,
+// this is unexpected, and interpreting it as (\sin(x))! is more natural.
+//
+// Omitting these parenthesees changes this perception though,
+// as e.g. \sin x! is more likely to be interpreted as \sin((x)!)
+//
+// Therefore, some postfix functions may have an additional rule, postfixed with _func_arg,
+// which matches all cases of the postfix function such that it can be passed as an argument to another function.
+//
+// all of these rules are grouped together in _postfix_function_arg
+_postfix_function_arg: factorial_func_arg | percent_func_arg | permille_func_arg | derivative_prime_func_arg
+
+factorial: _delimitedfactor _BANG
+factorial_func_arg: factor_func_postfix_arg _BANG -> factorial
+
+percent: factor_func_arg _PERCENT
+percent_func_arg: factor_func_postfix_arg _PERCENT -> percent
+permille: factor_func_arg _PERMILLE
+permille_func_arg: factor_func_postfix_arg _PERMILLE -> permille
+derivative_prime: factor_func_arg PRIMES
+derivative_prime_func_arg: factor_func_postfix_arg PRIMES -> derivative_prime
+
+modulo: factor_func_arg _FUNC_MOD factor_func_arg
 
 // core functions
 frac: _FUNC_FRAC _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULTIARG_EOS

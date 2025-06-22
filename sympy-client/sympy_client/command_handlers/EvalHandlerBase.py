@@ -17,17 +17,19 @@ from .CommandHandler import CommandHandler, CommandResult
 
 
 class EvalResult(CommandResult, ABC):
-    def __init__(self, sympy_expr: Expr, expr_lines: list[int] | None):
+    def __init__(self, sympy_expr: Expr, expr_separator: str, expr_lines: list[int] | None):
         super().__init__()
         self.sympy_expr = sympy_expr
+        self.expr_separator = expr_separator
         self.expr_lines = expr_lines
 
     @override
     def getPayload(self):
-        metadata = None
-
+        metadata = dict(separator = self.expr_separator)
+        
         if self.expr_lines is not None:
             metadata = dict(
+                **metadata,
                 start_line = self.expr_lines[0],
                 end_line = self.expr_lines[1] if self.expr_lines[1] is not None else self.expr_lines[0]
             )
@@ -60,12 +62,15 @@ class EvalHandlerBase(CommandHandler, ABC):
             if isinstance(sympy_expr, SystemOfExpr):
                 expr_lines = (sympy_expr.get_location(-1).line, sympy_expr.get_location(-1).end_line)
                 sympy_expr = sympy_expr.get_expr(-1)
+
             # for equalities, take the right hand side.
             if isinstance(sympy_expr, Relational):
                 sympy_expr = sympy_expr.rhs
-            # for boolean operations, eg. (a + b V a + c V b + c), then we choose the right most one (b + c).
-            elif isinstance(sympy_expr, LatticeOp):
-                sympy_expr = AssocOp.make_args(sympy_expr)[-1]
+
+        if hasattr(sympy_expr, 'is_Boolean') and sympy_expr.is_Boolean:
+            separator = r"\equiv"
+        else:
+            separator = "="
 
         sympy_expr = self.evaluate(sympy_expr, message)
 
@@ -75,6 +80,6 @@ class EvalHandlerBase(CommandHandler, ABC):
             sympy_expr = UnitsUtils.auto_convert(sympy_expr, UnitSystem.get_unit_system(unit_system))
         else:
             sympy_expr = UnitsUtils.auto_convert(sympy_expr)
-
-
-        return EvalResult(sympy_expr, expr_lines)
+            
+  
+        return EvalResult(sympy_expr, separator, expr_lines)

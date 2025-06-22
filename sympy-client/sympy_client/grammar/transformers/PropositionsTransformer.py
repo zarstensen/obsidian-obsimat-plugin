@@ -1,6 +1,7 @@
 from lark import Token, Transformer, v_args
 from sympy import *
 from sympy.logic.boolalg import *
+from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
 
 # The FucntionsTransformer holds the implementation of various mathematical function rules,
@@ -14,6 +15,12 @@ class PropositionsTransformer(Transformer):
     def CMD_CONTRADICTION(self, _) -> Expr:
         return S.false
     
+    @v_args(meta=True, inline=True)
+    def proposition_chain(self, meta, *props: tuple[Expr]) -> SystemOfExpr:
+        if len(props) > 1:
+            return SystemOfExpr([(prop, meta) for prop in props])
+        else:
+            return props[0]
         
     def prop_iff(self, *args: tuple[Expr]) -> Expr:
         return Equivalent(*args)

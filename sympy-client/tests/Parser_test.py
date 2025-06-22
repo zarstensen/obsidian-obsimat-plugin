@@ -315,6 +315,9 @@ i & 2 i
         result = self._parse_expr(r"\neg A")
         assert result == Not(a)
         
+        result = self._parse_expr(r"\mathrm{T} \implies \mathrm{F}")
+        assert result == S.true >> S.false
+        
     def test_regression_101(self):
         x, y = symbols('x y')
 

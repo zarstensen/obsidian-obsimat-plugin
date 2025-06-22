@@ -3,7 +3,7 @@
 
 // ======== Core structure ========
 
-?latex_string: relation | system_of_relations | _proposition
+?latex_string: relation | system_of_relations | proposition_chain
 
 _rel_op: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
 _align: _ALIGN | _LATEX_NEWLINE
@@ -339,6 +339,7 @@ NON_BRACE_TEXT.-1: /[^{}]+/
 
 // ======== Propositional Logic Structure
 
+proposition_chain: _proposition (_PROP_OP_EQUIV _proposition)*
 _proposition: _prop_bool_value | prop_not | prop_xnor | prop_xor | prop_nor | prop_and | prop_nand | prop_or | prop_implies | prop_iff
 
 // propositional operator presedence is based on wolfram alpha: https://www.wolframalpha.com/input?i=not+A+xor+B+nor++C+and+D+nand+E+or+F+implies+G+%3C%3D%3E+H
@@ -628,8 +629,8 @@ _CMD_END_CASES: CMD_END _WS? "cases" _WS? _R_BRACE
 
 // ======== propositional logic ========
 
-CMD_TAUTOLOGY: /\\(?:mathrm|operatorname)\s*{\s*(?:T|True|TRUE)\s*}/
-CMD_CONTRADICTION: /\\(?:mathrm|operatorname)\s*{\s*(?:F|False|FALSE)\s*}/
+CMD_TAUTOLOGY.1: /\\(?:mathrm|operatorname)\s*{\s*(?:T|True|TRUE)\s*}/
+CMD_CONTRADICTION.1: /\\(?:mathrm|operatorname)\s*{\s*(?:F|False|FALSE)\s*}/
 
 _PROP_OP_BIIMPLICATION: "\\iff" | /\\(?:[Ll]ongl|[Ll])eftrightarrow/ | /\\(?:leftright|rightleft)harpoons/
 _PROP_OP_LR_IMPLICATION.1: "\\implies" | "\\to" | /\\(?:[Ll]ongr|[Rr])ightarrow/ // have to increase priority due to _LIM_APPROACH_SYMBOL
@@ -642,4 +643,4 @@ _PROP_OP_XOR: "\\oplus"
 _PROP_OP_XNOR: "\\odot"
 _PROP_OP_NOT: "\\neg"
 
-PROP_OP_EQUIV: "\\equiv"
+_PROP_OP_EQUIV: "\\equiv"

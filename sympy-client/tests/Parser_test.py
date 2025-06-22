@@ -2,6 +2,7 @@ from sympy import *
 from sympy_client import LmatEnvironment
 from sympy_client.grammar.LatexMatrix import LatexMatrix
 from sympy_client.grammar.LatexParser import LatexParser
+from sympy.logic.boolalg import *
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
@@ -276,7 +277,44 @@ i & 2 i
         result = self._parse_expr(r"25\% - 5\textperthousand")
 
         assert abs(result - (0.25 - 0.005)) <= 1e-14
-
+        
+    def test_propositions(self):
+        a, b, c, d, e, f, g, h, i = symbols('A B C D E F G H I')
+        
+        # test presedence
+        result = self._parse_expr(r"\neg A \odot B \oplus C \bar \vee D \wedge E \overline \wedge F \vee G \implies H \iff I")
+        assert result == Equivalent(Implies(Or(Nand(And(Nor(Xor(Xnor(Not(a), b), c), d), e), f), g), h), i)
+        
+        result = self._parse_expr(r"A \iff B \Longleftrightarrow C \longleftrightarrow D \leftrightharpoons E \rightleftharpoons F ")
+        assert result == Equivalent(a, b, c, d, e, f)
+        
+        result = self._parse_expr(r"A \implies B \to C \Longrightarrow D \longrightarrow E \Rightarrow F \rightarrow G")
+        assert result == (a >> (b >> (c >> (d >> (e >> (f >> g))))))
+        
+        result = self._parse_expr(r"A \Longleftarrow B \longleftarrow C \Leftarrow D \leftarrow E")
+        assert result == (a << (b << (c << (d << e))))
+        
+        result = self._parse_expr(r"A \vee B")
+        assert result == Or(a, b)
+        
+        result = self._parse_expr(r"A \bar \wedge B \overline \wedge C")
+        assert result == Nand(a, b, c)
+        
+        result = self._parse_expr(r"A \wedge B")
+        assert result == And(a, b)
+        
+        result = self._parse_expr(r"A \bar \vee B \overline \vee C")
+        assert result == Nor(a, b, c)
+        
+        result = self._parse_expr(r"A \oplus B")
+        assert result == Xor(a, b)
+        
+        result = self._parse_expr(r"A \odot B")
+        assert result == Xnor(a, b)
+        
+        result = self._parse_expr(r"\neg A")
+        assert result == Not(a)
+        
     def test_regression_101(self):
         x, y = symbols('x y')
 

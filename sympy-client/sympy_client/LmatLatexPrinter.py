@@ -2,6 +2,7 @@ import re as regex
 from functools import reduce
 
 from sympy import *
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.physics.units import Quantity
 from sympy.printing.latex import LatexPrinter
 
@@ -43,6 +44,12 @@ class LmatLatexPrinter(LatexPrinter):
             contents.append(" & ".join(contents_row))
 
         return f"{expr.env_begin}{r' \\ '.join(contents)}{expr.env_end}"
+
+    def _print_BooleanTrue(self, _: BooleanTrue):
+        return r"\mathrm{T}"
+    
+    def _print_BooleanFalse(self, _: BooleanFalse):
+        return r"\mathrm{F}"
 
     def _print_Mul(self, expr: Mul):
         # try to split any fraction up into at most 3 distinct fractions.

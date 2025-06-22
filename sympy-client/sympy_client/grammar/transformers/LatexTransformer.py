@@ -16,11 +16,12 @@ from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from ..LatexMatrix import LatexMatrix
 from .ConstantsTransformer import ConstantsTransformer
 from .FunctionsTransformer import FunctionsTransformer
+from .PropositionsTransformer import PropositionsTransformer
 
 
 # The LatexMathLarkTransofmer class provides functions for transforming
 # rules defined in latex_math_grammar.lark into sympy expressions.
-class LatexTransformer(ConstantsTransformer, FunctionsTransformer):
+class LatexTransformer(ConstantsTransformer, FunctionsTransformer, PropositionsTransformer):
 
     class Delim(Enum):
         MatDelim = 1

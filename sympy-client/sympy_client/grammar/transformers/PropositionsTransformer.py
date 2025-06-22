@@ -23,7 +23,13 @@ class PropositionsTransformer(Transformer):
             return props[0]
         
     def prop_iff(self, *args: tuple[Expr]) -> Expr:
-        return Equivalent(*args)
+        equiv = Equivalent(*args, evaluate=False)
+        
+        if not equiv.is_Boolean:
+            # figure out how to do this...
+            equiv.lmat_is_Boolean = True
+        
+        return equiv
 
     def prop_implies(self, *args: tuple[Expr|Token]) -> Expr:
         
@@ -36,9 +42,9 @@ class PropositionsTransformer(Transformer):
             
             match op_token.type:
                 case "_PROP_OP_LR_IMPLICATION":
-                    implication = Implies(left, right)
+                    implication = Implies(left, right, evaluate=False)
                 case "_PROP_OP_RL_IMPLICATION":
-                    implication = Implies(right, left)
+                    implication = Implies(right, left, evaluate=False)
                 case _:
                     raise ValueError(f"Unexpected token: {repr(op_token)}")
             
@@ -47,22 +53,22 @@ class PropositionsTransformer(Transformer):
         return args[0]
 
     def prop_or(self, *args: tuple[Expr]) -> Expr:
-        return Or(*args)
+        return Or(*args, evaluate=False)
     
     def prop_nand(self, *args: tuple[Expr]) -> Expr:
-        return Nand(*args)
+        return Nand(*args, evaluate=False)
     
     def prop_and(self, *args: tuple[Expr]) -> Expr:
-        return And(*args)
+        return And(*args, evaluate=False)
     
     def prop_nor(self, *args: tuple[Expr]) -> Expr:
-        return Nor(*args)
+        return Nor(*args, evaluate=False)
     
     def prop_xor(self, *args: tuple[Expr]) -> Expr:
-        return Xor(*args)
+        return Xor(*args, evaluate=False)
     
     def prop_xnor(self, *args: tuple[Expr]) -> Expr:
-        return Xnor(*args)
+        return Xnor(*args, evaluate=False)
     
     def prop_not(self, arg: Expr) -> Expr:
-        return Not(arg)
+        return Not(arg, evaluate=False)

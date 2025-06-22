@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TypedDict, override
 
 from sympy import *
+from sympy.logic.boolalg import Equivalent
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.core.relational import Relational
 from sympy.physics.units.unitsystem import UnitSystem

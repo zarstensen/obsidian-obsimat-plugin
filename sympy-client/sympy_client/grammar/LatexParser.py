@@ -13,18 +13,18 @@ from .transformers.LatexTransformer import LatexTransformer
 
 # Represents a scope to be handled by the ScopePostLexer.
 # This class provides a series of terminals pairs which define the start and end of this scope.
-# 
+#
 # The replace_tokens dict is a dict between a terminal type, and either:
 # - A string representing the new type of this token, the value is preserved.
 # - A list of TerminalDef, which (going from left to right) replaces the given terminal type, if its pattern matches its value.
 class LexerScope:
-    def __init__(self, 
+    def __init__(self,
                     scope_pairs: list[tuple[regex.Pattern, regex.Pattern|Callable[[regex.Match[str]], regex.Pattern]]] = [],
                     replace_tokens: dict[str, str|list[TerminalDef]] = {}
                 ):
         self.scope_pairs = scope_pairs
         self.replace_tokens = replace_tokens
-    
+
     def token_handler(self, token_stream: Iterator[Token], _scope_start_token: Token) -> Iterator[Token]:
         for t in token_stream:
             # try to replace the token
@@ -32,7 +32,7 @@ class LexerScope:
                 if isinstance(self.replace_tokens[t.type], str):
                     yield Token(self.replace_tokens[t.type], t.value)
                     continue
-                
+
                 for replace_token in self.replace_tokens[t.type]:
                     if regex.fullmatch(replace_token.pattern.to_regexp(), t.value):
                         yield Token(replace_token.name, t.value)
@@ -47,7 +47,7 @@ class MultiArgScope(LexerScope):
     def __init__(self, arg_count: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.arg_count = arg_count
-    
+
     def token_handler(self, token_stream: Iterator[Token], scope_start_token: Token) -> Iterator[Token]:
         for _ in range(1, self.arg_count):
             yield next(super().token_handler(token_stream, scope_start_token))
@@ -67,25 +67,25 @@ class MatrixScope(LexerScope):
 
 class PartialDiffScope(LexerScope):
     def token_handler(self, token_stream, _scope_start_token):
-        
+
         for token in super().token_handler(token_stream, _scope_start_token):
             yield token
             if token.type == '_R_BRACE':
                 break
-        
+
         next_token = next(super().token_handler(token_stream, _scope_start_token))
         if next_token.type == '_L_BRACE':
             yield Token('_DERIV_ARG_SEPARATOR', next_token.value)
         else:
             yield next_token
-    
+
 
 # The ScopePostLexer aims to provide context to the lalr parser during tokenization.
 # It does this by recognizing pairs of terminals, which define a scope.
 # Inside this scope, terminals can be specified which should be replaced by other terminals,
 # or optionally a custom token handler can be given, for more complex operations.
 class ScopePostLexer(PostLex):
-        
+
     # setup scopes using the terminals defined in the given parser.
     def initialize_scopes(self, parser: Lark):
         self.scopes = [
@@ -166,19 +166,19 @@ class ScopePostLexer(PostLex):
                 scope_pairs=[("_?L_(.*)", lambda match : f"_?R_{match.groups()[0]}")]
             )
         ]
-        
+
     def process(self, stream: Iterator[Token]) -> Iterator[Token]:
         yield from self._process_scope(stream, LexerScope(), None, None)
-            
+
     def _process_scope(self, stream, scope: LexerScope, scope_begin_token: Token | None, scope_end_terminal: str | None):
         for token in scope.token_handler(stream, scope_begin_token):
             yield token
-            
+
             # check if we are ourselves at an end terminal
             # if we are, go out of the scope.
             if scope_end_terminal is not None and regex.fullmatch(scope_end_terminal, token.type):
                 break
-            
+
             # check if the token starts a scope
             for new_scope in self.scopes:
                 for scope_pair in new_scope.scope_pairs:
@@ -200,9 +200,9 @@ class LatexParser(SympyParser):
             grammar_file = os.path.join(
                 os.path.dirname(__file__), "latex_math_grammar.lark"
             )
-        
+
         post_lexer = ScopePostLexer()
-        
+
         self.parser = Lark.open(
             grammar_file,
             rel_to=os.path.dirname(grammar_file),
@@ -215,20 +215,20 @@ class LatexParser(SympyParser):
             maybe_placeholders=True,
             postlex=post_lexer
         )
-        
+
         post_lexer.initialize_scopes(self.parser)
 
     # Parse the given latex expression into a sympy expression, substituting any information into the expression, present in the current environment.
-    def parse(self, latex_str: str, definitions_store: DefinitionStore):        
+    def parse(self, latex_str: str, definitions_store: DefinitionStore):
         transformer = LatexTransformer(definitions_store)
-        
+
         try:
             parse_tree = self.parser.parse(latex_str)
         except UnexpectedInput as e:
             raise LarkError(f"{e.get_context(latex_str, LatexParser.__PARSE_ERR_PRETTY_STR_SPAN)}{e}") from e
-            
+
         expr = transformer.transform(parse_tree)
-        
+
         return expr
-    
+
     __PARSE_ERR_PRETTY_STR_SPAN = 30

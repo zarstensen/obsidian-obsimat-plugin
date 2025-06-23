@@ -10,43 +10,43 @@ from sympy_client.grammar.LatexParser import LatexParser
 ## Tests the evaluate mode.
 class TestEvaluate:
     parser = LatexParser()
-    
+
     def test_simple_evaluate(self):
         handler = EvalHandler(self.parser)
-        
+
         result = handler.handle({"expression": "1+1", "environment": {}})
-        
+
         assert result.sympy_expr == 2
-            
+
     def test_escaped_spaces(self):
         handler = EvalHandler(self.parser)
-        
+
         result = handler.handle({"expression": r"1\ + \ 1", "environment": {}})
 
         assert result.sympy_expr == 2
-        
-        
+
+
     def test_matrix_single_line(self):
         handler = EvalHandler(self.parser)
-        
+
         result = handler.handle({"expression": r"2 \cdot \begin{bmatrix} 1 \\ 1 \end{bmatrix}", "environment": {}})
 
         assert result.sympy_expr == 2 * Matrix([[1], [1]])
-        
-                
+
+
     def test_matrix_multi_line(self):
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": r"""
         2
-        \cdot 
-        \begin{bmatrix} 
+        \cdot
+        \begin{bmatrix}
         1 & 2 \\
         3 & 4
         \end{bmatrix}
         """, "environment": {}})
-        
+
         assert result.sympy_expr == 2 * Matrix([[1, 2], [3, 4]])
-        
+
     def test_matrix_normal(self):
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": r"""
@@ -61,11 +61,11 @@ class TestEvaluate:
         """, "environment": {}})
 
         assert result.sympy_expr == sqrt(20**2 + 30**2 + 40**2 + 50**2)
-        
+
     def test_matrix_inner_prodcut(self):
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": r"""
-        \langle 
+        \langle
         \begin{bmatrix}
         1 \\
         2
@@ -79,18 +79,18 @@ class TestEvaluate:
         """, "environment": {}})
 
         assert result.sympy_expr == 1 * 2 + 2 * 4
-        
-        
+
+
     def test_relational_evaluation(self):
         a, b = symbols("a b")
-        
+
         handler = EvalHandler(self.parser)
         result = handler.handle({"expression": r"""
         5 + 5 + 5 + 5 = 10 + 10
         """, "environment": {}})
 
         assert result.sympy_expr == 20
-        
+
         result = handler.handle({"expression": r"""
         a = b = (a - b)^2
         """, "environment": {}})
@@ -100,26 +100,26 @@ class TestEvaluate:
         result = handler.handle({"expression": r"""
         1 = 2 = 1
         """, "environment": {}})
-        
+
         assert result.sympy_expr == 1
-        
+
         result = handler.handle({"expression": r"""
             \begin{cases}
             2 + 2 + 2 + 2 &= 4 + 2 + 2 \\
                           &= 4 + 4
             \end{cases}
             """, "environment": {}})
-        
+
         assert result.sympy_expr == 8
         assert result.expr_lines == (4, 4)
-        
+
         result = handler.handle({"expression": r"""
             1 = 2 = 3 = 4 = 5 = 6 = 7 = 8 = 9
             """, "environment": {}})
 
         assert result.sympy_expr == 9
-        
-    
+
+
     def test_variable_substitution(self):
         handler = EvalHandler(self.parser)
 
@@ -184,19 +184,19 @@ class TestEvaluate:
             }
         })
         assert result.sympy_expr == 4
-        
-        
+
+
     def test_gradient(self):
         handler = EvalHandler(self.parser)
-        
+
         result = handler.handle({
             "expression": r"\nabla (x^2 y + y^2 x)",
             "environment": {}
         })
-        
+
         x, y = symbols("x y")
         assert result.sympy_expr == Matrix([y * (2 * x + y), x * (2 * y + x)])
-    
+
     def test_evalf(self):
         handler = EvalfHandler(self.parser)
         result = handler.handle({"expression": "5/2", "environment": {}})
@@ -277,7 +277,7 @@ class TestEvaluate:
             }
         })
         assert result.sympy_expr == Matrix([[125]])
-    
+
     def test_hessian(self):
         handler = EvalHandler(self.parser)
         x, y = symbols('x y')
@@ -303,14 +303,14 @@ class TestEvaluate:
                 }
             }
         })
-        
+
         assert result.sympy_expr == Matrix([
             [- 1 / x**2,    0,      0],
             [0,             E**y,   0],
             [0,             0,      0]
         ])
 
-    
+
     def test_jacobi(self):
         handler = EvalHandler(self.parser)
         x, y = symbols('x y')
@@ -337,93 +337,93 @@ class TestEvaluate:
                 }
             }
         })
-        
+
         assert result.sympy_expr == Matrix([
             [1 / x,             0,              0],
             [0,                 cos(y),         0],
             [-sin(x) * sin(y),  cos(x) * cos(y),0]
         ])
-    
+
     def test_assumptions(self):
         handler = EvalHandler(self.parser)
         x = symbols('x', real=True)
         result = handler.handle({ 'expression': r"\bar x x", 'environment': { 'symbols': {'x': ['real']} }})
         assert result.sympy_expr == x**2
-        
+
     def test_combinatorial(self):
         handler = EvalHandler(self.parser)
-        
+
         result = handler.handle({ 'expression': r"P(10, 5)", 'environment': { } })
-    
+
         assert result.sympy_expr == 30240
-        
+
         n, c = symbols('n C')
         result = handler.handle({'expression': r"C (2 + 3) + C(n, 42)", 'environment': { } })
-        
+
         assert result.sympy_expr == c * 5 + binomial(n, 42)
-        
+
         result = handler.handle({'expression': r"D(6)", 'environment': { } })
-        
+
         assert result.sympy_expr == 265
-        
+
         result = handler.handle({ 'expression': r"{^10P_5}", 'environment': { } })
-    
+
         assert result.sympy_expr == 30240
-        
+
         n, c = symbols('n C')
         result = handler.handle({'expression': r"C (2 + 3) + {_n C_42}", 'environment': { } })
-        
+
         assert result.sympy_expr == c * 5 + binomial(n, 42)
-        
+
         result = handler.handle({'expression': r"{!6}", 'environment': { } })
-        
+
         assert result.sympy_expr == 265
-        
+
     def test_gamma(self):
         handler = EvalHandler(self.parser)
-        
+
         result = handler.handle({ 'expression': r"\frac{6!}{e} - \frac{\gamma\left(6 + 1, -1\right)}{e}", 'environment': { } })
-        
+
         assert result.sympy_expr == 265
-        
+
         result = handler.handle({ 'expression': r"\Gamma(25 + 1)", 'environment': { } })
         assert result.sympy_expr == factorial(25)
-        
-        
+
+
         result = handler.handle({ 'expression': r"\Gamma(4, 5)", 'environment': { } })
         assert result.sympy_expr == 236 / exp(5)
-    
+
     def test_divisibility(self):
         handler = EvalHandler(self.parser)
-        
+
         result = handler.handle({ 'expression': r"{3 + 5^2} \mod 2", 'environment': { } })
         assert result.sympy_expr == 0
-        
+
         a, b, m = symbols('a b m')
         result = handler.handle({ 'expression': r"(a \mod m + b \mod m) \mod m", 'environment': { } })
         assert result.sympy_expr == Mod(a + b, m)
-        
+
         result = handler.handle({ 'expression': r"\gcd(8, 12)", 'environment': { } })
-        
+
         assert result.sympy_expr == 4
-        
+
         result = handler.handle({ 'expression': r"\operatorname{lcm}(6, 21)", 'environment': { } })
         assert result.sympy_expr == 42
-    
+
     def test_complex(self):
         handler = EvalHandler(self.parser)
-        
+
         result = handler.handle({ 'expression': r"\Re (5 + 7 i)", 'environment': { } })
         assert result.sympy_expr == 5
-        
+
         result = handler.handle({ 'expression': r"\operatorname{Im} (5 + 7 i)", 'environment': { } })
         assert result.sympy_expr == 7
-        
+
         result = handler.handle({ 'expression': r"\arg e^{i \pi / 2}", 'environment': { } })
         assert result.sympy_expr == pi/2
-        
+
         result = handler.handle({ 'expression': r"\mathrm{sgn}(-256)", 'environment': { } })
-        
-        assert result.sympy_expr == -1    
-    
+
+        assert result.sympy_expr == -1
+
     # TODO: add gradient test (it is already implicitly tested in test_jacobi so not high priority)

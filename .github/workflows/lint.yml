@@ -1,31 +1,12 @@
-name: Lint Sympy Client
+name: Sympy Client Code Quality Check
 on: pull_request
 
 jobs:
-  head-commit-msg:
-    name: Get PR Head Commit Message
+  code-quality-check:
     runs-on: ubuntu-latest
-    outputs:
-      message: ${{ steps.head_commit_message.outputs.message }}
-    steps:
-      - name: PR Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Get PR HEAD Commit Message
-        id: head_commit_message
-        run: echo "message=$(git show -s --format=%s)" >> $GITHUB_OUTPUT
-
-  lint:
-    needs: head-commit-msg
-    if: ${{ !endsWith(needs.head-commit-msg.outputs.message, '[skip lint]') }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT_LINT_WORKFLOW }}
           ref: ${{ github.head_ref }}
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -34,11 +15,6 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt -r requirements-dev.txt ruff
-      - name: Run Ruff Fix
-        run: ruff check --fix --output-format=github
-      - name: Commit Lint Changes
-        uses: stefanzweifel/git-auto-commit-action@v6
-        with:
-          commit_message: Lint SympyClient code base [skip lint]
-          branch: ${{ github.head_ref }}
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: Run Ruff Check
+        run: ruff check --output-format=github

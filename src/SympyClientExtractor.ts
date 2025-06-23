@@ -24,6 +24,10 @@ export class SympyClientExtractor {
         await this.extractClient(SympyClientWin, this.getPlatformClientPath("win"));
         await this.extractClient(SympyClientMacos, this.getPlatformClientPath("macos"));
         await this.extractClient(SympyClientLinux, this.getPlatformClientPath("linux"));
+
+        // give execute permissions on platforms which require this.
+        
+        await fs.chmod(this.getPlatformClientPath(this.getPlatformStr()), 0o755);
     }
 
     // retreive the location of the client relevant for the current platform.

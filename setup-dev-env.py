@@ -37,4 +37,10 @@ with open(pre_push_path, "w") as f:
     f.write("#!/bin/sh\n")
     f.write("env -i ./hooks/pre-push\n")
 
+pre_commit_path = os.path.join(git_dir, "hooks", "pre-commit")
+
+with open(pre_commit_path, "w") as f:
+    f.write("#!/bin/sh\n")
+    f.write("env -i ./hooks/pre-commit")
+
 print("Hooks are now setup!")

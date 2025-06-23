@@ -1,10 +1,11 @@
-from .command_handlers.CommandHandler import CommandHandler
-
-from typing import *
-import websockets
 import traceback
+from typing import *
 
 import jsonpickle
+import websockets
+
+from .command_handlers.CommandHandler import CommandHandler
+
 
 #
 # The LatexMathClient class manages a connection and message parsing + encoding between an active Latex Math plugin.
@@ -26,7 +27,7 @@ class LatexMathClient:
     # Register a message handler.
     def register_handler(self, handler_key: str, handler_factory: CommandHandler):
         self.handlers[handler_key] = handler_factory
-    
+
     # Send the given json dumpable object back to the plugin.
     async def send(self, handler_key: str, message: dict):
         await self.connection.send(f"{handler_key}|{jsonpickle.encode(message)}")
@@ -40,7 +41,7 @@ class LatexMathClient:
             if handler_key == "exit":
                 await self.send("exit", {})
                 break
-            
+
             if handler_key in self.handlers:
                 try:
                     loaded_payload = jsonpickle.decode(payload)

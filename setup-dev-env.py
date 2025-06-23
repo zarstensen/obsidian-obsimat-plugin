@@ -1,6 +1,6 @@
-import venv
 import os
 import subprocess
+import venv
 
 venv_bin_folder = 'Scripts' if os.name == 'nt' else 'bin'
 
@@ -21,10 +21,10 @@ git_dir = os.path.join(os.getcwd(), ".git")
 
 if not os.path.isdir(git_dir):
     # we are probably a submodule, look for a .git file
-    
+
     if not os.path.isfile(git_dir):
         print("Script could not find .git folder / file.\nPlease make sure to run the script at the repository root.")
-    
+
     with open(git_dir, "r") as f:
         entries = [ entry.split(':', 1) for entry in f.readlines() ]
         config_entries = { entry[0].strip() : entry[1].strip() for entry in entries }

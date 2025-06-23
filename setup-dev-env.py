@@ -37,5 +37,4 @@ with open(pre_push_path, "w") as f:
     f.write("#!/bin/sh\n")
     f.write("env -i ./hooks/pre-push\n")
 
-
 print("Hooks are now setup!")

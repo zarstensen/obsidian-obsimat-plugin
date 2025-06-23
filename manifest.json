@@ -1,7 +1,7 @@
 {
 	"id": "latex-math",
 	"name": "LaTeX Math",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"minAppVersion": "0.15.0",
 	"description": "Evaluate, solve and much more within LaTeX blocks using Sympy.",
 	"author": "Zarstensen",

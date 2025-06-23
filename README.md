@@ -24,8 +24,6 @@ Start out by placing the cursor inside any math block. Then execute the `Evaluat
 
 Take a look at the [command list](#command-list) a brief overview of what this plugin can do, or go look at the [features](#features) list, for a more in depth walkthrough of this plugin's advanced features.
 
-If you are a Linux user, make sure to read the [Linux](#linux) subsection of the [Installing](#installing) section to ensure this plugin runs correctly.
-
 <!-- omit in toc -->
 ## Table of Contents
 
@@ -39,7 +37,6 @@ If you are a Linux user, make sure to read the [Linux](#linux) subsection of the
   - [Symbol Assumptions](#symbol-assumptions)
   - [Convert To Sympy Code](#convert-to-sympy-code)
 - [Installing](#installing)
-  - [Linux](#linux)
 - [Developing](#developing)
   - [Developing the Sympy Client](#developing-the-sympy-client)
   - [Developing the Obsidian Plugin](#developing-the-obsidian-plugin)
@@ -127,32 +124,12 @@ Quickly convert latex to Sympy code to perform more advanced computations using 
 This will insert a python code block containing the equivalent Sympy code of the selected math block.
 
 ## Installing
+
 Press `Browse` in obsidians `Options > Community plugins` menu and search for `LaTeX Math`.
 
 OR
 
 Download the plugin zip file from the [latest release](https://github.com/zarstensen/obsidian-latex-math/releases/latest), and extract it to your vault's plugin folder, commonly located at `.obsidian/plugins`, relative to your vault's path.
-
-### Linux
-
-If you receive an error upon plugin load on Linux, you might need to give execute permissions to the `SympyClient-linux.bin` file located in the plugin's installation directory.
-
-Perform the following commands inside the **LaTeX Math** installation directory (see the [installing section](#installing)) **after enabling the plugin**, to give the necessary permissions:
-
-- (Optional) Check execution permissions of `SympyClient-linux.bin`:
-  
-  `ls -l ./bin/SympyClient-linux.bin`
-  
-  Something like `-rw-r--r--...` means no execute permission.
-
-- Give execution permissions to `Sympyclient-linux.bin` (This will give every user access to execute `SympyClient-linux.bin`):
-  
-  `chmod +x ./bin/SympyClient-linux.bin`
-
-- (Optional) Perform step 1 to check if permissions have changed.
-
-- Reload Obsidian with **LaTeX Math** enabled.
-  No errors should pop up, and the plugin should now work as expected
 
 ## Developing
 

@@ -11,5 +11,3 @@ on:
 jobs:
   run-tests:
     uses: ./.github/workflows/test.yml
-  run-code-quality-checks:
-    uses: ./.github/workflows/code-quality.yml

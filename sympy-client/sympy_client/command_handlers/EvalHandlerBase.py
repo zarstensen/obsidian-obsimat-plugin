@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TypedDict, override
 
 from sympy import *
-from sympy.logic.boolalg import Equivalent
-from sympy.core.operations import AssocOp, LatticeOp
+from sympy.core.operations import LatticeOp
 from sympy.core.relational import Relational
 from sympy.physics.units.unitsystem import UnitSystem
 
@@ -27,7 +26,7 @@ class EvalResult(CommandResult, ABC):
     @override
     def getPayload(self):
         metadata = dict(separator = self.expr_separator)
-        
+
         if self.expr_lines is not None:
             metadata = dict(
                 **metadata,
@@ -81,6 +80,6 @@ class EvalHandlerBase(CommandHandler, ABC):
             sympy_expr = UnitsUtils.auto_convert(sympy_expr, UnitSystem.get_unit_system(unit_system))
         else:
             sympy_expr = UnitsUtils.auto_convert(sympy_expr)
-            
-  
+
+
         return EvalResult(sympy_expr, separator, expr_lines)

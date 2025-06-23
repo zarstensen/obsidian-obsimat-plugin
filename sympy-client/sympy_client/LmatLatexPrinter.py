@@ -2,7 +2,7 @@ import re as regex
 from functools import reduce
 
 from sympy import *
-from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+from sympy.logic.boolalg import BooleanFalse, BooleanTrue
 from sympy.physics.units import Quantity
 from sympy.printing.latex import LatexPrinter
 
@@ -47,7 +47,7 @@ class LmatLatexPrinter(LatexPrinter):
 
     def _print_BooleanTrue(self, _: BooleanTrue):
         return r"\mathrm{T}"
-    
+
     def _print_BooleanFalse(self, _: BooleanFalse):
         return r"\mathrm{F}"
 

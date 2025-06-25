@@ -1,5 +1,6 @@
 from sympy import *
 from sympy_client import LmatEnvironment
+from sympy_client.grammar.LatexMatrix import LatexMatrix
 from sympy_client.grammar.LatexParser import LatexParser
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
@@ -301,3 +302,16 @@ i & 2 i
 
         result = self._parse_expr(r"\log x!!!")
         assert result == log(factorial(factorial(factorial(x))))
+
+    def test_matrix_bracket_persistance(self):
+        result = self._parse_expr(r"\begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}")
+
+        assert isinstance(result, LatexMatrix)
+        assert result.env_begin == r'\begin{pmatrix}'
+        assert result.env_end == r'\end{pmatrix}'
+
+        result = self._parse_expr(r"\left\{ \begin{array}{r | c : l} x & y^2 \\ z_3 & \mathrm{uv} \end{array} \right]")
+
+        assert isinstance(result, LatexMatrix)
+        assert result.env_begin == r'\left\{ \begin{array}{r | c : l}'
+        assert result.env_end == r'\end{array} \right]'

@@ -57,7 +57,7 @@ class MultiArgScope(LexerScope):
 
 class MatrixScope(LexerScope):
     def token_handler(self, token_stream: Iterator[Token], scope_start_token: Token) -> Iterator[Token]:
-        ignore_regex = r'(\\left\s*.|\\right\s*.|\s)'
+        ignore_regex = r'(\\left\s*(\\)?.|\\right\s*(\\)?.|\s)'
         expected_end_token_type = scope_start_token.type.replace('BEGIN', 'END')
         expected_end_token_value = regex.sub(ignore_regex, '', scope_start_token.value).replace('\\begin', '\\end')
         for token in super().token_handler(token_stream, scope_start_token):

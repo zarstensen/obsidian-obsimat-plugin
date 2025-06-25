@@ -2,6 +2,7 @@ from typing import Any, TypedDict, override
 
 from sympy import *
 from sympy.solvers.solveset import NonlinearError
+
 from sympy_client import UnitsUtils
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 from sympy_client.grammar.SympyParser import SympyParser
@@ -18,43 +19,43 @@ class SolveModeMessage(TypedDict):
     environment: LmatEnvironment
 
 class MultivariateResult(CommandResult):
-    
+
     def __init__(self, symbols, equation_count: int):
         super().__init__()
         self.symbols = symbols
         self.equation_count = equation_count
-        
+
     @override
     def getPayload(self) -> dict:
-        
+
         result = dict(
             equation_count=self.equation_count,
             symbols=[ dict(sympy_symbol=str(s), latex_symbol=lmat_latex(s)) for s in self.symbols ]
         )
-        
+
         return CommandResult.result(result, status='multivariate_equation')
-    
+
 class SolveResult(CommandResult):
-    
+
     # The maximum number of finite solution to display it as a disjunction of solutions.
     # instead of the set itself.
     MAX_RELATIONAL_FINITE_SOLUTIONS = 5
-    
-    
+
+
     def __init__(self, solution: Any, symbols: list[Any]):
         super().__init__()
         self.solution = solution
         self.symbols = symbols
-    
+
     @override
     def getPayload(self) -> dict:
         solutions_set = self.solution
-        
+
         if len(self.symbols) == 1:
             symbols = self.symbols[0]
         else:
             symbols = tuple(self.symbols)
-        
+
         if isinstance(solutions_set, FiniteSet) and len(solutions_set) <= SolveResult.MAX_RELATIONAL_FINITE_SOLUTIONS:
             return CommandResult.result(lmat_latex(solutions_set.as_relational(symbols)))
         else:
@@ -68,7 +69,7 @@ class SolveResult(CommandResult):
 # along with a list of possible symbols to solve for in its symbols key.
 # if successfull its sends a message with status solved, and the result in the result key.
 class SolveHandler(CommandHandler):
-    
+
     def __init__(self, parser: SympyParser):
         super().__init__()
         self._parser = parser
@@ -88,7 +89,7 @@ class SolveHandler(CommandHandler):
 
         # get a list of free symbols, by combining all the equations individual free symbols.
         free_symbols = set()
-        
+
         for equation in equations:
             free_symbols.update(equation.free_symbols)
 
@@ -98,7 +99,7 @@ class SolveHandler(CommandHandler):
         free_symbols = sorted(list(free_symbols), key=str)
 
         domain = S.Complexes
-        
+
         if 'domain' in message['environment'] and message['environment']['domain'].strip() != "":
             domain = sympify(message['environment']['domain'])
 
@@ -120,11 +121,11 @@ class SolveHandler(CommandHandler):
                 return ErrorResult(f"No such symbols: {message['symbols']}")
         else:
             symbols = list(free_symbols)
-        
-        
+
+
         # TODO: is there another way to do this?
         # it is sortof a mess having to distinguish between strictly 1 equation and multiple equations.
-        
+
         if len(equations) == 1 and len(symbols) == 1: # these two should always have equal lenth.
             solution_set = solveset(equations[0], symbols[0], domain=domain)
         else:
@@ -132,9 +133,9 @@ class SolveHandler(CommandHandler):
                 solution_set = linsolve(equations, symbols)
             except NonlinearError:
                 solution_set = nonlinsolve(equations, symbols)
-        
+
         unit_system = message['environment'].get('unit_system', None)
-        
+
         # if there is a finite number of solutions, go through each solution, simplify it, and convert units in it.
         if isinstance(solution_set, FiniteSet):
             if unit_system is not None:
@@ -147,5 +148,5 @@ class SolveHandler(CommandHandler):
                     UnitsUtils.auto_convert(simplify(sol.doit()))
                     for sol in solution_set.args)
                     )
-        
+
         return SolveResult(solution_set, symbols)

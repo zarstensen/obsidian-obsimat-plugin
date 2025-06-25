@@ -1,3 +1,5 @@
+pyinstaller~=6.13
 pytest~=8.3
 pandas~=2.2
 tabulate~=0.9
+ruff~=0.12

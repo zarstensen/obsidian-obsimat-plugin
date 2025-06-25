@@ -1,21 +1,42 @@
 # This file is a combination of the following files form the sympy repo:
 # test_latex_lark.py: https://github.com/sympy/sympy/blob/da6d1f3cb324ad0bf74d123d85c390029be997ce/sympy/parsing/tests/test_latex_lark.py
 # test_latex.py: https://github.com/sympy/sympy/blob/da6d1f3cb324ad0bf74d123d85c390029be997ce/sympy/parsing/tests/test_latex.py
-# 
+#
 # This is here to ensure feature parity(ish) with their latex parser.
 # some tests have been slightly modified or diabled, due to fundamental differences in the parsers functionality (multi letter symbols is an exmaple of this)
 
-from sympy import (Add, Expr, I, MatAdd, MatMul, Matrix, Mul, Trace, Transpose, expand,
-                   simplify)
+from sympy import (
+    Add,
+    Expr,
+    I,
+    MatAdd,
+    MatMul,
+    Matrix,
+    Mul,
+    Trace,
+    Transpose,
+    expand,
+    simplify,
+)
 from sympy.abc import a, b, c, d, k, n, t, x, y, z
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative, Function
-from sympy.core.numbers import E, Rational, oo
+from sympy.core.numbers import Rational, oo
 from sympy.core.power import Pow
-from sympy.core.relational import (Eq, Ge, GreaterThan, Gt, Le, LessThan, Lt,
-                                   Ne, StrictGreaterThan, StrictLessThan,
-                                   Unequality)
+from sympy.core.relational import (
+    Eq,
+    Ge,
+    GreaterThan,
+    Gt,
+    Le,
+    LessThan,
+    Lt,
+    Ne,
+    StrictGreaterThan,
+    StrictLessThan,
+    Unequality,
+)
 from sympy.core.symbol import Symbol
 from sympy.external import import_module
 from sympy.functions.combinatorial.factorials import binomial, factorial
@@ -23,8 +44,7 @@ from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import Max, Min, root, sqrt
-from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin,
-                                                      tan)
+from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy_client.grammar.LatexParser import LatexParser

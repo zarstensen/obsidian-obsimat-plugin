@@ -1,13 +1,10 @@
 name: Push Changes To Repo
 
 on:
-    push:
-      branches:
-        - "*"
+  push:
+    branches:
+      - "*"
 
-    pull_request:
-        branches:
-            - "*"
 jobs:
-    run-tests:
-        uses: ./.github/workflows/test.yml
+  run-tests:
+    uses: ./.github/workflows/test.yml

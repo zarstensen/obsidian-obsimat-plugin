@@ -1,0 +1,16 @@
+# TODO: more rules should probably be added, but this is fine to start with.
+[lint]
+
+select = [
+    # imports
+    "I",
+    "F401",
+    # single newline at end of file
+    "W292",
+    "W391",
+    # unneeded whitespace
+    "W291",
+    "W293"
+    ]
+
+extend-safe-fixes = ["W291"]

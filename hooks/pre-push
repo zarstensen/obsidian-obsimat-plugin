@@ -14,4 +14,8 @@ echo Running Tests
 
 pytest -x
 
+echo Running Code Quality Checks
+
+ruff check --preview
+
 echo Pre Push Completed

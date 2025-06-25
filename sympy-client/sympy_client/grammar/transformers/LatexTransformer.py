@@ -13,6 +13,7 @@ import sympy_client.UnitsUtils as UnitUtils
 from sympy_client.grammar.SympyParser import DefinitionStore
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
+from ..LatexMatrix import LatexMatrix
 from .ConstantsTransformer import ConstantsTransformer
 from .FunctionsTransformer import FunctionsTransformer
 
@@ -240,16 +241,16 @@ class LatexTransformer(ConstantsTransformer, FunctionsTransformer):
         ]
 
     @v_args(inline=True)
-    def matrix(self, matrix_begin_cmd, matrix_body, matrix_end_cmd) -> Matrix:
-        return Matrix(matrix_body)
+    def matrix(self, matrix_begin_cmd, matrix_body, matrix_end_cmd) -> LatexMatrix:
+        return LatexMatrix(matrix_body, env_begin = str(matrix_begin_cmd), env_end = str(matrix_end_cmd))
 
     @v_args(inline=True)
-    def array_matrix(self, matrix_begin_cmd, array_options, matrix_body, matrix_end_cmd) -> Matrix:
-        return Matrix(matrix_body)
+    def array_matrix(self, matrix_begin_cmd, array_options, matrix_body, matrix_end_cmd) -> LatexMatrix:
+        return LatexMatrix(matrix_body, env_begin = f'{matrix_begin_cmd}{array_options}', env_end = str(matrix_end_cmd))
 
     @v_args(inline=True)
-    def det_matrix(self, _begin, matrix_body, _end) -> Matrix:
-        return self.matrix(_begin, matrix_body, _end).det()
+    def det_matrix(self, begin, matrix_body, end) -> LatexMatrix:
+        return self.matrix(begin, matrix_body, end).det()
 
     def matrix_like_delim(self, _: Iterator[Token]):
         return self.Delim.MatDelim

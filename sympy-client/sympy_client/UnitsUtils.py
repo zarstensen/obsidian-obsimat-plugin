@@ -2,7 +2,7 @@ from copy import copy
 
 import sympy.physics.units as u
 import sympy.physics.units.definitions.unit_definitions as unit_definitions
-from sympy import Add, Expr, Matrix, MatrixBase, Rel
+from sympy import Add, Expr, MatrixBase, Rel
 from sympy.physics.units.quantities import PhysicalConstant, Quantity
 from sympy.physics.units.systems import SI
 from sympy.physics.units.unitsystem import UnitSystem
@@ -45,11 +45,13 @@ __add_unit_aliases([ ( 'min', u.minute ), ( 'sec', u.second ) ])
 # this convertion method prioritizes as few units as possible raised to the lowest power possible (or lowest root possible).
 def auto_convert(sympy_expr, unit_system: UnitSystem = SI):
     if isinstance(sympy_expr, MatrixBase):
-        converted_matrix = Matrix.zeros(*sympy_expr.shape)
-        for index, value in enumerate(sympy_expr):
-            converted_matrix[index] = auto_convert(value, unit_system)
+        new_matrix_contents = []
 
-        return converted_matrix
+        for value in sympy_expr:
+
+            new_matrix_contents.append(auto_convert(value, unit_system))
+
+        return type(sympy_expr)(*sympy_expr.shape, new_matrix_contents)
     # relationals and non sympy objects should not be auto converted
     elif isinstance(sympy_expr, Rel) or not isinstance(sympy_expr, Expr):
         return sympy_expr

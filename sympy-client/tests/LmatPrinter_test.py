@@ -1,5 +1,6 @@
 import sympy.physics.units as u
 from sympy import *
+from sympy_client.grammar.LatexMatrix import LatexMatrix
 from sympy_client.LmatLatexPrinter import LmatLatexPrinter
 
 
@@ -38,6 +39,11 @@ class TestLmatPrinter:
         a, b = symbols("a b")
         latex_str = self.printer.doprint((a + b**2) / (27 - b))
         self._assert_str_equal(r'\frac{a + b^{2}}{27 - b}', latex_str)
+
+    def test_latex_matrix(self):
+        latex_matrix = LatexMatrix([[1, 2], [3, 4]], env_begin=r"\begin{matrix}", env_end=r"\end{matrix}")
+        latex_str = self.printer.doprint(latex_matrix)
+        self._assert_str_equal(latex_str, r'\begin{matrix}1&2\\3&4\end{matrix}')
 
     def _assert_str_equal(self, expected, actual):
         assert ''.join(expected.split()) == ''.join(actual.split())

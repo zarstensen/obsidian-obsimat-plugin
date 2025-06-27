@@ -12,6 +12,7 @@ from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from sympy_client.LmatEnvironment import LmatEnvironment
 from sympy_client.LmatLatexPrinter import lmat_latex
+from sympy_client.grammar.transformers.PropositionsTransformer import PropositionExpr
 
 from .CommandHandler import CommandHandler, CommandResult
 
@@ -27,11 +28,11 @@ class EvalResult(CommandResult, ABC):
     def getPayload(self):
         metadata = dict(separator = self.expr_separator)
 
-        if self.expr_lines is not None:
+        if self.expr_lines is not None and self.expr_lines[0] != self.expr_lines[1]:
             metadata = dict(
                 **metadata,
                 start_line = self.expr_lines[0],
-                end_line = self.expr_lines[1] if self.expr_lines[1] is not None else self.expr_lines[0]
+                end_line = self.expr_lines[1]
             )
 
         return CommandResult.result(lmat_latex(self.sympy_expr), metadata=metadata)
@@ -57,17 +58,22 @@ class EvalHandlerBase(CommandHandler, ABC):
         expr_lines = None
 
         # choose bottom / right most evaluatable expression.
-        while isinstance(sympy_expr, SystemOfExpr) or isinstance(sympy_expr, Relational) or isinstance(sympy_expr, LatticeOp):
+        while isinstance(sympy_expr, SystemOfExpr) or isinstance(sympy_expr, Relational):
             # for system of expressions, take the last one
             if isinstance(sympy_expr, SystemOfExpr):
                 expr_lines = (sympy_expr.get_location(-1).line, sympy_expr.get_location(-1).end_line)
+                
+                if expr_lines[1] is None:
+                    expr_lines = (expr_lines[0], len(message['expression'].splitlines()))
+                
                 sympy_expr = sympy_expr.get_expr(-1)
 
             # for equalities, take the right hand side.
             if isinstance(sympy_expr, Relational):
                 sympy_expr = sympy_expr.rhs
 
-        if hasattr(sympy_expr, 'is_Boolean') and sympy_expr.is_Boolean:
+        if isinstance(sympy_expr, PropositionExpr):
+            sympy_expr = sympy_expr.expr
             separator = r"\equiv"
         else:
             separator = "="

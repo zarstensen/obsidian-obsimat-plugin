@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Iterator
 
 from lark import Token, v_args
+from lark.tree import Meta
 from sympy import *
 from sympy import Expr
 from sympy.core.numbers import Float, Integer
@@ -241,8 +242,8 @@ class LatexTransformer(ConstantsTransformer, FunctionsTransformer, PropositionsT
             if not is_delim
         ]
 
-    @v_args(inline=True)
-    def matrix(self, matrix_begin_cmd, matrix_body, matrix_end_cmd) -> LatexMatrix:
+    @v_args(meta=True, inline=True)
+    def matrix(self, meta, matrix_begin_cmd, matrix_body, matrix_end_cmd) -> LatexMatrix:
         return LatexMatrix(matrix_body, env_begin = str(matrix_begin_cmd), env_end = str(matrix_end_cmd))
 
     @v_args(inline=True)

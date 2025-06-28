@@ -2,8 +2,12 @@ from lark import Token, Transformer, v_args
 from sympy import *
 from sympy.logic.boolalg import *
 
+from sympy_client.grammar.SymbolicIff import SymbolicIff
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
+class PropositionExpr:
+    def __init__(self, expr):
+        self.expr = expr
 
 # The FucntionsTransformer holds the implementation of various mathematical function rules,
 # defined in the latex math grammar.
@@ -17,20 +21,14 @@ class PropositionsTransformer(Transformer):
         return S.false
 
     @v_args(meta=True, inline=True)
-    def proposition_chain(self, meta, *props: tuple[Expr]) -> SystemOfExpr:
+    def proposition_chain(self, meta, *props: Expr) -> SystemOfExpr | PropositionExpr:
         if len(props) > 1:
-            return SystemOfExpr([(prop, meta) for prop in props])
+            return SystemOfExpr([(PropositionExpr(prop), meta) for prop in props])
         else:
-            return props[0]
+            return PropositionExpr(props[0])
 
     def prop_iff(self, *args: tuple[Expr]) -> Expr:
-        equiv = Equivalent(*args, evaluate=False)
-
-        if not equiv.is_Boolean:
-            # figure out how to do this...
-            equiv.lmat_is_Boolean = True
-
-        return equiv
+        return SymbolicIff(*args)
 
     def prop_implies(self, *args: tuple[Expr|Token]) -> Expr:
 

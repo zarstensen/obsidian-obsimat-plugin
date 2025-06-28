@@ -242,8 +242,8 @@ class LatexTransformer(ConstantsTransformer, FunctionsTransformer, PropositionsT
             if not is_delim
         ]
 
-    @v_args(meta=True, inline=True)
-    def matrix(self, meta, matrix_begin_cmd, matrix_body, matrix_end_cmd) -> LatexMatrix:
+    @v_args(inline=True)
+    def matrix(self, matrix_begin_cmd, matrix_body, matrix_end_cmd) -> LatexMatrix:
         return LatexMatrix(matrix_body, env_begin = str(matrix_begin_cmd), env_end = str(matrix_end_cmd))
 
     @v_args(inline=True)

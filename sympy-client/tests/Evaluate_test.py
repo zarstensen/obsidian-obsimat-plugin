@@ -427,9 +427,3 @@ class TestEvaluate:
         assert result.sympy_expr == -1
 
     # TODO: add gradient test (it is already implicitly tested in test_jacobi so not high priority)
-
-    def test_proposition_eval(self):
-        handler = EvalHandler(self.parser)
-
-        result = handler.handle({ 'expression': r"a \iff 2", 'environment': { } })
-        assert result.sympy_expr == 5

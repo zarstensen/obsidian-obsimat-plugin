@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import TypedDict, override
 
 from sympy import *
-from sympy.core.operations import LatticeOp
 from sympy.core.relational import Relational
 from sympy.physics.units.unitsystem import UnitSystem
 
@@ -10,9 +9,9 @@ import sympy_client.UnitsUtils as UnitsUtils
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 from sympy_client.grammar.SympyParser import SympyParser
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
+from sympy_client.grammar.transformers.PropositionsTransformer import PropositionExpr
 from sympy_client.LmatEnvironment import LmatEnvironment
 from sympy_client.LmatLatexPrinter import lmat_latex
-from sympy_client.grammar.transformers.PropositionsTransformer import PropositionExpr
 
 from .CommandHandler import CommandHandler, CommandResult
 
@@ -62,10 +61,10 @@ class EvalHandlerBase(CommandHandler, ABC):
             # for system of expressions, take the last one
             if isinstance(sympy_expr, SystemOfExpr):
                 expr_lines = (sympy_expr.get_location(-1).line, sympy_expr.get_location(-1).end_line)
-                
+
                 if expr_lines[1] is None:
                     expr_lines = (expr_lines[0], len(message['expression'].splitlines()))
-                
+
                 sympy_expr = sympy_expr.get_expr(-1)
 
             # for equalities, take the right hand side.

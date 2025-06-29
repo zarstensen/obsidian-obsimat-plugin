@@ -5,9 +5,13 @@ from sympy.logic.boolalg import *
 from sympy_client.grammar.SymbolicIff import SymbolicIff
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
+
 class PropositionExpr:
     def __init__(self, expr):
         self.expr = expr
+
+    def _sympy_(self):
+        return self.expr
 
 # The FucntionsTransformer holds the implementation of various mathematical function rules,
 # defined in the latex math grammar.

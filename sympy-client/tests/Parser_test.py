@@ -3,7 +3,6 @@ from sympy.logic.boolalg import *
 from sympy_client import LmatEnvironment
 from sympy_client.grammar.LatexMatrix import LatexMatrix
 from sympy_client.grammar.LatexParser import LatexParser
-from sympy.logic.boolalg import *
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 

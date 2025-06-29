@@ -14,4 +14,3 @@ class SymbolicIff(Function):
         except:
             simplified_args = [simplify(arg) for arg in args]
             return all(a.equals(b) for a, b in combinations(simplified_args, 2))
-

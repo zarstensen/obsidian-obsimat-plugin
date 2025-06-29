@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Iterator
 
 from lark import Token, v_args
-from lark.tree import Meta
 from sympy import *
 from sympy import Expr
 from sympy.core.numbers import Float, Integer
@@ -121,12 +120,12 @@ class LatexTransformer(ConstantsTransformer, FunctionsTransformer, PropositionsT
         if len(signs) != len(values):
             raise RuntimeError(f"Error, too few signs were present in expression, expected {len(values) - 1} - {len(values)} got {len(signs)}")
 
-        result = signs[0] * values[0]
+        result = signs[0] * values[0] if signs[0] != S.One else values[0]
 
         # TODO: perhaps scalars should be autoconverted to 0d matrices here,
         # if it is attempted to sum a matrix and a scalar.
         for sign, value in zip(signs[1:], values[1:]):
-            result += sign * value
+            result += sign * value if sign != S.One else value
 
         return result
 

@@ -50,4 +50,4 @@ class LatexMathClient:
                 except Exception as e:
                     await self.send("error", dict(message=str(e) + "\n" + traceback.format_exc()))
             else:
-                await self.send("error", dict(message=handler_key))
+                await self.send("error", dict(message=f"Unsupported command: {handler_key}"))

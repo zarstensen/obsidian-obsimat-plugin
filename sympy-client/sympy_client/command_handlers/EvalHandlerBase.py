@@ -72,12 +72,11 @@ class EvalHandlerBase(CommandHandler, ABC):
                 sympy_expr = sympy_expr.rhs
 
         if isinstance(sympy_expr, PropositionExpr):
-            sympy_expr = sympy_expr.expr
             separator = r"\equiv"
         else:
             separator = "="
 
-        sympy_expr = self.evaluate(sympy_expr, message)
+        sympy_expr = self.evaluate(sympify(sympy_expr), message)
 
         unit_system = message['environment'].get('unit_system', None)
 

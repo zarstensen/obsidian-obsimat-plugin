@@ -6,6 +6,9 @@ from sympy_client.grammar.SymbolicIff import SymbolicIff
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 
 
+# return type for the PropositionsTransformer.
+# Simply wraps a propositional expression,
+# is primarily used to detect if an expression came from PropositionsTransformer.
 class PropositionExpr:
     def __init__(self, expr):
         self.expr = expr
@@ -29,6 +32,8 @@ class PropositionsTransformer(Transformer):
         if len(props) > 1:
             return SystemOfExpr([(PropositionExpr(prop), meta) for prop in props])
         else:
+            s = PropositionExpr(props[0])
+            sympify(s)
             return PropositionExpr(props[0])
 
     def prop_iff(self, *args: tuple[Expr]) -> Expr:

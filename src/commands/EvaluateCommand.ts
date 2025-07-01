@@ -40,7 +40,6 @@ export class EvaluateCommand implements ILatexMathCommand {
         const response = await evaluator.receive();
 
         const insert_pos: EditorPosition = editor.offsetToPos(equation.to);
-        console.log(response);
         let insert_content = ` ${response.metadata.separator} ` + await formatLatex(response.result);
 
         // remove any newlines from the formatted latex if the math block does not support newlines.

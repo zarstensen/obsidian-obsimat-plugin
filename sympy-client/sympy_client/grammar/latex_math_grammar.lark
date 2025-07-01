@@ -339,8 +339,12 @@ NON_BRACE_TEXT.-1: /[^{}]+/
 
 // ======== Propositional Logic Structure
 
+// represents a chain of propositions, separated by equivalence symbols
 proposition_chain: _proposition | (_proposition|relation) (_PROP_OP_EQUIV (_proposition|relation))+
+
+// represents a single proposition in a series of chained propositions
 _proposition: _prop_bool_value | _delimited_proposition | prop_not | prop_xnor | prop_xor | prop_nor | prop_and | prop_nand | prop_or | prop_implies | prop_iff
+// represents a single proposition surrounded by parenthesess, brackets or braces.
 _delimited_proposition: _L_PAREN _proposition _R_PAREN | _L_BRACKET _proposition _R_BRACKET | _L_BRACE _proposition _R_BRACE
 
 // propositional operator presedence is based on wolfram alpha: https://www.wolframalpha.com/input?i=not+A+xor+B+nor++C+and+D+nand+E+or+F+implies+G+%3C%3D%3E+H

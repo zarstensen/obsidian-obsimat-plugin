@@ -3,7 +3,7 @@
 
 // ======== Core structure ========
 
-?latex_string: relation | system_of_relations
+?latex_string: relation | system_of_relations | proposition_chain
 
 _rel_op: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
 _align: _ALIGN | _LATEX_NEWLINE
@@ -189,7 +189,8 @@ limit_direction: _L_BRACE (ADD|SUB) _R_BRACE
     | ADD
     | SUB
 
-limit: _FUNC_LIMIT _UNDERSCORE _L_BRACE symbol _LIM_APPROACH_SYMBOL basefactor_arg [_CARET limit_direction] _R_BRACE factor_func_arg
+_lim_approach_symbol: _PROP_OP_LR_IMPLICATION
+limit: _FUNC_LIMIT _UNDERSCORE _L_BRACE symbol _lim_approach_symbol basefactor_arg [_CARET limit_direction] _R_BRACE factor_func_arg
 
 _series_template_start_iter_first{series_name}: series_name _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE _CARET function_special_arg factor_func_arg
 _series_template_end_iter_first{series_name}: series_name _CARET function_special_arg _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE factor_func_arg
@@ -336,6 +337,47 @@ system_of_relations: _CMD_BEGIN_ALIGN _system_of_relations_body _CMD_END_ALIGN
 NON_BRACE_TEXT.-1: /[^{}]+/
 !brace_surrounded_text: _L_BRACE NON_BRACE_TEXT? (brace_surrounded_text NON_BRACE_TEXT?)*  _R_BRACE
 
+// ======== Propositional Logic Structure
+
+// represents a chain of propositions, separated by equivalence symbols
+proposition_chain: _proposition | (_proposition|relation) (_PROP_OP_EQUIV (_proposition|relation))+
+
+// represents a single proposition in a series of chained propositions
+_proposition: _prop_bool_value | _delimited_proposition | prop_not | prop_xnor | prop_xor | prop_nor | prop_and | prop_nand | prop_or | prop_implies | prop_iff
+// represents a single proposition surrounded by parenthesess, brackets or braces.
+_delimited_proposition: _L_PAREN _proposition _R_PAREN | _L_BRACKET _proposition _R_BRACKET | _L_BRACE _proposition _R_BRACE
+
+// propositional operator presedence is based on wolfram alpha: https://www.wolframalpha.com/input?i=not+A+xor+B+nor++C+and+D+nand+E+or+F+implies+G+%3C%3D%3E+H
+
+prop_iff: prop_iff_arg (_PROP_OP_BIIMPLICATION prop_iff_arg)+
+?prop_iff_arg: prop_implies_arg | prop_implies
+
+!prop_implies: prop_implies_arg ((_PROP_OP_LR_IMPLICATION|_PROP_OP_RL_IMPLICATION) prop_implies_arg)+
+?prop_implies_arg: prop_or_arg | prop_or
+
+prop_or: prop_or_arg (_PROP_OP_OR prop_or_arg)+
+?prop_or_arg: prop_nand_arg | prop_nand
+
+prop_nand: prop_nand_arg (_PROP_OP_NAND prop_nand_arg)+
+?prop_nand_arg: prop_and_arg | prop_and
+
+prop_and: prop_and_arg (_PROP_OP_AND prop_and_arg)+
+?prop_and_arg: prop_nor_arg | prop_nor
+
+prop_nor: prop_nor_arg (_PROP_OP_NOR prop_nor_arg)+
+?prop_nor_arg: prop_xor_arg | prop_xor
+
+prop_xor: prop_xor_arg (_PROP_OP_XOR prop_xor_arg)+
+?prop_xor_arg: prop_xnor_arg | prop_xnor
+
+prop_xnor: prop_xnor_arg (_PROP_OP_XNOR prop_xnor_arg)+
+?prop_xnor_arg: prop_not_arg | prop_not
+
+prop_not: _PROP_OP_NOT prop_not_arg
+?prop_not_arg: _delimited_proposition | relation | _prop_bool_value
+
+_prop_bool_value: CMD_TAUTOLOGY | CMD_CONTRADICTION
+
 // ================ Terminals ================
 
 // ignore escaped whitespace in latex code
@@ -394,7 +436,6 @@ _R_DELIMITER: _DOT | _R_ANGLE | R_BRACE_LITERAL | _R_BRACKET | _R_CEIL | _R_FLOO
 
 // limit, integral, sum, and product symbols
 _FUNC_LIMIT:  "\\lim"
-_LIM_APPROACH_SYMBOL: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
 _FUNC_INTEGRAL:  "\\int" | "\\intop"
 _FUNC_SUM:  "\\sum"
 _FUNC_PRODUCT: "\\prod"
@@ -517,7 +558,7 @@ _PERMILLE: "\\textperthousand"
 
 // relational symbols
 EQUAL: "="
-NOT_EQUAL: "\\neq" | "\\ne"
+NOT_EQUAL: "\\neq" | /\\ne(?!g)/ // do not match \neg as '\ne' followed by the symbol 'g'
 LT: "<"
 LTE: LT EQUAL | "\\leq" | "\\leqslant" | /\\le(?!ft)/ // do not match `\left` as `\le` followed by the symbol `ft`
 GT: ">"
@@ -590,3 +631,21 @@ _CMD_BEGIN_ALIGN: CMD_BEGIN _WS? "align" _WS? _R_BRACE
 _CMD_BEGIN_CASES: CMD_BEGIN _WS? "cases" _WS? _R_BRACE
 _CMD_END_ALIGN: CMD_END _WS? "align" _WS? _R_BRACE
 _CMD_END_CASES: CMD_END _WS? "cases" _WS? _R_BRACE
+
+// ======== propositional logic ========
+
+CMD_TAUTOLOGY.1: /\\(?:mathrm|operatorname)\s*{\s*(?:T|True|TRUE)\s*}/
+CMD_CONTRADICTION.1: /\\(?:mathrm|operatorname)\s*{\s*(?:F|False|FALSE)\s*}/
+
+_PROP_OP_BIIMPLICATION: "\\iff" | /\\(?:[Ll]ongl|[Ll])eftrightarrow/ | /\\(?:leftright|rightleft)harpoons/
+_PROP_OP_LR_IMPLICATION.1: "\\implies" | "\\to" | /\\(?:[Ll]ongr|[Rr])ightarrow/ // have to increase priority due to _LIM_APPROACH_SYMBOL
+_PROP_OP_RL_IMPLICATION: /\\(?:[Ll]ongl|[Ll])eftarrow/
+_PROP_OP_OR: "\\vee"
+_PROP_OP_NAND: (_CMD_BAR|_CMD_OVERLINE) _WS? _PROP_OP_AND
+_PROP_OP_AND: "\\wedge"
+_PROP_OP_NOR: (_CMD_BAR|_CMD_OVERLINE) _WS? _PROP_OP_OR
+_PROP_OP_XOR: "\\oplus"
+_PROP_OP_XNOR: "\\odot"
+_PROP_OP_NOT: "\\neg"
+
+_PROP_OP_EQUIV: "\\equiv"

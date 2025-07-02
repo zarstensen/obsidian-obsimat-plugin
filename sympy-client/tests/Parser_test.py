@@ -1,9 +1,11 @@
 from sympy import *
-from sympy_client import LmatEnvironment
+from sympy import Expr
+from sympy.logic.boolalg import *
 from sympy_client.grammar.LatexMatrix import LatexMatrix
 from sympy_client.grammar.LatexParser import LatexParser
 from sympy_client.grammar.LmatEnvDefStore import LmatEnvDefStore
 from sympy_client.grammar.SystemOfExpr import SystemOfExpr
+from sympy_client.LmatEnvironment import LmatEnvironment
 
 
 class TestParse:
@@ -276,6 +278,72 @@ i & 2 i
         result = self._parse_expr(r"25\% - 5\textperthousand")
 
         assert abs(result - (0.25 - 0.005)) <= 1e-14
+
+    def test_propositions_presedence(self):
+        a, b, c, d, e, f, g, h, i = symbols('A B C D E F G H I')
+
+        # test presedence
+        result = self._parse_expr(r"\neg A \odot B \oplus C \bar \vee D \wedge E \overline \wedge F \vee G \implies H \iff I")
+        assert simplify(result) == simplify(Equivalent(Implies(Or(Nand(And(Nor(Xor(Xnor(Not(a), b), c), d), e), f), g), h), i))
+
+        result = self._parse_expr(r"A \iff B \Longleftrightarrow C \longleftrightarrow D \leftrightharpoons E \rightleftharpoons F ")
+        assert simplify(result) == simplify(Equivalent(a, b, c, d, e, f))
+
+        result = self._parse_expr(r"A \implies B \to C \Longrightarrow D \longrightarrow E \Rightarrow F \rightarrow G")
+        assert simplify(result) == simplify(a >> (b >> (c >> (d >> (e >> (f >> g))))))
+
+        result = self._parse_expr(r"A \Longleftarrow B \longleftarrow C \Leftarrow D \leftarrow E")
+        assert simplify(result) == simplify(a << (b << (c << (d << e))))
+
+        result = self._parse_expr(r"A \vee B")
+        assert simplify(result) == simplify(Or(a, b))
+
+        result = self._parse_expr(r"A \bar \wedge B \overline \wedge C")
+        assert simplify(result) == simplify(Nand(a, b, c))
+
+        result = self._parse_expr(r"A \wedge B")
+        assert simplify(result) == simplify(And(a, b))
+
+        result = self._parse_expr(r"A \bar \vee B \overline \vee C")
+        assert simplify(result) == simplify(Nor(a, b, c))
+
+        result = self._parse_expr(r"A \oplus B")
+        assert simplify(result) == simplify(Xor(a, b))
+
+        result = self._parse_expr(r"A \odot B")
+        assert simplify(result) == simplify(Xnor(a, b))
+
+        result = self._parse_expr(r"\neg A")
+        assert simplify(result) == simplify(Not(a))
+
+        result = self._parse_expr(r"\mathrm{T} \implies \mathrm{F}")
+        assert simplify(result) == simplify(S.true >> S.false)
+
+        result = self._parse_expr(r"(A \iff B) \wedge (C \iff D)")
+        assert simplify(result) == simplify(And(Equivalent(a, b), Equivalent(c, d)))
+
+    def test_symbolic_iff(self):
+
+        result = self._parse_expr(r"\sqrt{\fracc3} \iff \frac{\sqrt{3}}{3} \sqrt{c}")
+        assert sympify(result) == True
+
+        result = self._parse_expr(r"3 \iff 5")
+        assert sympify(result) == False
+
+        a = Symbol('A')
+        result = self._parse_expr(r"(c^2 \iff c) \vee A")
+        assert simplify(result.expr) == a
+
+    def test_proposition_variables(self):
+
+        result = self._parse_expr(r"P \implies Q", { "variables": {
+                "P": r"A \wedge B",
+                "Q": r"B \vee A"
+            }})
+
+        a, b = symbols('A B')
+
+        assert simplify(result) == simplify(Implies(And(a, b), Or(b, a)))
 
     def test_regression_101(self):
         x, y = symbols('x y')

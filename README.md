@@ -35,6 +35,7 @@ Take a look at the [command list](#command-list) a brief overview of what this p
   - [Symbol and Function Definitions](#symbol-and-function-definitions)
   - [Units and Physical Constants](#units-and-physical-constants)
   - [Symbol Assumptions](#symbol-assumptions)
+  - [Logical Propositions](#logical-propositions)
   - [Convert To Sympy Code](#convert-to-sympy-code)
 - [Installing](#installing)
 - [Developing](#developing)
@@ -117,6 +118,17 @@ Use an `lmat` code block to tell **LaTeX Math** about various assumptions it may
 > ````
 
 See the [Sympy documentation](https://docs.sympy.org/latest/guides/assumptions.html#id28) for a list of possible assumptions.
+
+### Logical Propositions
+
+Simplify logical propositions using the [evaluate commands](#evaluate). Truth tables can be generated from a logical proposition using the `Create truth table from LaTeX expression` commands.
+
+See [SYNTAX.MD/Logical Operators](SYNTAX.MD#logical-operators) for a list of logical operators.
+
+> [!TIP]
+> Want to check if two expressions are equal?
+>
+> Put an `\iff` in between them and upon [evaluation](#evaluate), **LaTeX Math** will insert `True` if they are symbolically equal or otherwise `False` if they are not.
 
 ### Convert To Sympy Code
 

@@ -16,11 +16,12 @@ from sympy_client.grammar.SystemOfExpr import SystemOfExpr
 from ..LatexMatrix import LatexMatrix
 from .ConstantsTransformer import ConstantsTransformer
 from .FunctionsTransformer import FunctionsTransformer
+from .PropositionsTransformer import PropositionsTransformer
 
 
 # The LatexMathLarkTransofmer class provides functions for transforming
 # rules defined in latex_math_grammar.lark into sympy expressions.
-class LatexTransformer(ConstantsTransformer, FunctionsTransformer):
+class LatexTransformer(ConstantsTransformer, FunctionsTransformer, PropositionsTransformer):
 
     class Delim(Enum):
         MatDelim = 1
@@ -119,12 +120,12 @@ class LatexTransformer(ConstantsTransformer, FunctionsTransformer):
         if len(signs) != len(values):
             raise RuntimeError(f"Error, too few signs were present in expression, expected {len(values) - 1} - {len(values)} got {len(signs)}")
 
-        result = signs[0] * values[0]
+        result = signs[0] * values[0] if signs[0] != S.One else values[0]
 
         # TODO: perhaps scalars should be autoconverted to 0d matrices here,
         # if it is attempted to sum a matrix and a scalar.
         for sign, value in zip(signs[1:], values[1:]):
-            result += sign * value
+            result += sign * value if sign != S.One else value
 
         return result
 

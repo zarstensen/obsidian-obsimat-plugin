@@ -10,6 +10,7 @@ from sympy_client.command_handlers.ExpandHandler import ExpandHandler
 from sympy_client.command_handlers.FactorHandler import FactorHandler
 from sympy_client.command_handlers.SolveHandler import SolveHandler
 from sympy_client.command_handlers.SymbolSetHandler import SymbolSetHandler
+from sympy_client.command_handlers.TruthTableHandler import TruthTableHandler
 from sympy_client.grammar.LatexParser import LatexParser
 from sympy_client.LatexMathClient import LatexMathClient
 
@@ -32,6 +33,7 @@ client.register_handler("solve", SolveHandler(latex_parser))
 client.register_handler("symbolsets", SymbolSetHandler(latex_parser))
 client.register_handler("convert-sympy", ConvertSympyHandler(latex_parser))
 client.register_handler("convert-units", ConvertUnitsHandler(latex_parser))
+client.register_handler("truth-table", TruthTableHandler(latex_parser))
 
 async def main():
     await client.connect(port)

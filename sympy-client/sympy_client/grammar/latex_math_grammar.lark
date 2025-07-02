@@ -3,7 +3,7 @@
 
 // ======== Core structure ========
 
-?latex_string: relation | system_of_relations
+?latex_string: relation | system_of_relations | proposition_chain
 
 _rel_op: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
 _align: _ALIGN | _LATEX_NEWLINE
@@ -16,36 +16,49 @@ expression: (_align* (ADD|SUB))? term ((ADD|SUB) term)*
 term: implicit_multiplication ((OPERATOR_MUL|OPERATOR_DIV) (_align* (ADD|SUB))? implicit_multiplication)*
 
 // factors with no operator between them are implicitly multiplied together.
-?implicit_multiplication: _align* _factor (_align* _factor)* _align*
+?implicit_multiplication: _align* factor (_align* factor)* _align*
 
 // a factor is either a number, a constant, a symbol, or a function.
 // here exponentiation, fractions, binomials are loosly seen as functions.
-_factor: exponentiation_with_unit
-    | _base_factor
+?factor: exponentiation_ext
+    | factor_func_arg
     | unit
- 
- _factor_no_unit: exponentiation_no_unit
-    | _base_factor
+    | function_noarg
 
-_base_factor: substitute_symbol
-    | _function
+// matches all factors which may be passed to a mathematical function (excluding postfix functions) as an argument
+?factor_func_arg: factor_func_postfix_arg
+    | _delimitedfactor
+
+// matches all factors which may be passed to a post fix mathematical function (factorial, percent, ...) WHICH may be passed to another mathematical function as an argument.
+// e.g. \sin x! this rule should match x, since x is an allowed arg in x! and x! is an allowed arg to \sin x!.
+// should not match (x) in e.g. \sin(x)! since (x)! is not passable as an arg to \sin.
+// this should instead be interpreted as (\sin(x))!, which another rule will take care of.
+?factor_func_postfix_arg: exponentiation_arg
+    | basefactor_arg
+
+// matches all base factors in an exponentiation, which may be passed to a mathematical function as an argument.
+?basefactor_arg: substitute_symbol
+    | function_as_arg
     | _number
     | _matrix_notation
-    | parenthesees_expression
-    | brackets_expression
-    | braces_expression
-
-?exponentiation_with_unit: exponentiation_no_unit
-    | unit _CARET function_special_arg -> exponentiation
-
-// groups a base factor and an exponent factor to be evaluated in an exponentation.
-exponentiation_no_unit: _base_factor _CARET function_special_arg -> exponentiation
-    | _base_factor _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
 
 // various rules for grouping expressions surrounded by delimiters.
+_delimitedfactor: parenthesees_expression | brackets_expression | braces_expression
+
 ?parenthesees_expression: _L_PAREN expression _R_PAREN
 ?braces_expression: _L_BRACE expression _R_BRACE
 ?brackets_expression: _L_BRACKET expression _R_BRACKET
+
+// groups a base factor and an exponent factor to be evaluated in an exponentation.
+// this variant matches only exponentiations which may be used as arguments to functions.
+// e.g. it should match x^2 in \sin x^2 but not (x + y)^2 in \sin(x+ y)^2
+//
+// exponentiation_arg combined with exponentiation_ext should match all exponentiations possible. 
+exponentiation_arg: basefactor_arg _CARET function_special_arg -> exponentiation
+    | basefactor_arg _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
+
+?exponentiation_ext: (unit|_delimitedfactor|function_noarg) _CARET function_special_arg -> exponentiation
+    | (unit|_delimitedfactor|function_noarg) _CARET (ADJOINT_TRANSPOSE_EXPONENT|ADJOINT_TRANSPOSE_EXPONENTS) -> exp_transpose
 
 // ======== Symbols ========
 
@@ -80,28 +93,29 @@ _digit: _numeric_digit | _constant
 _constant: CONST_PI | CONST_EULER | CONST_IMAGINARY | CONST_INFINITY
 
 _numeric_digit: NUMERIC_DIGIT
-_numeric_number: NUMERIC_NUMBER
+_numeric_number: HEXADECIMAL_NUMBER | BASE_10_NUMBER | OCTAL_NUMBER | BINARY_NUMBER
 
 // ======== Functions ========
 
 undefined_function: UNDEFINED_FUNC_START list_of_expressions _R_PAREN
 
-_function: _delimited_function
-    | _named_function
+// groups all functions whic cannot be used as an argument to other functions.
+// to pass this type of function, delimit them so they are matched by the _delimited_factor rule.
+?function_noarg: _postfix_function
+
+// groups all functions which can be used as arguments to other functions without needing to be delimited.
+?function_as_arg: _delimited_function
+    | named_function
     | _series_function
     | integral
     | sqrt
     | conjugate
     | frac
     | binom
-    | factorial
-    | percent
-    | permille
     | derivative
-    | derivative_prime
-    | modulo
+    | _postfix_function_arg
 
-_named_function: undefined_function
+?named_function: undefined_function
     | trig_function
     | _log
     | exponential
@@ -115,12 +129,12 @@ _named_function: undefined_function
 
 // matches a special kind of argument, defined by the fact that fractions and binomials can be passed without surrounding them with braces.
 substitute_single_letter_symbol: single_letter_symbol -> substitute_symbol
-?function_special_arg: braces_expression | parenthesees_expression | _named_function | _delimited_function | frac | binom | substitute_single_letter_symbol | _digit
+?function_special_arg: braces_expression | parenthesees_expression | named_function | _delimited_function | frac | binom | substitute_single_letter_symbol | _digit
 
 
 // named functions
 
-_func_template{func_name}: func_name [_CARET function_special_arg] _factor_no_unit
+_func_template{func_name}: func_name [_CARET function_special_arg] factor_func_arg
 
 // trigonometric functions
 
@@ -156,8 +170,8 @@ log_implicit_base: _func_template{FUNC_LOG}
     | _func_template{FUNC_LN}
     | _func_template{FUNC_LG}
 
-log_explicit_base: FUNC_LOG _UNDERSCORE function_special_arg [_CARET function_special_arg] _factor_no_unit
-    | FUNC_LOG _CARET function_special_arg _UNDERSCORE function_special_arg _factor_no_unit -> log_explicit_base_exponent_first
+log_explicit_base: FUNC_LOG _UNDERSCORE function_special_arg [_CARET function_special_arg] factor_func_arg
+    | FUNC_LOG _CARET function_special_arg _UNDERSCORE function_special_arg factor_func_arg -> log_explicit_base_exponent_first
 
 real_part: _func_template{_FUNC_RE}
 imaginary_part: _func_template{_FUNC_IM}
@@ -166,24 +180,20 @@ sign: _func_template{_FUNC_SGN}
 
 exponential: _func_template{_FUNC_EXP}
 
-factorial: _factor_no_unit _BANG
-
-percent: _factor_no_unit _PERCENT
-permille: _factor_no_unit _PERMILLE
 
 upper_gamma: _FUNC_UPPER_GAMMA expression (_COMMA expression)? _R_PAREN
 lower_gamma: _FUNC_LOWER_GAMMA expression _COMMA expression _R_PAREN
 
-derivative_prime: _factor_no_unit PRIMES
 
 limit_direction: _L_BRACE (ADD|SUB) _R_BRACE
     | ADD
     | SUB
 
-limit: _FUNC_LIMIT _UNDERSCORE _L_BRACE symbol _LIM_APPROACH_SYMBOL _base_factor [_CARET limit_direction] _R_BRACE _factor_no_unit
+_lim_approach_symbol: _PROP_OP_LR_IMPLICATION
+limit: _FUNC_LIMIT _UNDERSCORE _L_BRACE symbol _lim_approach_symbol basefactor_arg [_CARET limit_direction] _R_BRACE factor_func_arg
 
-_series_template_start_iter_first{series_name}: series_name _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE _CARET function_special_arg _factor_no_unit
-_series_template_end_iter_first{series_name}: series_name _CARET function_special_arg _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE _factor_no_unit
+_series_template_start_iter_first{series_name}: series_name _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE _CARET function_special_arg factor_func_arg
+_series_template_end_iter_first{series_name}: series_name _CARET function_special_arg _UNDERSCORE _L_BRACE symbol EQUAL expression _R_BRACE factor_func_arg
 
 _series_function: sum | product
 
@@ -222,6 +232,36 @@ _multiarg_func_arg: (braces_expression|single_letter_symbol|_digit)
 %declare _MULTIARG_DELIMITER
 %declare _MULTIARG_EOS
 
+// postfix functions
+
+_postfix_function: factorial | percent | permille | derivative_prime | modulo
+
+// postfix functions can generally not be passed as an argument to other mathematical functions,
+// e.g. \sin(x)!, where (x)! would be the postfix function call.
+// if this was allowed, then \sin(x)! would be interpreted as \sin((x)!), but from a human reader perspective,
+// this is unexpected, and interpreting it as (\sin(x))! is more natural.
+//
+// Omitting these parenthesees changes this perception though,
+// as e.g. \sin x! is more likely to be interpreted as \sin((x)!)
+//
+// Therefore, some postfix functions may have an additional rule, postfixed with _func_arg,
+// which matches all cases of the postfix function such that it can be passed as an argument to another function.
+//
+// all of these rules are grouped together in _postfix_function_arg
+_postfix_function_arg: factorial_func_arg | percent_func_arg | permille_func_arg | derivative_prime_func_arg
+
+factorial: _delimitedfactor _BANG
+factorial_func_arg: factor_func_postfix_arg _BANG -> factorial
+
+percent: factor_func_arg _PERCENT
+percent_func_arg: factor_func_postfix_arg _PERCENT -> percent
+permille: factor_func_arg _PERMILLE
+permille_func_arg: factor_func_postfix_arg _PERMILLE -> permille
+derivative_prime: factor_func_arg PRIMES
+derivative_prime_func_arg: factor_func_postfix_arg PRIMES -> derivative_prime
+
+modulo: factor_func_arg _FUNC_MOD factor_func_arg
+
 // core functions
 frac: _FUNC_FRAC _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULTIARG_EOS
 binom: _FUNC_BINOM _multiarg_func_arg _MULTIARG_DELIMITER _multiarg_func_arg _MULTIARG_EOS
@@ -232,7 +272,7 @@ diff_symbol_arg_list: (_DIFFERENTIAL_SYMBOL diff_symbol_exponent)+
 _DERIV_ARG_SEPARATOR.-1: _L_BRACE
 // need to have a post lex which recognises _FUNC_DERIVATIVE and then replaces any single letter symbol which matches _DIFFERENTIAL_SYMBOL with _DIFFERENTIAL_SYMBOL
 derivative: _FUNC_DERIVATIVE expression _R_BRACE _DERIV_ARG_SEPARATOR diff_symbol_arg_list _R_BRACE -> derivative_func_first
-    |   _FUNC_DERIVATIVE _R_BRACE _DERIV_ARG_SEPARATOR diff_symbol_arg_list _R_BRACE _factor_no_unit -> derivative_symbols_first
+    |   _FUNC_DERIVATIVE _R_BRACE _DERIV_ARG_SEPARATOR diff_symbol_arg_list _R_BRACE factor_func_arg -> derivative_symbols_first
 
 integral: _FUNC_INTEGRAL [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_no_bounds
     | _FUNC_INTEGRAL _UNDERSCORE function_special_arg _CARET function_special_arg [expression] _DIFFERENTIAL_SYMBOL symbol -> integral_lower_bound_first
@@ -281,7 +321,6 @@ _divisibility_functions: gcd | lcm
 
 gcd: _FUNC_GCD _L_PAREN expression _COMMA expression _R_PAREN
 lcm: _FUNC_LCM _L_PAREN expression _COMMA expression _R_PAREN
-modulo: _factor_no_unit _FUNC_MOD _factor_no_unit
 
 // ======== System of relations ========
 
@@ -297,6 +336,47 @@ system_of_relations: _CMD_BEGIN_ALIGN _system_of_relations_body _CMD_END_ALIGN
 // TODO: i dont see a reason why this priority should change anything, but it does so its here now.
 NON_BRACE_TEXT.-1: /[^{}]+/
 !brace_surrounded_text: _L_BRACE NON_BRACE_TEXT? (brace_surrounded_text NON_BRACE_TEXT?)*  _R_BRACE
+
+// ======== Propositional Logic Structure
+
+// represents a chain of propositions, separated by equivalence symbols
+proposition_chain: _proposition | (_proposition|relation) (_PROP_OP_EQUIV (_proposition|relation))+
+
+// represents a single proposition in a series of chained propositions
+_proposition: _prop_bool_value | _delimited_proposition | prop_not | prop_xnor | prop_xor | prop_nor | prop_and | prop_nand | prop_or | prop_implies | prop_iff
+// represents a single proposition surrounded by parenthesess, brackets or braces.
+_delimited_proposition: _L_PAREN _proposition _R_PAREN | _L_BRACKET _proposition _R_BRACKET | _L_BRACE _proposition _R_BRACE
+
+// propositional operator presedence is based on wolfram alpha: https://www.wolframalpha.com/input?i=not+A+xor+B+nor++C+and+D+nand+E+or+F+implies+G+%3C%3D%3E+H
+
+prop_iff: prop_iff_arg (_PROP_OP_BIIMPLICATION prop_iff_arg)+
+?prop_iff_arg: prop_implies_arg | prop_implies
+
+!prop_implies: prop_implies_arg ((_PROP_OP_LR_IMPLICATION|_PROP_OP_RL_IMPLICATION) prop_implies_arg)+
+?prop_implies_arg: prop_or_arg | prop_or
+
+prop_or: prop_or_arg (_PROP_OP_OR prop_or_arg)+
+?prop_or_arg: prop_nand_arg | prop_nand
+
+prop_nand: prop_nand_arg (_PROP_OP_NAND prop_nand_arg)+
+?prop_nand_arg: prop_and_arg | prop_and
+
+prop_and: prop_and_arg (_PROP_OP_AND prop_and_arg)+
+?prop_and_arg: prop_nor_arg | prop_nor
+
+prop_nor: prop_nor_arg (_PROP_OP_NOR prop_nor_arg)+
+?prop_nor_arg: prop_xor_arg | prop_xor
+
+prop_xor: prop_xor_arg (_PROP_OP_XOR prop_xor_arg)+
+?prop_xor_arg: prop_xnor_arg | prop_xnor
+
+prop_xnor: prop_xnor_arg (_PROP_OP_XNOR prop_xnor_arg)+
+?prop_xnor_arg: prop_not_arg | prop_not
+
+prop_not: _PROP_OP_NOT prop_not_arg
+?prop_not_arg: _delimited_proposition | relation | _prop_bool_value
+
+_prop_bool_value: CMD_TAUTOLOGY | CMD_CONTRADICTION
 
 // ================ Terminals ================
 
@@ -351,12 +431,11 @@ _L_BAR: _BAR
 _L_DOUBLE_BAR: _DOUBLE_BAR
 %declare _R_DOUBLE_BAR
 
-_L_DELIMITER: _L_ANGLE | L_BRACE_LITERAL | _L_BRACKET | _L_CEIL | _L_FLOOR | _L_PAREN
-_R_DELIMITER: _R_ANGLE | R_BRACE_LITERAL | _R_BRACKET | _R_CEIL | _R_FLOOR | _R_PAREN
+_L_DELIMITER: _DOT | _L_ANGLE | L_BRACE_LITERAL | _L_BRACKET | _L_CEIL | _L_FLOOR | _L_PAREN
+_R_DELIMITER: _DOT | _R_ANGLE | R_BRACE_LITERAL | _R_BRACKET | _R_CEIL | _R_FLOOR | _R_PAREN
 
 // limit, integral, sum, and product symbols
 _FUNC_LIMIT:  "\\lim"
-_LIM_APPROACH_SYMBOL: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
 _FUNC_INTEGRAL:  "\\int" | "\\intop"
 _FUNC_SUM:  "\\sum"
 _FUNC_PRODUCT: "\\prod"
@@ -479,7 +558,7 @@ _PERMILLE: "\\textperthousand"
 
 // relational symbols
 EQUAL: "="
-NOT_EQUAL: "\\neq" | "\\ne"
+NOT_EQUAL: "\\neq" | /\\ne(?!g)/ // do not match \neg as '\ne' followed by the symbol 'g'
 LT: "<"
 LTE: LT EQUAL | "\\leq" | "\\leqslant" | /\\le(?!ft)/ // do not match `\left` as `\le` followed by the symbol `ft`
 GT: ">"
@@ -507,7 +586,13 @@ MULTI_LETTER_SYMBOL: LATIN_SYMBOL_WITH_PRIMTES | GREEK_SYMBOL_WITH_PRIMES | MULT
 
 %import common.DIGIT -> NUMERIC_DIGIT
 
-NUMERIC_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* _DOT NUMERIC_DIGIT+
+BINARY_NUMBER: /0(b|\\mathrm{b})[01]+/ | /\\mathrm{0b[01]+}/
+
+OCTAL_NUMBER: /0(o|\\mathrm{o})[0-7]+/ | /\\mathrm{0o[0-7]+}/
+
+HEXADECIMAL_NUMBER: /0[xX][\da-fA-F]+/ | /\\mathrm{0[xX][\da-fA-F]+}/
+
+BASE_10_NUMBER: NUMERIC_DIGIT NUMERIC_DIGIT+ | NUMERIC_DIGIT* _DOT NUMERIC_DIGIT+
 
 PRIMES: "'"+
 
@@ -532,7 +617,7 @@ CMD_BEGIN_VMATRIX: CMD_BEGIN _WS? VMATRIX_ENV _WS? _R_BRACE
 CMD_END_VMATRIX: CMD_END _WS? VMATRIX_ENV _WS? _R_BRACE
 
 CMD_BEGIN_ARRAY: ("\\left" _WS? _L_DELIMITER)? _WS? CMD_BEGIN _WS? ARRAY_ENV _WS? _R_BRACE
-ARRAY_ENV_OPTIONS: _L_BRACE (/[clr|\s]+/)? _R_BRACE
+ARRAY_ENV_OPTIONS: _L_BRACE (/[clr|:\s]+/)? _R_BRACE
 CMD_END_ARRAY: CMD_END _WS? ARRAY_ENV _WS? _R_BRACE _WS? ("\\right" _WS? _R_DELIMITER)?
 
 %declare _MATRIX_COL_DELIM
@@ -546,3 +631,21 @@ _CMD_BEGIN_ALIGN: CMD_BEGIN _WS? "align" _WS? _R_BRACE
 _CMD_BEGIN_CASES: CMD_BEGIN _WS? "cases" _WS? _R_BRACE
 _CMD_END_ALIGN: CMD_END _WS? "align" _WS? _R_BRACE
 _CMD_END_CASES: CMD_END _WS? "cases" _WS? _R_BRACE
+
+// ======== propositional logic ========
+
+CMD_TAUTOLOGY.1: /\\(?:mathrm|operatorname)\s*{\s*(?:T|True|TRUE)\s*}/
+CMD_CONTRADICTION.1: /\\(?:mathrm|operatorname)\s*{\s*(?:F|False|FALSE)\s*}/
+
+_PROP_OP_BIIMPLICATION: "\\iff" | /\\(?:[Ll]ongl|[Ll])eftrightarrow/ | /\\(?:leftright|rightleft)harpoons/
+_PROP_OP_LR_IMPLICATION.1: "\\implies" | "\\to" | /\\(?:[Ll]ongr|[Rr])ightarrow/ // have to increase priority due to _LIM_APPROACH_SYMBOL
+_PROP_OP_RL_IMPLICATION: /\\(?:[Ll]ongl|[Ll])eftarrow/
+_PROP_OP_OR: "\\vee"
+_PROP_OP_NAND: (_CMD_BAR|_CMD_OVERLINE) _WS? _PROP_OP_AND
+_PROP_OP_AND: "\\wedge"
+_PROP_OP_NOR: (_CMD_BAR|_CMD_OVERLINE) _WS? _PROP_OP_OR
+_PROP_OP_XOR: "\\oplus"
+_PROP_OP_XNOR: "\\odot"
+_PROP_OP_NOT: "\\neg"
+
+_PROP_OP_EQUIV: "\\equiv"

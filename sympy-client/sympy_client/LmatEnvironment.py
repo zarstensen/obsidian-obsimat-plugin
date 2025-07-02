@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+
 class FunctionDef(TypedDict):
     args: list[str]
     expr: str

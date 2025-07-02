@@ -9,22 +9,28 @@ Whilst this document should provide a good overview of the parser, one can alway
 ## Table of Contents
 
 - [Expression Structure](#expression-structure)
+  - [Expression](#expression)
+  - [Logical Proposition](#logical-proposition)
+- [Numbers](#numbers)
 - [Symbols](#symbols)
 - [Mathematical Functions](#mathematical-functions)
 - [Mathematical Constants](#mathematical-constants)
+- [Logical Operators](#logical-operators)
 - [Units and Physical Constants](#units-and-physical-constants)
   - [Supported Units](#supported-units)
   - [Supported Physical Constants](#supported-physical-constants)
 
 ## Expression Structure
 
-The **LaTeX Math** parser is able to parse most mathematical expressions and optionally relations (*e.g.* `>`, `<`, `=`) between expressions.
+The **LaTeX Math** parser is able to parse most [mathematical expressions and relations](#expression) (*e.g.* `>`, `<`, `=`) between expressions, as well as [logical propositions](#logical-proposition).
+
+### Expression
 
 An expression is any series of mathematical terms separated by `+` or `-` signs.
 Terms consists of a series of factors separated by a multiplication sign (`*`, `\cdot`, `\times`) or a division sign (`/`), where a factor is one of the following:
 
 <!-- no toc -->
-- Number
+- [Number](#numbers)
 - [Symbol](#symbols)
 - [Unit / Constant](#units-and-physical-constants)
 - Matrix
@@ -35,6 +41,30 @@ Terms consists of a series of factors separated by a multiplication sign (`*`, `
 If no multiplication or division sign is present, multiplication is implicitly assumed.
 
 The parser also supports systems of equations. Notate these by placing a series of equations, separated by latex newlines (`\\\\`), inside a `cases` or `align` environment.
+
+### Logical Proposition
+
+A logical proposition is any [logical operator](#logical-operators) applied on a [boolean constant](#mathematical-constants), [symbol](#symbols), [expression](#expression), [relation](#expression) or another logical proposition.
+
+Logical propositions may be chained together with a `\equiv` symbol separating each proposition.
+
+*e.g. `A \implies B \equiv B \vee \neg A`*
+
+Expressions and logical propositions cannot be mixed. The only exception to this is the `iff` operator, which checks for symbolic equality if one of its arguments is an expression.
+
+*e.g. `x^2 \implies 2 y`, `(x \wedge y) + 2` is NOT allowed, but `x \iff \sqrt{x^2}` is allowed, and checks if `x` is symbolically equal to `\sqrt{x^2}` upon evaluation*
+
+## Numbers
+
+Numbers can be notated in 1 of the following 4 ways.
+
+- No prefix for base 10 e.g. `1234`.
+- `0x` or `0X` prefix for hexadecimal (base 16) e.g. `0xFF12`.
+- `0o` prefix for octal (base 8) e.g. `0o57`.
+- `0b` prefix for binary (base 2) e.g. `0b10110100`.
+
+Any prefixed number may optionally be surrounded with `\mathrm{...}`.
+Only surrounding the character in the prefix is also allowed `0\mathrm{x|b|o}...`.
 
 ## Symbols
 
@@ -55,7 +85,7 @@ This is a side effect of how Sympy handles symbols internally.
 Below is a table of all supported mathematical functions supported by the parser, this list may grow overtime as this project develops.
 Note that a *mathematical function* also encompasses concepts not normally thought of as a function, e.g. `\frac` is considered part of this table whilst it may not intuitively be thought of as a function.
 
-| Description                | LaTeX String                                                                           |
+| Function                   | LaTeX String                                                                           |
 | :------------------------- | :------------------------------------------------------------------------------------- |
 | sine                       | `\sin`                                                                                 |
 | cosine                     | `\cos`                                                                                 |
@@ -127,12 +157,34 @@ The number of mathematical constants has intentionally been kept sparse, as thei
 
 Below is a table of all the mathematical constants the parser supports.
 
-| Name           | LaTeX String |
-| :------------- | :----------- |
-| pi             | `\pi`        |
-| euler          | `e`          |
-| imaginary unit | `i`          |
-| infinity       | `\infty`     |
+| Name                          | LaTeX String                                |
+| :---------------------------- | :------------------------------------------ |
+| pi                            | `\pi`                                       |
+| euler                         | `e`                                         |
+| imaginary unit                | `i`                                         |
+| infinity                      | `\infty`                                    |
+| boolean true[^boolean-const]  | `\mathrm{T}` / `\operatorname{True}` / ...  |
+| boolean false[^boolean-const] | `\mathrm{F}` / `\operatorname{False}` / ... |
+
+[^boolean-const]: These constants only apply inside logical propositions, they can be used as standard symbols in expressions, provided they are not the first token in said expression. e.g. `2 \mathrm{T}` is a valid expression, whilst `\mathrm{T} 2` is not, as `\mathrm{T}` is seen as the boolean true constant in this case.
+
+## Logical Operators
+
+Below is a list of logical operators this parser supports.
+The order of precedence starts with any logical proposition surrounded by delimiters, and then follows the operators' entry in the below table, from top to bottom.
+e.g. `\neg` has higher precedence than `\wedge` because it is higher in the list.
+
+| Operator    | LaTeX String                                                         |
+| :---------- | :------------------------------------------------------------------- |
+| not         | `\neg .`                                                             |
+| xnor        | `. \odot .`                                                          |
+| xor         | `. \oplus .`                                                         |
+| nor         | `. \bar \vee .` / `. \overline \vee .`                               |
+| and         | `. \wedge .`                                                         |
+| nand        | `. \bar \wedge .` / `. \overline \wedge .`                           |
+| or          | `. \vee .`                                                           |
+| implication | `. \implies .` / `. \leftarrow . ` / `. \Rightarrow .` / ...         |
+| iff         | `. \iff .` / `. \leftrightarrow . ` / `. \rightleftharpoons .` / ... |
 
 ## Units and Physical Constants
 

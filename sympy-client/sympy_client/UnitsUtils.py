@@ -1,10 +1,11 @@
-from sympy import Add, Matrix, MatrixBase, Symbol, Rel, Expr
+from copy import copy
+
 import sympy.physics.units as u
 import sympy.physics.units.definitions.unit_definitions as unit_definitions
-from sympy.physics.units.quantities import Quantity, PhysicalConstant
+from sympy import Add, Expr, MatrixBase, Rel
+from sympy.physics.units.quantities import PhysicalConstant, Quantity
 from sympy.physics.units.systems import SI
 from sympy.physics.units.unitsystem import UnitSystem
-from copy import copy
 
 # Maps an alias to its corresponding Quantity object.
 UNIT_ALIAS_MAP = {}
@@ -42,37 +43,39 @@ __add_unit_aliases([ ( 'min', u.minute ), ( 'sec', u.second ) ])
 
 # attempt to automatically convert the units in the given sympy expression.
 # this convertion method prioritizes as few units as possible raised to the lowest power possible (or lowest root possible).
-def auto_convert(sympy_expr, unit_system: UnitSystem = SI):    
+def auto_convert(sympy_expr, unit_system: UnitSystem = SI):
     if isinstance(sympy_expr, MatrixBase):
-        converted_matrix = Matrix.zeros(*sympy_expr.shape)
-        for index, value in enumerate(sympy_expr):
-            converted_matrix[index] = auto_convert(value, unit_system)
-        
-        return converted_matrix
+        new_matrix_contents = []
+
+        for value in sympy_expr:
+
+            new_matrix_contents.append(auto_convert(value, unit_system))
+
+        return type(sympy_expr)(*sympy_expr.shape, new_matrix_contents)
     # relationals and non sympy objects should not be auto converted
     elif isinstance(sympy_expr, Rel) or not isinstance(sympy_expr, Expr):
         return sympy_expr
-    
+
     if not isinstance(sympy_expr, Add):
         sympy_expr = [sympy_expr]
     else:
         sympy_expr = list(sympy_expr.args)
-    
+
     converted_expressions = []
-    
+
     for expr in sympy_expr:
         curr_complexity = get_unit_complexity(expr)
-        
+
         # unit complexity cannot be determined for expression for some reason.
         if curr_complexity is None:
             converted_expressions.append(expr)
             continue
-        
+
         # Conver to using all base units of system.
         for units in [ unit_system._base_units, *unit_system.get_units_non_prefixed() ]:
             converted_expr = u.convert_to(expr, units)
             converted_expr_complexity = get_unit_complexity(converted_expr)
-            
+
             if converted_expr_complexity < curr_complexity:
                 curr_complexity = converted_expr_complexity
                 expr = converted_expr
@@ -95,18 +98,18 @@ def str_to_unit(unit_str: str) -> Quantity | None:
 # get the 'complexity' of a unit.
 # complexity is defined as the sum of all units raised power (or 1/power if 0 < power < 1).
 def get_unit_complexity(expression):
-    
+
     if not hasattr(expression, 'as_powers_dict'):
         return None
-    
+
     complexity = 0
-    
+
     for val, pow in expression.as_powers_dict().items():
         if isinstance(val, Quantity):
-            
+
             if 0 < abs(pow) < 1:
                 pow = 1 / pow
-            
+
             complexity += abs(pow)
-            
+
     return complexity

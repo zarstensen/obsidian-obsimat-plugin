@@ -10,6 +10,7 @@ import { SympyConvertCommand } from 'src/commands/SympyConvertCommand';
 import { UnitConvertCommand } from 'src/commands/UnitConvertCommand';
 import { SympyClientExtractor } from 'src/SympyClientExtractor';
 import path from 'path';
+import { TruthTableCommand, TruthTableFormat } from 'src/commands/TruthTableCommand';
 
 interface LatexMathPluginSettings {
     dev_mode: boolean;
@@ -68,7 +69,9 @@ export default class LatexMathPlugin extends Plugin {
             [ new EvaluateCommand("apart"), 'Partial fraction decompose LaTeX expression' ],
             [ new SolveCommand(), 'Solve LaTeX expression' ],
             [ new SympyConvertCommand(), 'Convert LaTeX expression to Sympy' ],
-            [ new UnitConvertCommand(), 'Convert units in LaTeX expression' ]
+            [ new UnitConvertCommand(), 'Convert units in LaTeX expression' ],
+            [ new TruthTableCommand(TruthTableFormat.MARKDOWN), 'Create truth table from LaTeX expression (Markdown)' ],
+            [ new TruthTableCommand(TruthTableFormat.LATEX_ARRAY), 'Create truth table from LaTeX expression (LaTeX)' ],
         ]));
 
         // spawn sympy client

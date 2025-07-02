@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, override
 
+
 # The CommandResult represents an arbitrary result returned by a CommandHandler.
 # It contains the result data and a method for converting this data into a message payload.
 class CommandResult(ABC):
@@ -15,11 +16,11 @@ class CommandResult(ABC):
         return dict(result=result, metadata=metadata or {}, status=status)
 
 class ErrorResult(CommandResult):
-    
+
     def __init__(self, err_msg: str):
         super().__init__()
         self.err_msg = err_msg
-        
+
     @override
     def getPayload(self) -> dict:
         return CommandResult.result(dict(message=self.err_msg), status='error')
@@ -30,4 +31,3 @@ class CommandHandler(ABC):
     @abstractmethod
     def handle(self, message: Any) -> CommandResult:
         pass
-
